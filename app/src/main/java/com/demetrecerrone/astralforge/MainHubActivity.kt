@@ -85,7 +85,7 @@ class MainHubActivity : Activity() {
 
         val background = ImageView(this).apply {
             setImageResource(hubDrawableId)
-            scaleType = ImageView.ScaleType.CENTER_CROP
+            scaleType = ImageView.ScaleType.FIT_XY
         }
         content.addView(
             background,
@@ -95,7 +95,7 @@ class MainHubActivity : Activity() {
             )
         )
 
-        val overlay = ReferenceOverlayLayout(this, 941f, 1672f)
+        val overlay = ReferenceOverlayLayout(this, 941f, 1672f, stretchToFit = true)
 
         addPlayerPanel(overlay)
         addUtilityIcons(overlay)
