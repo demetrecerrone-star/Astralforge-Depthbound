@@ -140,17 +140,6 @@ class CreateAccountActivity : Activity() {
             setOnClickListener { finish() }
         }
 
-        val guest = Button(this).apply {
-            text = getString(R.string.continue_as_guest)
-            setOnClickListener {
-                Toast.makeText(
-                    this@CreateAccountActivity,
-                    getString(R.string.guest_flow_placeholder),
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
-
         fun addSpacing() {
             root.addView(
                 TextView(this),
@@ -181,7 +170,6 @@ class CreateAccountActivity : Activity() {
         root.addView(createButton)
         addSpacing()
         root.addView(backToSignIn)
-        root.addView(guest)
 
         scroll.addView(root)
         setContentView(scroll)
