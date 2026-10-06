@@ -12,10 +12,13 @@ import android.widget.LinearLayout
 import android.widget.TextView
 
 object AuthUi {
-    val textPrimary: Int = Color.rgb(241, 236, 255)
-    val textSecondary: Int = Color.rgb(181, 173, 214)
-    val violet: Int = Color.rgb(156, 89, 255)
-    val violetSoft: Int = Color.rgb(199, 156, 255)
+    val textPrimary: Int = Color.rgb(244, 239, 255)
+    val textSecondary: Int = Color.rgb(185, 181, 205)
+    val violet: Int = Color.rgb(111, 48, 226)
+    val violetSoft: Int = Color.rgb(190, 118, 255)
+    val blueLine: Int = Color.rgb(58, 135, 231)
+    val cyanLine: Int = Color.rgb(87, 178, 194)
+    val antiqueGold: Int = Color.rgb(195, 169, 132)
 
     fun dp(context: Context, value: Int): Int =
         (value * context.resources.displayMetrics.density).toInt()
@@ -33,17 +36,17 @@ object AuthUi {
     fun panelBackground(context: Context): GradientDrawable =
         GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
-            cornerRadius = dp(context, 26).toFloat()
-            setColor(Color.argb(188, 7, 10, 31))
-            setStroke(dp(context, 1), Color.rgb(82, 57, 145))
+            cornerRadius = dp(context, 8).toFloat()
+            setColor(Color.argb(224, 3, 7, 20))
+            setStroke(dp(context, 1), Color.rgb(119, 91, 126))
         }
 
     fun fieldBackground(context: Context): GradientDrawable =
         GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
-            cornerRadius = dp(context, 14).toFloat()
-            setColor(Color.argb(230, 11, 14, 40))
-            setStroke(dp(context, 1), Color.rgb(113, 86, 185))
+            cornerRadius = dp(context, 10).toFloat()
+            setColor(Color.argb(235, 5, 12, 27))
+            setStroke(dp(context, 1), Color.rgb(92, 113, 151))
         }
 
     fun primaryBackground(context: Context): GradientDrawable =
@@ -57,15 +60,15 @@ object AuthUi {
         ).apply {
             shape = GradientDrawable.RECTANGLE
             cornerRadius = dp(context, 15).toFloat()
-            setStroke(dp(context, 1), violetSoft)
+            setStroke(dp(context, 2), Color.rgb(133, 72, 255))
         }
 
     fun secondaryBackground(context: Context): GradientDrawable =
         GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
-            cornerRadius = dp(context, 15).toFloat()
-            setColor(Color.argb(155, 8, 12, 34))
-            setStroke(dp(context, 1), Color.rgb(98, 76, 161))
+            cornerRadius = dp(context, 10).toFloat()
+            setColor(Color.argb(158, 4, 14, 31))
+            setStroke(dp(context, 1), blueLine)
         }
 
     fun googleBackground(context: Context): GradientDrawable =
@@ -79,7 +82,8 @@ object AuthUi {
         field.background = fieldBackground(context)
         field.setTextColor(Color.WHITE)
         field.setHintTextColor(Color.rgb(139, 132, 171))
-        field.textSize = 16f
+        field.textSize = 17f
+        field.typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
         field.setPadding(
             dp(context, 18),
             dp(context, 14),
@@ -95,7 +99,7 @@ object AuthUi {
         button.setTextColor(Color.WHITE)
         button.textSize = 16f
         button.typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
-        button.isAllCaps = true
+        button.isAllCaps = false
         button.minHeight = dp(context, 56)
     }
 
@@ -104,7 +108,7 @@ object AuthUi {
         button.background = secondaryBackground(context)
         button.setTextColor(textPrimary)
         button.textSize = 15f
-        button.typeface = Typeface.DEFAULT_BOLD
+        button.typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
         button.isAllCaps = false
         button.minHeight = dp(context, 54)
     }
@@ -121,34 +125,51 @@ object AuthUi {
 
     fun brandTitle(context: Context): TextView =
         TextView(context).apply {
-            text = "ASTRALFORGE"
-            setTextColor(textPrimary)
-            textSize = 34f
+            text = "Astralforge:"
+            setTextColor(Color.rgb(245, 231, 212))
+            textSize = 48f
             gravity = Gravity.CENTER
             typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
-            letterSpacing = 0.035f
-            setShadowLayer(18f, 0f, 0f, Color.rgb(137, 82, 255))
+            letterSpacing = 0.005f
+            setShadowLayer(14f, 0f, 2f, Color.rgb(104, 44, 198))
             setLayerType(View.LAYER_TYPE_SOFTWARE, null)
         }
 
     fun brandSubtitle(context: Context): TextView =
         TextView(context).apply {
-            text = "—  D E P T H B O U N D  —"
-            setTextColor(Color.rgb(207, 193, 238))
-            textSize = 13f
+            text = "Depthbound"
+            setTextColor(Color.rgb(228, 217, 255))
+            textSize = 30f
             gravity = Gravity.CENTER
-            typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
-            setPadding(0, dp(context, 2), 0, dp(context, 6))
+            typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+            setShadowLayer(12f, 0f, 0f, Color.rgb(129, 59, 255))
+            setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+            setPadding(0, dp(context, -6), 0, dp(context, 4))
         }
 
     fun ornament(context: Context): TextView =
         TextView(context).apply {
             text = "✦"
             setTextColor(violetSoft)
-            textSize = 24f
+            textSize = 18f
             gravity = Gravity.CENTER
-            setPadding(0, 0, 0, dp(context, 8))
+            setPadding(0, 0, 0, dp(context, 4))
         }
+
+    fun styleGuest(context: Context, button: Button) {
+        button.backgroundTintList = null
+        button.background = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = dp(context, 10).toFloat()
+            setColor(Color.argb(152, 5, 28, 39))
+            setStroke(dp(context, 1), cyanLine)
+        }
+        button.setTextColor(Color.rgb(220, 245, 255))
+        button.textSize = 16f
+        button.typeface = Typeface.create(Typeface.SERIF, Typeface.NORMAL)
+        button.isAllCaps = false
+        button.minHeight = dp(context, 56)
+    }
 
     fun divider(context: Context, label: String): LinearLayout {
         val row = LinearLayout(context).apply {
