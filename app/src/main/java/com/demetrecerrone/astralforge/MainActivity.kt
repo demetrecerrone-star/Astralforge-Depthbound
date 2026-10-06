@@ -109,7 +109,7 @@ class MainActivity : Activity() {
             setTextColor(ColorStateList.valueOf(android.graphics.Color.WHITE))
             textSize = 16f
             setPadding(0, 0, 0, 0)
-            background = android.graphics.drawable.GradientDrawable().apply {
+            this.background = android.graphics.drawable.GradientDrawable().apply {
                 shape = android.graphics.drawable.GradientDrawable.RECTANGLE
                 cornerRadius = AuthUi.dp(this@MainActivity, 3).toFloat()
                 setColor(android.graphics.Color.argb(120, 5, 10, 28))
