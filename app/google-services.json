@@ -12,7 +12,12 @@
           "package_name": "Com.demetrecerrone.astralforge"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "994438088871-fvv612cb91rb7hi9njelseospji48en0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAvtJJXUJfPvEJBpdT_mp4cOUgkDkZw0oI"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "994438088871-fvv612cb91rb7hi9njelseospji48en0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     },
@@ -31,7 +41,20 @@
           "package_name": "com.demetrecerrone.astralforge"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "994438088871-7f79sjeq6velkvutuvqodfrpoi1ailps.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.demetrecerrone.astralforge",
+            "certificate_hash": "cc03d8d6263982646ff6be41a34827db9a2e674d"
+          }
+        },
+        {
+          "client_id": "994438088871-fvv612cb91rb7hi9njelseospji48en0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAvtJJXUJfPvEJBpdT_mp4cOUgkDkZw0oI"
@@ -39,7 +62,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "994438088871-fvv612cb91rb7hi9njelseospji48en0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
