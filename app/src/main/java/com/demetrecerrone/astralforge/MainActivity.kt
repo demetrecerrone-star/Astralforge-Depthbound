@@ -47,6 +47,17 @@ class MainActivity : Activity() {
             return
         }
 
+        val exactArtwork = EmbeddedImageLoader.decodeNamed(
+            resources,
+            packageName,
+            "login_exact",
+            4
+        )
+        if (exactArtwork != null) {
+            showExactLogin(exactArtwork, authPrefs)
+            return
+        }
+
         fun dp(value: Int) = AuthUi.dp(this, value)
 
         val screen = FrameLayout(this).apply {
@@ -281,6 +292,203 @@ class MainActivity : Activity() {
         )
         screen.addView(
             scroll,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+        setContentView(screen)
+    }
+
+    private fun showExactLogin(
+        artwork: android.graphics.Bitmap,
+        authPrefs: android.content.SharedPreferences
+    ) {
+        val screen = FrameLayout(this)
+
+        val background = android.widget.ImageView(this).apply {
+            setImageBitmap(artwork)
+            scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+        }
+        screen.addView(
+            background,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+
+        val overlay = ReferenceOverlayLayout(this)
+
+        fun mappedField(
+            hintText: String,
+            inputTypeValue: Int,
+            left: Float,
+            top: Float,
+            right: Float,
+            bottom: Float
+        ): EditText {
+            val field = EditText(this).apply {
+                hint = hintText
+                inputType = inputTypeValue
+                AuthUi.styleOverlayField(this@MainActivity, this)
+            }
+            overlay.addMappedView(field, left, top, right, bottom)
+            return field
+        }
+
+        val email = mappedField(
+            "Email",
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
+            238f, 648f, 664f, 718f
+        )
+        val password = mappedField(
+            "Password",
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD,
+            238f, 736f, 610f, 805f
+        )
+
+        val rememberMe = CheckBox(this).apply {
+            text = ""
+            isChecked = authPrefs.getBoolean("remember_me", true)
+            buttonTintList = ColorStateList.valueOf(AuthUi.violetSoft)
+            setPadding(0, 0, 0, 0)
+        }
+        overlay.addMappedView(rememberMe, 158f, 826f, 194f, 864f)
+
+        val passwordEye = android.view.View(this).apply {
+            setOnClickListener {
+                val selection = password.selectionStart.coerceAtLeast(0)
+                password.transformationMethod =
+                    if (password.transformationMethod == null) {
+                        android.text.method.PasswordTransformationMethod.getInstance()
+                    } else {
+                        null
+                    }
+                password.setSelection(selection.coerceAtMost(password.text.length))
+            }
+        }
+        overlay.addMappedView(passwordEye, 620f, 744f, 690f, 805f)
+
+        val forgotPassword = android.view.View(this).apply {
+            setOnClickListener {
+                val emailValue = email.text.toString().trim()
+                if (!Patterns.EMAIL_ADDRESS.matcher(emailValue).matches()) {
+                    email.error = getString(R.string.error_email_for_reset)
+                    email.requestFocus()
+                    return@setOnClickListener
+                }
+                auth.sendPasswordResetEmail(emailValue)
+                    .addOnSuccessListener {
+                        Toast.makeText(
+                            this@MainActivity,
+                            getString(R.string.password_reset_sent),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                    .addOnFailureListener { error ->
+                        Toast.makeText(
+                            this@MainActivity,
+                            getString(
+                                R.string.password_reset_failed,
+                                error.localizedMessage ?: getString(R.string.unknown_error)
+                            ),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+            }
+        }
+        overlay.addMappedView(forgotPassword, 514f, 824f, 705f, 866f)
+
+        val signIn = Button(this).apply {
+            text = ""
+            setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            setTextColor(android.graphics.Color.TRANSPARENT)
+            setOnClickListener {
+                val emailValue = email.text.toString().trim()
+                val passwordValue = password.text.toString()
+
+                when {
+                    !Patterns.EMAIL_ADDRESS.matcher(emailValue).matches() -> {
+                        email.error = getString(R.string.error_email)
+                        email.requestFocus()
+                    }
+                    passwordValue.length < 8 -> {
+                        password.error = getString(R.string.error_password_length)
+                        password.requestFocus()
+                    }
+                    else -> {
+                        isEnabled = false
+                        auth.signInWithEmailAndPassword(emailValue, passwordValue)
+                            .addOnSuccessListener { result ->
+                                val user = result.user
+                                if (user == null) {
+                                    isEnabled = true
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        getString(R.string.sign_in_failed),
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                    return@addOnSuccessListener
+                                }
+
+                                authPrefs.edit()
+                                    .putBoolean("remember_me", rememberMe.isChecked)
+                                    .apply()
+
+                                firestore.collection("players")
+                                    .document(user.uid)
+                                    .set(
+                                        mapOf("lastLoginAt" to FieldValue.serverTimestamp()),
+                                        SetOptions.merge()
+                                    )
+                                    .addOnCompleteListener {
+                                        isEnabled = true
+                                        openHub()
+                                    }
+                            }
+                            .addOnFailureListener { error ->
+                                isEnabled = true
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    getString(
+                                        R.string.sign_in_failed_with_reason,
+                                        error.localizedMessage ?: getString(R.string.unknown_error)
+                                    ),
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                    }
+                }
+            }
+        }
+        overlay.addMappedView(signIn, 160f, 890f, 707f, 987f)
+
+        val googleSignIn = Button(this).apply {
+            text = ""
+            setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            setTextColor(android.graphics.Color.TRANSPARENT)
+            setOnClickListener { signInWithGoogle(this) }
+        }
+        overlay.addMappedView(googleSignIn, 165f, 1067f, 699f, 1148f)
+
+        val guest = Button(this).apply {
+            text = ""
+            setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            setTextColor(android.graphics.Color.TRANSPARENT)
+            setOnClickListener { continueAsGuest(this) }
+        }
+        overlay.addMappedView(guest, 165f, 1157f, 699f, 1238f)
+
+        val createAccount = android.view.View(this).apply {
+            setOnClickListener {
+                startActivity(Intent(this@MainActivity, CreateAccountActivity::class.java))
+            }
+        }
+        overlay.addMappedView(createAccount, 470f, 1268f, 674f, 1315f)
+
+        screen.addView(
+            overlay,
             FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
