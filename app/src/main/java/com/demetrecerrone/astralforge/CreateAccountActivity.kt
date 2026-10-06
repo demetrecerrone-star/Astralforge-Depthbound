@@ -1,11 +1,17 @@
 package com.demetrecerrone.astralforge
 
 import android.app.Activity
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.text.InputType
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
 import android.util.Patterns
 import android.view.Gravity
+import android.view.View
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
@@ -83,7 +89,49 @@ class CreateAccountActivity : Activity() {
         )
 
         val terms = CheckBox(this).apply {
-            text = getString(R.string.accept_terms)
+            val prefix = getString(R.string.accept_terms_prefix)
+            val termsLabel = getString(R.string.terms_of_service)
+            val connector = getString(R.string.accept_terms_connector)
+            val privacyLabel = getString(R.string.privacy_policy)
+            val fullText = prefix + termsLabel + connector + privacyLabel + "."
+            val linkedText = SpannableString(fullText)
+
+            val termsStart = prefix.length
+            val termsEnd = termsStart + termsLabel.length
+            linkedText.setSpan(
+                object : ClickableSpan() {
+                    override fun onClick(widget: View) {
+                        startActivity(
+                            Intent(this@CreateAccountActivity, LegalDocumentActivity::class.java)
+                                .putExtra(LegalDocumentActivity.EXTRA_DOCUMENT, LegalDocumentActivity.DOCUMENT_TERMS)
+                        )
+                    }
+                },
+                termsStart,
+                termsEnd,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+
+            val privacyStart = termsEnd + connector.length
+            val privacyEnd = privacyStart + privacyLabel.length
+            linkedText.setSpan(
+                object : ClickableSpan() {
+                    override fun onClick(widget: View) {
+                        startActivity(
+                            Intent(this@CreateAccountActivity, LegalDocumentActivity::class.java)
+                                .putExtra(LegalDocumentActivity.EXTRA_DOCUMENT, LegalDocumentActivity.DOCUMENT_PRIVACY)
+                        )
+                    }
+                },
+                privacyStart,
+                privacyEnd,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+
+            text = linkedText
+            movementMethod = LinkMovementMethod.getInstance()
+            highlightColor = Color.TRANSPARENT
+            setLinkTextColor(Color.rgb(181, 118, 255))
             setTextColor(Color.rgb(220, 215, 240))
         }
 
