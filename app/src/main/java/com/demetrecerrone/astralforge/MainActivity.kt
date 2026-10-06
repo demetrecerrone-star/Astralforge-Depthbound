@@ -14,7 +14,16 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.credentials.CredentialManager
+import androidx.credentials.CredentialManagerCallback
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.GetCredentialException
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -153,6 +162,13 @@ class MainActivity : Activity() {
             }
         }
 
+        val googleSignIn = Button(this).apply {
+            text = getString(R.string.sign_in_with_google)
+            setOnClickListener {
+                signInWithGoogle(this)
+            }
+        }
+
         val createAccount = Button(this).apply {
             text = getString(R.string.create_account_button)
             setOnClickListener {
@@ -230,12 +246,152 @@ class MainActivity : Activity() {
         spacer()
         root.addView(signIn)
         spacer()
+        root.addView(googleSignIn)
+        spacer()
         root.addView(createAccount)
         root.addView(forgotPassword)
         root.addView(guest)
 
         scroll.addView(root)
         setContentView(scroll)
+    }
+
+    private fun signInWithGoogle(button: Button) {
+        button.isEnabled = false
+        button.text = getString(R.string.signing_in_with_google)
+
+        val googleIdOption = GetGoogleIdOption.Builder()
+            .setFilterByAuthorizedAccounts(false)
+            .setServerClientId(getString(R.string.default_web_client_id))
+            .setAutoSelectEnabled(false)
+            .build()
+
+        val request = GetCredentialRequest.Builder()
+            .addCredentialOption(googleIdOption)
+            .build()
+
+        val credentialManager = CredentialManager.create(this)
+        credentialManager.getCredentialAsync(
+            this,
+            request,
+            null,
+            mainExecutor,
+            object : CredentialManagerCallback<GetCredentialResponse, GetCredentialException> {
+                override fun onResult(result: GetCredentialResponse) {
+                    val credential = result.credential
+                    if (
+                        credential is CustomCredential &&
+                        credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+                    ) {
+                        try {
+                            val googleCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                            firebaseAuthWithGoogle(googleCredential.idToken, button)
+                        } catch (error: Exception) {
+                            restoreGoogleButton(button)
+                            Toast.makeText(
+                                this@MainActivity,
+                                getString(
+                                    R.string.google_sign_in_failed_with_reason,
+                                    error.localizedMessage ?: getString(R.string.unknown_error)
+                                ),
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    } else {
+                        restoreGoogleButton(button)
+                        Toast.makeText(
+                            this@MainActivity,
+                            getString(R.string.google_sign_in_failed),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+
+                override fun onError(error: GetCredentialException) {
+                    restoreGoogleButton(button)
+                    Toast.makeText(
+                        this@MainActivity,
+                        getString(
+                            R.string.google_sign_in_failed_with_reason,
+                            error.localizedMessage ?: getString(R.string.unknown_error)
+                        ),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        )
+    }
+
+    private fun firebaseAuthWithGoogle(idToken: String, button: Button) {
+        val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
+        val existingUser = auth.currentUser
+
+        val authTask =
+            if (existingUser != null && existingUser.isAnonymous) {
+                existingUser.linkWithCredential(firebaseCredential)
+            } else {
+                auth.signInWithCredential(firebaseCredential)
+            }
+
+        authTask
+            .addOnSuccessListener { result ->
+                val user = result.user
+                if (user == null) {
+                    restoreGoogleButton(button)
+                    Toast.makeText(
+                        this,
+                        getString(R.string.google_sign_in_failed),
+                        Toast.LENGTH_LONG
+                    ).show()
+                    return@addOnSuccessListener
+                }
+
+                val profile = mutableMapOf<String, Any>(
+                    "uid" to user.uid,
+                    "displayName" to (user.displayName ?: "Player"),
+                    "email" to (user.email ?: ""),
+                    "accountType" to "google",
+                    "lastLoginAt" to FieldValue.serverTimestamp(),
+                    "appVersion" to "0.0.0.1"
+                )
+
+                if (result.additionalUserInfo?.isNewUser == true) {
+                    profile["createdAt"] = FieldValue.serverTimestamp()
+                }
+
+                firestore.collection("players")
+                    .document(user.uid)
+                    .set(profile, SetOptions.merge())
+                    .addOnCompleteListener {
+                        getSharedPreferences("auth_prefs", MODE_PRIVATE)
+                            .edit()
+                            .putBoolean("remember_me", true)
+                            .apply()
+
+                        restoreGoogleButton(button)
+                        Toast.makeText(
+                            this,
+                            getString(R.string.google_sign_in_success),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+            }
+            .addOnFailureListener { error ->
+                restoreGoogleButton(button)
+                Toast.makeText(
+                    this,
+                    getString(
+                        R.string.google_sign_in_failed_with_reason,
+                        error.localizedMessage ?: getString(R.string.unknown_error)
+                    ),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+    }
+
+    private fun restoreGoogleButton(button: Button) {
+        button.isEnabled = true
+        button.text = getString(R.string.sign_in_with_google)
     }
 
     private fun continueAsGuest(button: Button) {
