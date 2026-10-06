@@ -2,6 +2,7 @@ package com.demetrecerrone.astralforge
 
 import android.app.Activity
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.text.InputType
@@ -31,41 +32,71 @@ class CreateAccountActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val density = resources.displayMetrics.density
-        fun dp(value: Int) = (value * density).toInt()
+        fun dp(value: Int) = AuthUi.dp(this, value)
 
         val scroll = ScrollView(this).apply {
-            setBackgroundColor(Color.rgb(8, 10, 28))
+            background = AuthUi.screenBackground()
+            isFillViewport = true
         }
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(24), dp(36), dp(24), dp(36))
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(dp(22), dp(28), dp(22), dp(36))
         }
 
+        root.addView(AuthUi.brandTitle(this))
+        root.addView(AuthUi.brandSubtitle(this))
+        root.addView(AuthUi.ornament(this))
+
         val title = TextView(this).apply {
-            text = getString(R.string.create_account_title)
-            setTextColor(Color.rgb(236, 230, 255))
-            textSize = 30f
+            text = getString(R.string.create_account_title).uppercase()
+            setTextColor(AuthUi.textPrimary)
+            textSize = 22f
             gravity = Gravity.CENTER
+            letterSpacing = 0.08f
         }
 
         val subtitle = TextView(this).apply {
             text = getString(R.string.create_account_subtitle)
-            setTextColor(Color.rgb(173, 163, 214))
-            textSize = 15f
+            setTextColor(AuthUi.textSecondary)
+            textSize = 13f
             gravity = Gravity.CENTER
-            setPadding(0, dp(8), 0, dp(28))
+            setPadding(dp(8), dp(6), dp(8), dp(20))
+        }
+
+        root.addView(title)
+        root.addView(subtitle)
+
+        val card = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = AuthUi.panelBackground(this@CreateAccountActivity)
+            setPadding(dp(18), dp(20), dp(18), dp(20))
+        }
+
+        root.addView(
+            card,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        fun addToCard(view: View, topMargin: Int = 0) {
+            card.addView(
+                view,
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { this.topMargin = dp(topMargin) }
+            )
         }
 
         fun field(hintText: String, inputTypeValue: Int): EditText =
             EditText(this).apply {
                 hint = hintText
                 inputType = inputTypeValue
-                setTextColor(Color.WHITE)
-                setHintTextColor(Color.rgb(125, 117, 160))
-                setBackgroundColor(Color.rgb(20, 22, 48))
-                setPadding(dp(14), dp(12), dp(14), dp(12))
+                AuthUi.styleField(this@CreateAccountActivity, this)
             }
 
         val displayName = field(
@@ -88,6 +119,11 @@ class CreateAccountActivity : Activity() {
             InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         )
 
+        addToCard(displayName)
+        addToCard(email, 11)
+        addToCard(password, 11)
+        addToCard(confirmPassword, 11)
+
         val terms = CheckBox(this).apply {
             val prefix = getString(R.string.accept_terms_prefix)
             val termsLabel = getString(R.string.terms_of_service)
@@ -103,7 +139,10 @@ class CreateAccountActivity : Activity() {
                     override fun onClick(widget: View) {
                         startActivity(
                             Intent(this@CreateAccountActivity, LegalDocumentActivity::class.java)
-                                .putExtra(LegalDocumentActivity.EXTRA_DOCUMENT, LegalDocumentActivity.DOCUMENT_TERMS)
+                                .putExtra(
+                                    LegalDocumentActivity.EXTRA_DOCUMENT,
+                                    LegalDocumentActivity.DOCUMENT_TERMS
+                                )
                         )
                     }
                 },
@@ -119,7 +158,10 @@ class CreateAccountActivity : Activity() {
                     override fun onClick(widget: View) {
                         startActivity(
                             Intent(this@CreateAccountActivity, LegalDocumentActivity::class.java)
-                                .putExtra(LegalDocumentActivity.EXTRA_DOCUMENT, LegalDocumentActivity.DOCUMENT_PRIVACY)
+                                .putExtra(
+                                    LegalDocumentActivity.EXTRA_DOCUMENT,
+                                    LegalDocumentActivity.DOCUMENT_PRIVACY
+                                )
                         )
                     }
                 },
@@ -131,17 +173,24 @@ class CreateAccountActivity : Activity() {
             text = linkedText
             movementMethod = LinkMovementMethod.getInstance()
             highlightColor = Color.TRANSPARENT
-            setLinkTextColor(Color.rgb(181, 118, 255))
-            setTextColor(Color.rgb(220, 215, 240))
+            setLinkTextColor(AuthUi.violetSoft)
+            setTextColor(AuthUi.textPrimary)
+            textSize = 12f
+            buttonTintList = ColorStateList.valueOf(AuthUi.violet)
         }
+        addToCard(terms, 10)
 
         val updates = CheckBox(this).apply {
             text = getString(R.string.receive_updates)
-            setTextColor(Color.rgb(190, 184, 216))
+            setTextColor(AuthUi.textSecondary)
+            textSize = 12f
+            buttonTintList = ColorStateList.valueOf(AuthUi.violet)
         }
+        addToCard(updates, 2)
 
         val createButton = Button(this).apply {
             text = getString(R.string.create_account_button)
+            AuthUi.stylePrimary(this@CreateAccountActivity, this)
             setOnClickListener {
                 val nameValue = displayName.text.toString().trim()
                 val emailValue = email.text.toString().trim()
@@ -182,42 +231,14 @@ class CreateAccountActivity : Activity() {
                 }
             }
         }
+        addToCard(createButton, 12)
 
         val backToSignIn = Button(this).apply {
             text = getString(R.string.back_to_sign_in)
+            AuthUi.styleSecondary(this@CreateAccountActivity, this)
             setOnClickListener { finish() }
         }
-
-        fun addSpacing() {
-            root.addView(
-                TextView(this),
-                LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(10)
-                )
-            )
-        }
-
-        root.addView(title)
-        root.addView(subtitle)
-
-        listOf(displayName, email, password, confirmPassword).forEach {
-            root.addView(
-                it,
-                LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-            )
-            addSpacing()
-        }
-
-        root.addView(terms)
-        root.addView(updates)
-        addSpacing()
-        root.addView(createButton)
-        addSpacing()
-        root.addView(backToSignIn)
+        addToCard(backToSignIn, 10)
 
         scroll.addView(root)
         setContentView(scroll)
