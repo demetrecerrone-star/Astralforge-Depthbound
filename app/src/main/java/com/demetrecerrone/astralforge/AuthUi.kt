@@ -34,7 +34,7 @@ object AuthUi {
         GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
             cornerRadius = dp(context, 26).toFloat()
-            setColor(Color.argb(210, 7, 10, 31))
+            setColor(Color.argb(188, 7, 10, 31))
             setStroke(dp(context, 1), Color.rgb(82, 57, 145))
         }
 
@@ -127,6 +127,8 @@ object AuthUi {
             gravity = Gravity.CENTER
             typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
             letterSpacing = 0.035f
+            setShadowLayer(18f, 0f, 0f, Color.rgb(137, 82, 255))
+            setLayerType(View.LAYER_TYPE_SOFTWARE, null)
         }
 
     fun brandSubtitle(context: Context): TextView =
