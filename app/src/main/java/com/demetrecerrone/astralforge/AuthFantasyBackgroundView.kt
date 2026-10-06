@@ -55,7 +55,7 @@ class AuthFantasyBackgroundView(context: Context) : View(context) {
         paint.shader = null
 
         paint.color = Color.argb(28, 131, 68, 220)
-        canvas.drawCircle(w * 0.16f, h * 0.40f, w * 0.42f, paint)
+        canvas.drawCircle(w * 0.16f, h * 0.205f, w * 0.42f, paint)
         paint.color = Color.argb(22, 77, 111, 230)
         canvas.drawCircle(w * 0.86f, h * 0.28f, w * 0.38f, paint)
     }
@@ -76,17 +76,26 @@ class AuthFantasyBackgroundView(context: Context) : View(context) {
     }
 
     private fun drawMoon(canvas: Canvas, w: Float, h: Float) {
-        val cx = w * 0.77f
-        val cy = h * 0.20f
-        val r = w * 0.105f
+        val cx = w * 0.58f
+        val cy = h * 0.13f
+        val r = w * 0.18f
 
         for (i in 5 downTo 1) {
             paint.color = Color.argb(10 + i * 8, 176, 140, 255)
             canvas.drawCircle(cx, cy, r * (1f + i * 0.36f), paint)
         }
 
-        paint.color = Color.rgb(221, 222, 244)
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = w * 0.012f
+        paint.color = Color.argb(205, 167, 105, 255)
         canvas.drawCircle(cx, cy, r, paint)
+        paint.strokeWidth = w * 0.004f
+        paint.color = Color.argb(220, 225, 203, 255)
+        canvas.drawCircle(cx, cy, r * 0.98f, paint)
+        paint.style = Paint.Style.FILL
+
+        paint.color = Color.argb(40, 203, 190, 245)
+        canvas.drawCircle(cx, cy, r * 0.90f, paint)
 
         paint.color = Color.argb(22, 88, 78, 128)
         canvas.drawCircle(cx - r * 0.28f, cy - r * 0.12f, r * 0.20f, paint)
@@ -106,44 +115,44 @@ class AuthFantasyBackgroundView(context: Context) : View(context) {
     }
 
     private fun drawCastle(canvas: Canvas, w: Float, h: Float) {
-        val baseY = h * 0.73f
+        val baseY = h * 0.36f
         paint.color = Color.rgb(6, 8, 24)
 
         path.reset()
         path.moveTo(w * 0.04f, baseY)
-        path.lineTo(w * 0.08f, h * 0.58f)
-        path.lineTo(w * 0.12f, h * 0.58f)
-        path.lineTo(w * 0.14f, h * 0.49f)
-        path.lineTo(w * 0.18f, h * 0.58f)
-        path.lineTo(w * 0.22f, h * 0.58f)
-        path.lineTo(w * 0.24f, h * 0.42f)
-        path.lineTo(w * 0.29f, h * 0.34f)
-        path.lineTo(w * 0.34f, h * 0.42f)
-        path.lineTo(w * 0.35f, h * 0.58f)
-        path.lineTo(w * 0.40f, h * 0.58f)
-        path.lineTo(w * 0.42f, h * 0.47f)
-        path.lineTo(w * 0.46f, h * 0.42f)
-        path.lineTo(w * 0.50f, h * 0.47f)
-        path.lineTo(w * 0.52f, h * 0.58f)
-        path.lineTo(w * 0.57f, h * 0.58f)
-        path.lineTo(w * 0.59f, h * 0.51f)
-        path.lineTo(w * 0.63f, h * 0.47f)
-        path.lineTo(w * 0.67f, h * 0.51f)
-        path.lineTo(w * 0.69f, h * 0.58f)
-        path.lineTo(w * 0.76f, h * 0.58f)
-        path.lineTo(w * 0.78f, h * 0.46f)
-        path.lineTo(w * 0.82f, h * 0.40f)
-        path.lineTo(w * 0.86f, h * 0.46f)
-        path.lineTo(w * 0.88f, h * 0.58f)
-        path.lineTo(w * 0.94f, h * 0.58f)
+        path.lineTo(w * 0.08f, h * 0.31f)
+        path.lineTo(w * 0.12f, h * 0.31f)
+        path.lineTo(w * 0.14f, h * 0.25f)
+        path.lineTo(w * 0.18f, h * 0.31f)
+        path.lineTo(w * 0.22f, h * 0.31f)
+        path.lineTo(w * 0.24f, h * 0.22f)
+        path.lineTo(w * 0.29f, h * 0.145f)
+        path.lineTo(w * 0.34f, h * 0.22f)
+        path.lineTo(w * 0.35f, h * 0.31f)
+        path.lineTo(w * 0.40f, h * 0.31f)
+        path.lineTo(w * 0.42f, h * 0.235f)
+        path.lineTo(w * 0.46f, h * 0.22f)
+        path.lineTo(w * 0.50f, h * 0.235f)
+        path.lineTo(w * 0.52f, h * 0.31f)
+        path.lineTo(w * 0.57f, h * 0.31f)
+        path.lineTo(w * 0.59f, h * 0.265f)
+        path.lineTo(w * 0.63f, h * 0.235f)
+        path.lineTo(w * 0.67f, h * 0.265f)
+        path.lineTo(w * 0.69f, h * 0.31f)
+        path.lineTo(w * 0.76f, h * 0.31f)
+        path.lineTo(w * 0.78f, h * 0.23f)
+        path.lineTo(w * 0.82f, h * 0.205f)
+        path.lineTo(w * 0.86f, h * 0.23f)
+        path.lineTo(w * 0.88f, h * 0.31f)
+        path.lineTo(w * 0.94f, h * 0.31f)
         path.lineTo(w * 0.97f, baseY)
         path.close()
         canvas.drawPath(path, paint)
 
         paint.color = Color.argb(135, 98, 54, 180)
         val windows = arrayOf(
-            0.29f to 0.50f, 0.29f to 0.55f, 0.45f to 0.52f, 0.62f to 0.55f,
-            0.82f to 0.50f, 0.82f to 0.55f, 0.18f to 0.62f, 0.72f to 0.62f
+            0.29f to 0.27f, 0.29f to 0.30f, 0.45f to 0.285f, 0.62f to 0.30f,
+            0.82f to 0.27f, 0.82f to 0.30f, 0.18f to 0.33f, 0.72f to 0.33f
         )
         windows.forEach {
             canvas.drawRoundRect(
@@ -170,7 +179,7 @@ class AuthFantasyBackgroundView(context: Context) : View(context) {
             path.reset()
             path.moveTo(cx - rw, cy)
             path.lineTo(cx - rw * 0.45f, cy - rh * 0.55f)
-            path.lineTo(cx + rw * 0.5f, cy - rh * 0.42f)
+            path.lineTo(cx + rw * 0.5f, cy - rh * 0.22f)
             path.lineTo(cx + rw, cy)
             path.lineTo(cx + rw * 0.35f, cy + rh * 0.95f)
             path.lineTo(cx - rw * 0.2f, cy + rh * 0.72f)
@@ -214,7 +223,7 @@ class AuthFantasyBackgroundView(context: Context) : View(context) {
 
     private fun drawBottomVignette(canvas: Canvas, w: Float, h: Float) {
         paint.shader = LinearGradient(
-            0f, h * 0.62f, 0f, h,
+            0f, h * 0.48f, 0f, h,
             intArrayOf(
                 Color.TRANSPARENT,
                 Color.argb(95, 3, 4, 16),
@@ -223,7 +232,7 @@ class AuthFantasyBackgroundView(context: Context) : View(context) {
             floatArrayOf(0f, 0.58f, 1f),
             Shader.TileMode.CLAMP
         )
-        canvas.drawRect(0f, h * 0.62f, w, h, paint)
+        canvas.drawRect(0f, h * 0.48f, w, h, paint)
         paint.shader = null
     }
 }
