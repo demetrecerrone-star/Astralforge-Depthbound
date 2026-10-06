@@ -63,7 +63,7 @@ class MainActivity : Activity() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(dp(22), dp(34), dp(22), dp(40))
+            setPadding(dp(22), dp(24), dp(22), dp(34))
         }
 
         root.addView(AuthUi.brandTitle(this))
@@ -71,18 +71,19 @@ class MainActivity : Activity() {
         root.addView(AuthUi.ornament(this))
 
         val tagline = TextView(this).apply {
-            text = getString(R.string.login_subtitle)
-            setTextColor(AuthUi.textSecondary)
-            textSize = 14f
+            text = "Enter the Depths. Forge what survives."
+            setTextColor(ColorStateList.valueOf(AuthUi.textPrimary).defaultColor)
+            textSize = 16f
             gravity = Gravity.CENTER
-            setPadding(0, 0, 0, dp(22))
+            typeface = android.graphics.Typeface.create(android.graphics.Typeface.SERIF, android.graphics.Typeface.ITALIC)
+            setPadding(0, dp(2), 0, dp(18))
         }
         root.addView(tagline)
 
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            background = AuthUi.panelBackground(this@MainActivity)
-            setPadding(dp(18), dp(20), dp(18), dp(20))
+            background = android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT)
+            setPadding(dp(2), dp(2), dp(2), dp(4))
         }
         root.addView(
             card,
@@ -134,22 +135,15 @@ class MainActivity : Activity() {
             isChecked = authPrefs.getBoolean("remember_me", true)
         }
 
-        val forgotPassword = TextView(this).apply {
+        val forgotPassword = Button(this).apply {
             text = getString(R.string.forgot_password)
-            setTextColor(AuthUi.violetSoft)
-            textSize = 13f
-            gravity = Gravity.END or Gravity.CENTER_VERTICAL
-            setPadding(dp(8), dp(10), 0, dp(10))
+            AuthUi.styleSecondary(this@MainActivity, this)
         }
 
         optionsRow.addView(
             rememberMe,
-            LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-        )
-        optionsRow.addView(
-            forgotPassword,
             LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
         )
@@ -252,22 +246,12 @@ class MainActivity : Activity() {
                 }
         }
 
-        val divider = AuthUi.divider(this, "OR CONTINUE WITH")
-        addToCard(divider, 18)
-
         val googleSignIn = Button(this).apply {
             text = "G   " + getString(R.string.sign_in_with_google)
             AuthUi.styleGoogle(this@MainActivity, this)
             setOnClickListener { signInWithGoogle(this) }
         }
-        addToCard(googleSignIn, 16)
-
-        val guest = Button(this).apply {
-            text = getString(R.string.continue_as_guest)
-            AuthUi.styleSecondary(this@MainActivity, this)
-            setOnClickListener { continueAsGuest(this) }
-        }
-        addToCard(guest, 10)
+        addToCard(googleSignIn, 14)
 
         val createAccount = Button(this).apply {
             text = getString(R.string.create_account_button)
@@ -276,7 +260,16 @@ class MainActivity : Activity() {
                 startActivity(Intent(this@MainActivity, CreateAccountActivity::class.java))
             }
         }
-        addToCard(createAccount, 10)
+        addToCard(createAccount, 12)
+
+        addToCard(forgotPassword, 12)
+
+        val guest = Button(this).apply {
+            text = "♟   " + getString(R.string.continue_as_guest)
+            AuthUi.styleGuest(this@MainActivity, this)
+            setOnClickListener { continueAsGuest(this) }
+        }
+        addToCard(guest, 12)
 
         scroll.addView(root)
         screen.addView(
