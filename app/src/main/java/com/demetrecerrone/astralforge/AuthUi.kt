@@ -103,6 +103,25 @@ object AuthUi {
         }
     }
 
+    fun styleOverlayField(context: Context, field: EditText) {
+        val placeholder = field.hint
+        field.setBackgroundColor(Color.TRANSPARENT)
+        field.setTextColor(Color.WHITE)
+        field.setHintTextColor(Color.rgb(168, 158, 204))
+        field.textSize = 17f
+        field.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+        field.gravity = Gravity.CENTER_VERTICAL
+        field.isSingleLine = true
+        field.setPadding(0, 0, 0, 0)
+        field.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                field.hint = null
+            } else if (field.text.isNullOrEmpty()) {
+                field.hint = placeholder
+            }
+        }
+    }
+
     fun stylePrimary(context: Context, button: Button) {
         button.backgroundTintList = null
         button.background = primaryBackground(context)
