@@ -57,18 +57,8 @@ class MainHubActivity : Activity() {
             return
         }
 
-        val namedHub = resources.getIdentifier("main_hub_exact", "drawable", packageName)
-        val uploadedHub = resources.getIdentifier(
-            "file_0000000080b481f587bdf0c5eea2bf2c",
-            "drawable",
-            packageName
-        )
-        val hubDrawableId = if (namedHub != 0) namedHub else uploadedHub
-
-        if (hubDrawableId == 0) {
-            Toast.makeText(this, "Main hub artwork was not found.", Toast.LENGTH_LONG).show()
-            return
-        }
+        val hubDrawableId =
+            R.drawable.file_0000000080b481f587bdf0c5eea2bf2c
 
         showExactHub(hubDrawableId)
         initializePlayerIfNeeded(user.uid)
