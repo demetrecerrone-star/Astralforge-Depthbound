@@ -5,10 +5,14 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
+import android.view.View
 import android.widget.Button
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -17,9 +21,6 @@ class MainHubActivity : Activity() {
 
     private val auth by lazy { FirebaseAuth.getInstance() }
     private val firestore by lazy { FirebaseFirestore.getInstance() }
-
-    private lateinit var welcomeText: TextView
-    private lateinit var statsText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +31,150 @@ class MainHubActivity : Activity() {
             return
         }
 
+        val exactHubId = resources.getIdentifier(
+            "main_hub_exact",
+            "drawable",
+            packageName
+        )
+
+        if (exactHubId != 0) {
+            showExactHub(exactHubId)
+        } else {
+            showFallbackHub()
+        }
+
+        initializePlayerIfNeeded(user.uid)
+    }
+
+    private fun showExactHub(hubDrawableId: Int) {
+        val screen = FrameLayout(this)
+
+        val background = ImageView(this).apply {
+            setImageResource(hubDrawableId)
+            scaleType = ImageView.ScaleType.CENTER_CROP
+        }
+        screen.addView(
+            background,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+
+        val overlay = ReferenceOverlayLayout(
+            this,
+            941f,
+            1672f
+        )
+
+        fun open(section: String) {
+            startActivity(
+                Intent(this, GameSectionActivity::class.java)
+                    .putExtra(GameSectionActivity.EXTRA_SECTION, section)
+            )
+        }
+
+        fun hotspot(
+            left: Float,
+            top: Float,
+            right: Float,
+            bottom: Float,
+            action: () -> Unit
+        ) {
+            val view = View(this).apply {
+                setBackgroundColor(Color.TRANSPARENT)
+                isClickable = true
+                setOnClickListener { action() }
+            }
+            overlay.addMappedView(view, left, top, right, bottom)
+        }
+
+        // Top profile and event card.
+        hotspot(10f, 8f, 330f, 135f) {
+            open(GameSectionActivity.SECTION_CHARACTER)
+        }
+        hotspot(16f, 175f, 268f, 310f) {
+            open(GameSectionActivity.SECTION_CLASS)
+        }
+
+        // Main city destinations.
+        hotspot(350f, 548f, 595f, 620f) {
+            open(GameSectionActivity.SECTION_DESCEND)
+        }
+        hotspot(38f, 640f, 278f, 724f) {
+            open(GameSectionActivity.SECTION_SHOP)
+        }
+        hotspot(676f, 642f, 934f, 730f) {
+            open(GameSectionActivity.SECTION_EQUIPMENT)
+        }
+        hotspot(348f, 760f, 612f, 850f) {
+            open(GameSectionActivity.SECTION_CLASS)
+        }
+        hotspot(112f, 986f, 367f, 1084f) {
+            open(GameSectionActivity.SECTION_CHARACTER)
+        }
+        hotspot(675f, 928f, 929f, 1030f) {
+            open(GameSectionActivity.SECTION_ASCENSION)
+        }
+        hotspot(700f, 1074f, 936f, 1180f) {
+            open(GameSectionActivity.SECTION_INVENTORY)
+        }
+
+        // Large battle call-to-action.
+        hotspot(255f, 1340f, 686f, 1488f) {
+            open(GameSectionActivity.SECTION_DESCEND)
+        }
+
+        // Bottom navigation.
+        hotspot(0f, 1502f, 184f, 1672f) {
+            // Already on Home.
+        }
+        hotspot(184f, 1502f, 372f, 1672f) {
+            open(GameSectionActivity.SECTION_DESCEND)
+        }
+        hotspot(372f, 1502f, 558f, 1672f) {
+            open(GameSectionActivity.SECTION_CHARACTER)
+        }
+        hotspot(558f, 1502f, 752f, 1672f) {
+            open(GameSectionActivity.SECTION_EQUIPMENT)
+        }
+        hotspot(752f, 1502f, 941f, 1672f) {
+            open(GameSectionActivity.SECTION_SETTINGS)
+        }
+
+        // Top-right utility icons.
+        hotspot(868f, 38f, 936f, 108f) {
+            open(GameSectionActivity.SECTION_SETTINGS)
+        }
+        hotspot(778f, 38f, 826f, 108f) {
+            Toast.makeText(this, "Mail is coming soon.", Toast.LENGTH_SHORT).show()
+        }
+        hotspot(824f, 38f, 870f, 108f) {
+            Toast.makeText(this, "Notifications are coming soon.", Toast.LENGTH_SHORT).show()
+        }
+
+        // Currency/energy plus buttons route to the shop for now.
+        hotspot(742f, 5f, 785f, 43f) {
+            open(GameSectionActivity.SECTION_SHOP)
+        }
+        hotspot(742f, 46f, 785f, 86f) {
+            open(GameSectionActivity.SECTION_SHOP)
+        }
+        hotspot(742f, 88f, 785f, 130f) {
+            open(GameSectionActivity.SECTION_SHOP)
+        }
+
+        screen.addView(
+            overlay,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+        setContentView(screen)
+    }
+
+    private fun showFallbackHub() {
         val density = resources.displayMetrics.density
         fun dp(value: Int) = (value * density).toInt()
 
@@ -49,107 +194,40 @@ class MainHubActivity : Activity() {
             textSize = 30f
             gravity = Gravity.CENTER
         }
+        root.addView(title)
 
-        val subtitle = TextView(this).apply {
-            text = getString(R.string.hub_subtitle)
-            setTextColor(Color.rgb(173, 163, 214))
-            textSize = 14f
-            gravity = Gravity.CENTER
-            setPadding(0, dp(6), 0, dp(22))
-        }
-
-        welcomeText = TextView(this).apply {
-            text = getString(R.string.hub_loading_player)
-            setTextColor(Color.WHITE)
-            textSize = 21f
-            gravity = Gravity.CENTER
-            setPadding(dp(12), dp(14), dp(12), dp(8))
-        }
-
-        statsText = TextView(this).apply {
-            text = getString(R.string.hub_default_stats)
-            setTextColor(Color.rgb(199, 190, 232))
-            textSize = 15f
-            gravity = Gravity.CENTER
-            setPadding(dp(12), dp(4), dp(12), dp(18))
-        }
-
-        val section = TextView(this).apply {
-            text = getString(R.string.hub_actions)
-            setTextColor(Color.rgb(181, 118, 255))
-            textSize = 16f
-            gravity = Gravity.CENTER
-            setPadding(0, dp(8), 0, dp(10))
-        }
-
-        fun hubButton(label: Int, section: String): Button =
-            Button(this).apply {
-                text = getString(label)
-                setOnClickListener {
-                    startActivity(
-                        Intent(this@MainHubActivity, GameSectionActivity::class.java)
-                            .putExtra(GameSectionActivity.EXTRA_SECTION, section)
-                    )
-                }
-            }
-
-        val descend = hubButton(R.string.hub_descend, GameSectionActivity.SECTION_DESCEND)
-        val character = hubButton(R.string.hub_character, GameSectionActivity.SECTION_CHARACTER)
-        val equipment = hubButton(R.string.hub_equipment, GameSectionActivity.SECTION_EQUIPMENT)
-        val classScreen = hubButton(R.string.hub_class, GameSectionActivity.SECTION_CLASS)
-        val ascension = hubButton(R.string.hub_ascension, GameSectionActivity.SECTION_ASCENSION)
-        val inventory = hubButton(R.string.hub_inventory, GameSectionActivity.SECTION_INVENTORY)
-        val shop = hubButton(R.string.hub_shop, GameSectionActivity.SECTION_SHOP)
-        val settings = hubButton(R.string.hub_settings, GameSectionActivity.SECTION_SETTINGS)
-
-        val logout = Button(this).apply {
-            text = getString(R.string.hub_log_out)
-            setOnClickListener {
-                getSharedPreferences("auth_prefs", MODE_PRIVATE)
-                    .edit()
-                    .putBoolean("remember_me", false)
-                    .apply()
-                auth.signOut()
-                returnToLogin()
-            }
-        }
-
-        fun addFullWidth(view: android.view.View, topMargin: Int = 8) {
+        fun addButton(label: String, section: String) {
             root.addView(
-                view,
+                Button(this).apply {
+                    text = label
+                    setOnClickListener {
+                        startActivity(
+                            Intent(this@MainHubActivity, GameSectionActivity::class.java)
+                                .putExtra(GameSectionActivity.EXTRA_SECTION, section)
+                        )
+                    }
+                },
                 LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply { this.topMargin = dp(topMargin) }
+                ).apply { topMargin = dp(10) }
             )
         }
 
-        root.addView(title)
-        root.addView(subtitle)
-        addFullWidth(welcomeText, 0)
-        addFullWidth(statsText, 0)
-        root.addView(section)
-
-        listOf(
-            descend,
-            character,
-            equipment,
-            classScreen,
-            ascension,
-            inventory,
-            shop,
-            settings
-        ).forEach { addFullWidth(it) }
-
-        addFullWidth(logout, 18)
+        addButton("Dungeons / Battle", GameSectionActivity.SECTION_DESCEND)
+        addButton("Heroes", GameSectionActivity.SECTION_CHARACTER)
+        addButton("Forge / Gear", GameSectionActivity.SECTION_EQUIPMENT)
+        addButton("Summon / Class", GameSectionActivity.SECTION_CLASS)
+        addButton("Guild / Ascension", GameSectionActivity.SECTION_ASCENSION)
+        addButton("Quests / Inventory", GameSectionActivity.SECTION_INVENTORY)
+        addButton("Shop", GameSectionActivity.SECTION_SHOP)
+        addButton("Menu / Settings", GameSectionActivity.SECTION_SETTINGS)
 
         scroll.addView(root)
         setContentView(scroll)
-
-        initializeAndLoadPlayer(user.uid)
     }
 
-    private fun initializeAndLoadPlayer(uid: String) {
+    private fun initializePlayerIfNeeded(uid: String) {
         val defaults = mapOf(
             "level" to 1L,
             "xp" to 0L,
@@ -161,39 +239,12 @@ class MainHubActivity : Activity() {
         )
 
         val ref = firestore.collection("players").document(uid)
-        ref.set(defaults, SetOptions.merge())
-            .addOnCompleteListener {
-                ref.get()
-                    .addOnSuccessListener { snapshot ->
-                        val fallbackName =
-                            if (auth.currentUser?.isAnonymous == true) "Guest"
-                            else auth.currentUser?.displayName
-                                ?: auth.currentUser?.email?.substringBefore("@")
-                                ?: "Player"
-
-                        val name = snapshot.getString("displayName") ?: fallbackName
-                        val level = snapshot.getLong("level") ?: 1L
-                        val rank = snapshot.getString("rank") ?: "E"
-                        val gold = snapshot.getLong("gold") ?: 0L
-                        val essence = snapshot.getLong("essence") ?: 0L
-                        val className = snapshot.getString("className") ?: "Unawakened"
-                        val depth = snapshot.getLong("highestDepth") ?: 0L
-
-                        welcomeText.text = getString(R.string.hub_welcome, name)
-                        statsText.text = getString(
-                            R.string.hub_stats_format,
-                            level,
-                            rank,
-                            className,
-                            gold,
-                            essence,
-                            depth
-                        )
-                    }
-                    .addOnFailureListener {
-                        welcomeText.text = getString(R.string.hub_welcome, "Player")
-                        statsText.text = getString(R.string.hub_default_stats)
-                    }
+        ref.get()
+            .addOnSuccessListener { snapshot ->
+                val missing = defaults.filterKeys { key -> !snapshot.contains(key) }
+                if (missing.isNotEmpty()) {
+                    ref.set(missing, SetOptions.merge())
+                }
             }
     }
 
