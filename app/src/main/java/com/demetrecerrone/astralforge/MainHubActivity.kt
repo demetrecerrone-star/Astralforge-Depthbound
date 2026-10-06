@@ -6,11 +6,13 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.View
+import android.view.WindowInsets
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -72,13 +74,20 @@ class MainHubActivity : Activity() {
     }
 
     private fun showExactHub(hubDrawableId: Int) {
-        val screen = FrameLayout(this)
+        val screen = FrameLayout(this).apply {
+            setBackgroundColor(Color.rgb(2, 4, 14))
+        }
+
+        // Keep the hub content above Android's gesture/navigation area.
+        // This prevents the system Home/Back/Recents controls from covering
+        // the game's bottom navigation bar.
+        val content = FrameLayout(this)
 
         val background = ImageView(this).apply {
             setImageResource(hubDrawableId)
             scaleType = ImageView.ScaleType.CENTER_CROP
         }
-        screen.addView(
+        content.addView(
             background,
             FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
@@ -94,14 +103,73 @@ class MainHubActivity : Activity() {
         addActiveQuests(overlay)
         addHubHotspots(overlay)
 
-        screen.addView(
+        content.addView(
             overlay,
             FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
         )
+
+        screen.addView(
+            content,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+
+        // Soft visual cap behind the Android navigation controls. It fades
+        // into the hub rather than creating a harsh black strip.
+        val softCap = View(this).apply {
+            isClickable = false
+            isFocusable = false
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(
+                    Color.TRANSPARENT,
+                    Color.argb(185, 2, 4, 14),
+                    Color.rgb(2, 4, 14)
+                )
+            )
+        }
+        screen.addView(
+            softCap,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                dp(54),
+                Gravity.BOTTOM
+            )
+        )
+
+        screen.setOnApplyWindowInsetsListener { _, insets ->
+            val navBottom =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    insets.getInsets(WindowInsets.Type.navigationBars()).bottom
+                } else {
+                    @Suppress("DEPRECATION")
+                    insets.systemWindowInsetBottom
+                }
+
+            val contentParams = content.layoutParams as FrameLayout.LayoutParams
+            if (contentParams.bottomMargin != navBottom) {
+                contentParams.bottomMargin = navBottom
+                content.layoutParams = contentParams
+            }
+
+            val capParams = softCap.layoutParams as FrameLayout.LayoutParams
+            val desiredCapHeight = navBottom + dp(34)
+            if (capParams.height != desiredCapHeight) {
+                capParams.height = desiredCapHeight
+                capParams.gravity = Gravity.BOTTOM
+                softCap.layoutParams = capParams
+            }
+
+            insets
+        }
+
         setContentView(screen)
+        screen.requestApplyInsets()
     }
 
     private fun addPlayerPanel(overlay: ReferenceOverlayLayout) {
