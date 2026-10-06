@@ -13,8 +13,14 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 
 class CreateAccountActivity : Activity() {
+
+    private val auth by lazy { FirebaseAuth.getInstance() }
+    private val firestore by lazy { FirebaseFirestore.getInstance() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -118,13 +124,13 @@ class CreateAccountActivity : Activity() {
                             Toast.LENGTH_SHORT
                         ).show()
                     }
-                    else -> {
-                        Toast.makeText(
-                            this@CreateAccountActivity,
-                            getString(R.string.account_validation_success),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
+                    else -> createAccount(
+                        nameValue = nameValue,
+                        emailValue = emailValue,
+                        passwordValue = passwordValue,
+                        receiveUpdates = updates.isChecked,
+                        createButton = this
+                    )
                 }
             }
         }
@@ -179,5 +185,80 @@ class CreateAccountActivity : Activity() {
 
         scroll.addView(root)
         setContentView(scroll)
+    }
+
+    private fun createAccount(
+        nameValue: String,
+        emailValue: String,
+        passwordValue: String,
+        receiveUpdates: Boolean,
+        createButton: Button
+    ) {
+        createButton.isEnabled = false
+        createButton.text = getString(R.string.creating_account)
+
+        auth.createUserWithEmailAndPassword(emailValue, passwordValue)
+            .addOnSuccessListener { result ->
+                val user = result.user
+                if (user == null) {
+                    restoreCreateButton(createButton)
+                    Toast.makeText(
+                        this,
+                        getString(R.string.account_create_failed),
+                        Toast.LENGTH_LONG
+                    ).show()
+                    return@addOnSuccessListener
+                }
+
+                val profile = hashMapOf(
+                    "uid" to user.uid,
+                    "displayName" to nameValue,
+                    "email" to emailValue,
+                    "receiveUpdates" to receiveUpdates,
+                    "createdAt" to FieldValue.serverTimestamp(),
+                    "lastLoginAt" to FieldValue.serverTimestamp(),
+                    "accountType" to "email",
+                    "appVersion" to "0.0.0.1"
+                )
+
+                firestore.collection("players")
+                    .document(user.uid)
+                    .set(profile)
+                    .addOnSuccessListener {
+                        Toast.makeText(
+                            this,
+                            getString(R.string.account_created_success),
+                            Toast.LENGTH_LONG
+                        ).show()
+                        finish()
+                    }
+                    .addOnFailureListener { error ->
+                        restoreCreateButton(createButton)
+                        Toast.makeText(
+                            this,
+                            getString(
+                                R.string.profile_save_failed,
+                                error.localizedMessage ?: getString(R.string.unknown_error)
+                            ),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+            }
+            .addOnFailureListener { error ->
+                restoreCreateButton(createButton)
+                Toast.makeText(
+                    this,
+                    getString(
+                        R.string.account_create_failed_with_reason,
+                        error.localizedMessage ?: getString(R.string.unknown_error)
+                    ),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+    }
+
+    private fun restoreCreateButton(button: Button) {
+        button.isEnabled = true
+        button.text = getString(R.string.create_account_button)
     }
 }
