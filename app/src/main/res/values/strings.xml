@@ -27,6 +27,16 @@
     <string name="password_hint">Password</string>
     <string name="confirm_password_hint">Confirm Password</string>
     <string name="accept_terms">I agree to the Terms of Service and Privacy Policy.</string>
+    <string name="accept_terms_prefix">I agree to the </string>
+    <string name="terms_of_service">Terms of Service</string>
+    <string name="accept_terms_connector"> and </string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="terms_of_service_title">Terms of Service</string>
+    <string name="privacy_policy_title">Privacy Policy</string>
+    <string name="legal_last_updated">Last updated: October 6, 2026</string>
+    <string name="back">Back</string>
+    <string name="terms_of_service_body">Welcome to Astralforge: Depthbound. By creating an account or using the app, you agree to use the service lawfully and not attempt to disrupt, exploit, reverse engineer, abuse, or gain unauthorized access to the app, its accounts, or backend services.\n\nYour account is your responsibility. Keep your sign-in credentials secure and provide accurate information when creating an account. Guest accounts may have different recovery limitations than registered accounts.\n\nGame features, balance, content, availability, and progression systems may change as the app is updated. We may suspend or restrict access when necessary to protect players, the service, or enforce these terms.\n\nAll original Astralforge: Depthbound game content, branding, artwork, code, and related materials remain protected by applicable intellectual-property rights.\n\nThe app is provided as available. To the extent permitted by law, we do not guarantee uninterrupted or error-free operation. These terms may be updated when the app or its services change. Continued use after an update means you accept the revised terms.</string>
+    <string name="privacy_policy_body">Astralforge: Depthbound uses account and game data to provide sign-in, save player information, and operate game features.\n\nFor email accounts, we may store your display name, email address, account identifier, update preference, timestamps, and game/profile data. For Google sign-in, Firebase may provide an account identifier, display name, and email address. Guest mode uses an anonymous Firebase account identifier.\n\nAuthentication and player-profile data are handled through Firebase services. We use this information to authenticate players, maintain accounts, save progress and preferences, and support app functionality.\n\nWe do not sell personal information. Optional game-news preferences are used only when you choose to receive those updates.\n\nData may be retained while your account is active or as reasonably needed to operate the service, resolve security or abuse issues, and meet legal obligations. Account and privacy controls may be expanded as the app develops.\n\nThis policy may be updated when features, providers, or data practices change. The current version will remain available inside the app.</string>
     <string name="receive_updates">Send me optional Astralforge game news and updates.</string>
     <string name="create_account_button">Create Account</string>
     <string name="creating_account">Creating Account…</string>
