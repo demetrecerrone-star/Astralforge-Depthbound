@@ -9,7 +9,6 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
-import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -83,26 +82,25 @@ class MainHubActivity : Activity() {
             setPadding(0, dp(8), 0, dp(10))
         }
 
-        fun hubButton(label: Int, feature: String): Button =
+        fun hubButton(label: Int, section: String): Button =
             Button(this).apply {
                 text = getString(label)
                 setOnClickListener {
-                    Toast.makeText(
-                        this@MainHubActivity,
-                        getString(R.string.hub_feature_next, feature),
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    startActivity(
+                        Intent(this@MainHubActivity, GameSectionActivity::class.java)
+                            .putExtra(GameSectionActivity.EXTRA_SECTION, section)
+                    )
                 }
             }
 
-        val descend = hubButton(R.string.hub_descend, getString(R.string.hub_descend))
-        val character = hubButton(R.string.hub_character, getString(R.string.hub_character))
-        val equipment = hubButton(R.string.hub_equipment, getString(R.string.hub_equipment))
-        val classScreen = hubButton(R.string.hub_class, getString(R.string.hub_class))
-        val ascension = hubButton(R.string.hub_ascension, getString(R.string.hub_ascension))
-        val inventory = hubButton(R.string.hub_inventory, getString(R.string.hub_inventory))
-        val shop = hubButton(R.string.hub_shop, getString(R.string.hub_shop))
-        val settings = hubButton(R.string.hub_settings, getString(R.string.hub_settings))
+        val descend = hubButton(R.string.hub_descend, GameSectionActivity.SECTION_DESCEND)
+        val character = hubButton(R.string.hub_character, GameSectionActivity.SECTION_CHARACTER)
+        val equipment = hubButton(R.string.hub_equipment, GameSectionActivity.SECTION_EQUIPMENT)
+        val classScreen = hubButton(R.string.hub_class, GameSectionActivity.SECTION_CLASS)
+        val ascension = hubButton(R.string.hub_ascension, GameSectionActivity.SECTION_ASCENSION)
+        val inventory = hubButton(R.string.hub_inventory, GameSectionActivity.SECTION_INVENTORY)
+        val shop = hubButton(R.string.hub_shop, GameSectionActivity.SECTION_SHOP)
+        val settings = hubButton(R.string.hub_settings, GameSectionActivity.SECTION_SETTINGS)
 
         val logout = Button(this).apply {
             text = getString(R.string.hub_log_out)
