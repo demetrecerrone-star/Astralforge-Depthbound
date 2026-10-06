@@ -451,7 +451,7 @@ class MainHubActivity : Activity() {
         }
         val bar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
             max = 100
-            progress = 0
+            this.progress = 0
             progressTintList = ColorStateList.valueOf(Color.rgb(124, 80, 255))
             progressBackgroundTintList = ColorStateList.valueOf(Color.argb(145, 29, 30, 54))
         }
