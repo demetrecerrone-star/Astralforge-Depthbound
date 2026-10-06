@@ -124,7 +124,7 @@ class MainHubActivity : Activity() {
         val softCap = View(this).apply {
             isClickable = false
             isFocusable = false
-            background = GradientDrawable(
+            this.background = GradientDrawable(
                 GradientDrawable.Orientation.TOP_BOTTOM,
                 intArrayOf(
                     Color.TRANSPARENT,
