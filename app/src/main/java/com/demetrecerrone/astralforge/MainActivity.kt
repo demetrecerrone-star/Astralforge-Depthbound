@@ -41,6 +41,11 @@ class MainActivity : Activity() {
             auth.signOut()
         }
 
+        if (authPrefs.getBoolean("remember_me", true) && auth.currentUser != null) {
+            openHub()
+            return
+        }
+
         val density = resources.displayMetrics.density
         fun dp(value: Int) = (value * density).toInt()
 
@@ -139,11 +144,7 @@ class MainActivity : Activity() {
                                     )
                                     .addOnCompleteListener {
                                         restoreSignInButton(this)
-                                        Toast.makeText(
-                                            this@MainActivity,
-                                            getString(R.string.sign_in_success),
-                                            Toast.LENGTH_LONG
-                                        ).show()
+                                        openHub()
                                     }
                             }
                             .addOnFailureListener { error ->
@@ -369,11 +370,7 @@ class MainActivity : Activity() {
                             .apply()
 
                         restoreGoogleButton(button)
-                        Toast.makeText(
-                            this,
-                            getString(R.string.google_sign_in_success),
-                            Toast.LENGTH_LONG
-                        ).show()
+                        openHub()
                     }
             }
             .addOnFailureListener { error ->
@@ -456,11 +453,7 @@ class MainActivity : Activity() {
             .set(profile, SetOptions.merge())
             .addOnSuccessListener {
                 restoreGuestButton(button)
-                Toast.makeText(
-                    this,
-                    getString(R.string.guest_sign_in_success),
-                    Toast.LENGTH_LONG
-                ).show()
+                openHub()
             }
             .addOnFailureListener { error ->
                 restoreGuestButton(button)
@@ -473,6 +466,15 @@ class MainActivity : Activity() {
                     Toast.LENGTH_LONG
                 ).show()
             }
+    }
+
+    private fun openHub() {
+        startActivity(
+            Intent(this, MainHubActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+        )
+        finish()
     }
 
     private fun restoreGuestButton(button: Button) {
