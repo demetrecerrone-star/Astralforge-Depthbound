@@ -198,11 +198,7 @@ class MainActivity : Activity() {
         val guest = Button(this).apply {
             text = getString(R.string.continue_as_guest)
             setOnClickListener {
-                Toast.makeText(
-                    this@MainActivity,
-                    getString(R.string.guest_flow_placeholder),
-                    Toast.LENGTH_SHORT
-                ).show()
+                continueAsGuest(this)
             }
         }
 
@@ -240,6 +236,92 @@ class MainActivity : Activity() {
 
         scroll.addView(root)
         setContentView(scroll)
+    }
+
+    private fun continueAsGuest(button: Button) {
+        button.isEnabled = false
+        button.text = getString(R.string.starting_guest)
+
+        val authPrefs = getSharedPreferences("auth_prefs", MODE_PRIVATE)
+        authPrefs.edit()
+            .putBoolean("remember_me", true)
+            .apply()
+
+        val existingUser = auth.currentUser
+        if (existingUser != null && existingUser.isAnonymous) {
+            saveGuestProfile(existingUser.uid, button)
+            return
+        }
+
+        if (existingUser != null) {
+            auth.signOut()
+        }
+
+        auth.signInAnonymously()
+            .addOnSuccessListener { result ->
+                val user = result.user
+                if (user == null) {
+                    restoreGuestButton(button)
+                    Toast.makeText(
+                        this,
+                        getString(R.string.guest_sign_in_failed),
+                        Toast.LENGTH_LONG
+                    ).show()
+                    return@addOnSuccessListener
+                }
+
+                saveGuestProfile(user.uid, button)
+            }
+            .addOnFailureListener { error ->
+                restoreGuestButton(button)
+                Toast.makeText(
+                    this,
+                    getString(
+                        R.string.guest_sign_in_failed_with_reason,
+                        error.localizedMessage ?: getString(R.string.unknown_error)
+                    ),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+    }
+
+    private fun saveGuestProfile(uid: String, button: Button) {
+        val profile = mapOf(
+            "uid" to uid,
+            "displayName" to "Guest",
+            "accountType" to "guest",
+            "createdAt" to FieldValue.serverTimestamp(),
+            "lastLoginAt" to FieldValue.serverTimestamp(),
+            "appVersion" to "0.0.0.1"
+        )
+
+        firestore.collection("players")
+            .document(uid)
+            .set(profile, SetOptions.merge())
+            .addOnSuccessListener {
+                restoreGuestButton(button)
+                Toast.makeText(
+                    this,
+                    getString(R.string.guest_sign_in_success),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            .addOnFailureListener { error ->
+                restoreGuestButton(button)
+                Toast.makeText(
+                    this,
+                    getString(
+                        R.string.guest_profile_save_failed,
+                        error.localizedMessage ?: getString(R.string.unknown_error)
+                    ),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+    }
+
+    private fun restoreGuestButton(button: Button) {
+        button.isEnabled = true
+        button.text = getString(R.string.continue_as_guest)
     }
 
     private fun restoreSignInButton(button: Button) {
