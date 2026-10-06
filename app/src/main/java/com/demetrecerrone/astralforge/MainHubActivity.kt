@@ -311,7 +311,7 @@ class MainHubActivity : Activity() {
             )
         }
 
-        overlay.addMappedView(row, 776f, 38f, 936f, 112f)
+        overlay.addMappedView(row, 776f, 126f, 936f, 198f)
     }
 
     private fun utilityButton(
@@ -415,7 +415,7 @@ class MainHubActivity : Activity() {
         banner.addView(eventCountdownText)
         banner.addView(dots)
 
-        overlay.addMappedView(banner, 18f, 168f, 272f, 318f)
+        overlay.addMappedView(banner, 18f, 168f, 342f, 318f)
     }
 
     private data class QuestRowViews(
@@ -465,7 +465,7 @@ class MainHubActivity : Activity() {
         questTwoBar = second.bar
         card.addView(second.root)
 
-        overlay.addMappedView(card, 12f, 1056f, 340f, 1288f)
+        overlay.addMappedView(card, 12f, 1098f, 340f, 1248f)
     }
 
     private fun questRow(
