@@ -108,7 +108,7 @@ class MainActivity : Activity() {
             buttonTintList = ColorStateList.valueOf(AuthUi.violetSoft)
             setPadding(0, 0, 0, 0)
         }
-        overlay.addMappedView(rememberMe, 158f, 826f, 194f, 864f)
+        overlay.addMappedView(rememberMe, 344f, 826f, 384f, 866f)
 
         val passwordEye = android.view.View(this).apply {
             setOnClickListener {
