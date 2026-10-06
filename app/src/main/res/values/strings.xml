@@ -5,10 +5,15 @@
 
     <string name="login_subtitle">Enter the Depths. Forge what survives.</string>
     <string name="sign_in_button">Sign In</string>
+    <string name="signing_in">Signing In…</string>
     <string name="remember_me">Remember Me</string>
     <string name="forgot_password">Forgot Password</string>
-    <string name="sign_in_placeholder">Sign-in form validated. Online authentication will be connected later.</string>
-    <string name="forgot_password_placeholder">Password recovery will connect when online authentication is added.</string>
+    <string name="sign_in_success">Signed in successfully. Main Hub is the next destination to connect.</string>
+    <string name="sign_in_failed">Sign in failed. Please try again.</string>
+    <string name="sign_in_failed_with_reason">Sign in failed: %1$s</string>
+    <string name="error_email_for_reset">Enter your account email first.</string>
+    <string name="password_reset_sent">Password reset email sent.</string>
+    <string name="password_reset_failed">Could not send reset email: %1$s</string>
 
     <string name="create_account_title">Create Account</string>
     <string name="create_account_subtitle">Forge your identity before descending into the Depths.</string>
@@ -19,6 +24,7 @@
     <string name="accept_terms">I agree to the Terms of Service and Privacy Policy.</string>
     <string name="receive_updates">Send me optional Astralforge game news and updates.</string>
     <string name="create_account_button">Create Account</string>
+    <string name="creating_account">Creating Account…</string>
     <string name="back_to_sign_in">Back to Sign In</string>
     <string name="continue_as_guest">Continue as Guest</string>
 
@@ -28,6 +34,10 @@
     <string name="error_password_match">Passwords do not match.</string>
     <string name="error_terms">You must accept the terms to create an account.</string>
 
-    <string name="account_validation_success">Account form validated. Online account service will be connected later.</string>
-    <string name="guest_flow_placeholder">Guest access will connect to the main hub when that screen is added.</string>
+    <string name="account_created_success">Account created and player profile saved.</string>
+    <string name="account_create_failed">Account creation failed. Please try again.</string>
+    <string name="account_create_failed_with_reason">Account creation failed: %1$s</string>
+    <string name="profile_save_failed">Account created, but the player profile could not be saved: %1$s</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="guest_flow_placeholder">Guest mode will be connected after Firebase Anonymous sign-in is enabled.</string>
 </resources>
