@@ -103,12 +103,24 @@ class MainActivity : Activity() {
         )
 
         val rememberMe = CheckBox(this).apply {
-            text = ""
+            buttonDrawable = null
+            gravity = Gravity.CENTER
             isChecked = authPrefs.getBoolean("remember_me", true)
-            buttonTintList = ColorStateList.valueOf(AuthUi.violetSoft)
+            setTextColor(ColorStateList.valueOf(android.graphics.Color.WHITE))
+            textSize = 16f
             setPadding(0, 0, 0, 0)
+            background = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = AuthUi.dp(this@MainActivity, 3).toFloat()
+                setColor(android.graphics.Color.argb(120, 5, 10, 28))
+                setStroke(AuthUi.dp(this@MainActivity, 2), AuthUi.violetSoft)
+            }
+            text = if (isChecked) "✓" else ""
+            setOnCheckedChangeListener { buttonView, checked ->
+                buttonView.text = if (checked) "✓" else ""
+            }
         }
-        overlay.addMappedView(rememberMe, 344f, 826f, 384f, 866f)
+        overlay.addMappedView(rememberMe, 350f, 829f, 390f, 869f)
 
         val passwordEye = android.view.View(this).apply {
             setOnClickListener {
