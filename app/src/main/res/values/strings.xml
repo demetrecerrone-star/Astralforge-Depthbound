@@ -3,6 +3,13 @@
     <string name="app_name">Astralforge: Depthbound</string>
     <string name="source_foundation_ready">Source foundation ready</string>
 
+    <string name="login_subtitle">Enter the Depths. Forge what survives.</string>
+    <string name="sign_in_button">Sign In</string>
+    <string name="remember_me">Remember Me</string>
+    <string name="forgot_password">Forgot Password</string>
+    <string name="sign_in_placeholder">Sign-in form validated. Online authentication will be connected later.</string>
+    <string name="forgot_password_placeholder">Password recovery will connect when online authentication is added.</string>
+
     <string name="create_account_title">Create Account</string>
     <string name="create_account_subtitle">Forge your identity before descending into the Depths.</string>
     <string name="display_name_hint">Display Name</string>
@@ -22,5 +29,5 @@
     <string name="error_terms">You must accept the terms to create an account.</string>
 
     <string name="account_validation_success">Account form validated. Online account service will be connected later.</string>
-    <string name="guest_flow_placeholder">Guest flow will connect to the main hub when that screen is added.</string>
+    <string name="guest_flow_placeholder">Guest access will connect to the main hub when that screen is added.</string>
 </resources>
