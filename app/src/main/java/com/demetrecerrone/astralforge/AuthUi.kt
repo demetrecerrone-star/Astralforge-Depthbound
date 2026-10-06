@@ -79,6 +79,8 @@ object AuthUi {
         }
 
     fun styleField(context: Context, field: EditText) {
+        val placeholder = field.hint
+
         field.background = fieldBackground(context)
         field.setTextColor(Color.WHITE)
         field.setHintTextColor(Color.rgb(139, 132, 171))
@@ -91,6 +93,14 @@ object AuthUi {
             dp(context, 14)
         )
         field.minHeight = dp(context, 56)
+
+        field.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                field.hint = null
+            } else if (field.text.isNullOrEmpty()) {
+                field.hint = placeholder
+            }
+        }
     }
 
     fun stylePrimary(context: Context, button: Button) {
