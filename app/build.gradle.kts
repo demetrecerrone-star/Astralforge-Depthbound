@@ -16,6 +16,15 @@ android {
         versionName = "0.0.0.1"
     }
 
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("astralforge-debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
