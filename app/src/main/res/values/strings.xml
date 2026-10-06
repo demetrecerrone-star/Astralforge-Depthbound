@@ -2,4 +2,25 @@
 <resources>
     <string name="app_name">Astralforge: Depthbound</string>
     <string name="source_foundation_ready">Source foundation ready</string>
+
+    <string name="create_account_title">Create Account</string>
+    <string name="create_account_subtitle">Forge your identity before descending into the Depths.</string>
+    <string name="display_name_hint">Display Name</string>
+    <string name="email_hint">Email Address</string>
+    <string name="password_hint">Password</string>
+    <string name="confirm_password_hint">Confirm Password</string>
+    <string name="accept_terms">I agree to the Terms of Service and Privacy Policy.</string>
+    <string name="receive_updates">Send me optional Astralforge game news and updates.</string>
+    <string name="create_account_button">Create Account</string>
+    <string name="back_to_sign_in">Back to Sign In</string>
+    <string name="continue_as_guest">Continue as Guest</string>
+
+    <string name="error_display_name">Display name must be at least 3 characters.</string>
+    <string name="error_email">Enter a valid email address.</string>
+    <string name="error_password_length">Password must be at least 8 characters.</string>
+    <string name="error_password_match">Passwords do not match.</string>
+    <string name="error_terms">You must accept the terms to create an account.</string>
+
+    <string name="account_validation_success">Account form validated. Online account service will be connected later.</string>
+    <string name="guest_flow_placeholder">Guest flow will connect to the main hub when that screen is added.</string>
 </resources>
