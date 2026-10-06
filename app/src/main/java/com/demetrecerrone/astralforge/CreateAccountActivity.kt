@@ -261,12 +261,11 @@ class CreateAccountActivity : Activity() {
                     .document(user.uid)
                     .set(profile)
                     .addOnSuccessListener {
-                        Toast.makeText(
-                            this,
-                            getString(R.string.account_created_success),
-                            Toast.LENGTH_LONG
-                        ).show()
-                        finish()
+                        getSharedPreferences("auth_prefs", MODE_PRIVATE)
+                            .edit()
+                            .putBoolean("remember_me", true)
+                            .apply()
+                        openHub()
                     }
                     .addOnFailureListener { error ->
                         restoreCreateButton(createButton)
@@ -291,6 +290,15 @@ class CreateAccountActivity : Activity() {
                     Toast.LENGTH_LONG
                 ).show()
             }
+    }
+
+    private fun openHub() {
+        startActivity(
+            Intent(this, MainHubActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+        )
+        finish()
     }
 
     private fun restoreCreateButton(button: Button) {
