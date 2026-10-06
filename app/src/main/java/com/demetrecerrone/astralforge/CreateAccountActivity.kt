@@ -43,16 +43,12 @@ class CreateAccountActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val exactArtwork = EmbeddedImageLoader.decodeNamed(
+        val exactArtwork = android.graphics.BitmapFactory.decodeResource(
             resources,
-            packageName,
-            "create_exact",
-            4
+            R.drawable.create_exact
         )
-        if (exactArtwork != null) {
-            showExactCreateAccount(exactArtwork)
-            return
-        }
+        showExactCreateAccount(exactArtwork)
+        return
 
         fun dp(value: Int) = AuthUi.dp(this, value)
 
