@@ -14,10 +14,23 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 
 class MainActivity : Activity() {
+
+    private val auth by lazy { FirebaseAuth.getInstance() }
+    private val firestore by lazy { FirebaseFirestore.getInstance() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val authPrefs = getSharedPreferences("auth_prefs", MODE_PRIVATE)
+        if (!authPrefs.getBoolean("remember_me", true) && auth.currentUser != null) {
+            auth.signOut()
+        }
 
         val density = resources.displayMetrics.density
         fun dp(value: Int) = (value * density).toInt()
@@ -70,6 +83,7 @@ class MainActivity : Activity() {
         val rememberMe = CheckBox(this).apply {
             text = getString(R.string.remember_me)
             setTextColor(Color.rgb(220, 215, 240))
+            isChecked = authPrefs.getBoolean("remember_me", true)
         }
 
         val signIn = Button(this).apply {
@@ -87,11 +101,54 @@ class MainActivity : Activity() {
                         password.error = getString(R.string.error_password_length)
                         password.requestFocus()
                     }
-                    else -> Toast.makeText(
-                        this@MainActivity,
-                        getString(R.string.sign_in_placeholder),
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    else -> {
+                        isEnabled = false
+                        text = getString(R.string.signing_in)
+
+                        auth.signInWithEmailAndPassword(emailValue, passwordValue)
+                            .addOnSuccessListener { result ->
+                                val user = result.user
+                                if (user == null) {
+                                    restoreSignInButton(this)
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        getString(R.string.sign_in_failed),
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                    return@addOnSuccessListener
+                                }
+
+                                authPrefs.edit()
+                                    .putBoolean("remember_me", rememberMe.isChecked)
+                                    .apply()
+
+                                firestore.collection("players")
+                                    .document(user.uid)
+                                    .set(
+                                        mapOf("lastLoginAt" to FieldValue.serverTimestamp()),
+                                        SetOptions.merge()
+                                    )
+                                    .addOnCompleteListener {
+                                        restoreSignInButton(this)
+                                        Toast.makeText(
+                                            this@MainActivity,
+                                            getString(R.string.sign_in_success),
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                            }
+                            .addOnFailureListener { error ->
+                                restoreSignInButton(this)
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    getString(
+                                        R.string.sign_in_failed_with_reason,
+                                        error.localizedMessage ?: getString(R.string.unknown_error)
+                                    ),
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                    }
                 }
             }
         }
@@ -106,11 +163,35 @@ class MainActivity : Activity() {
         val forgotPassword = Button(this).apply {
             text = getString(R.string.forgot_password)
             setOnClickListener {
-                Toast.makeText(
-                    this@MainActivity,
-                    getString(R.string.forgot_password_placeholder),
-                    Toast.LENGTH_SHORT
-                ).show()
+                val emailValue = email.text.toString().trim()
+
+                if (!Patterns.EMAIL_ADDRESS.matcher(emailValue).matches()) {
+                    email.error = getString(R.string.error_email_for_reset)
+                    email.requestFocus()
+                    return@setOnClickListener
+                }
+
+                isEnabled = false
+                auth.sendPasswordResetEmail(emailValue)
+                    .addOnSuccessListener {
+                        isEnabled = true
+                        Toast.makeText(
+                            this@MainActivity,
+                            getString(R.string.password_reset_sent),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                    .addOnFailureListener { error ->
+                        isEnabled = true
+                        Toast.makeText(
+                            this@MainActivity,
+                            getString(
+                                R.string.password_reset_failed,
+                                error.localizedMessage ?: getString(R.string.unknown_error)
+                            ),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
             }
         }
 
@@ -159,5 +240,10 @@ class MainActivity : Activity() {
 
         scroll.addView(root)
         setContentView(scroll)
+    }
+
+    private fun restoreSignInButton(button: Button) {
+        button.isEnabled = true
+        button.text = getString(R.string.sign_in_button)
     }
 }
