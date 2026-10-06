@@ -47,16 +47,12 @@ class MainActivity : Activity() {
             return
         }
 
-        val exactArtwork = EmbeddedImageLoader.decodeNamed(
+        val exactArtwork = android.graphics.BitmapFactory.decodeResource(
             resources,
-            packageName,
-            "login_exact",
-            4
+            R.drawable.login_exact
         )
-        if (exactArtwork != null) {
-            showExactLogin(exactArtwork, authPrefs)
-            return
-        }
+        showExactLogin(exactArtwork, authPrefs)
+        return
 
         fun dp(value: Int) = AuthUi.dp(this, value)
 
