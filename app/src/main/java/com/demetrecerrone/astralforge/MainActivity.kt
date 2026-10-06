@@ -10,6 +10,7 @@ import android.view.Gravity
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -48,8 +49,14 @@ class MainActivity : Activity() {
 
         fun dp(value: Int) = AuthUi.dp(this, value)
 
-        val scroll = ScrollView(this).apply {
+        val screen = FrameLayout(this).apply {
             background = AuthUi.screenBackground()
+        }
+
+        val fantasyBackground = AuthFantasyBackgroundView(this)
+
+        val scroll = ScrollView(this).apply {
+            setBackgroundColor(android.graphics.Color.TRANSPARENT)
             isFillViewport = true
         }
 
@@ -272,7 +279,21 @@ class MainActivity : Activity() {
         addToCard(createAccount, 10)
 
         scroll.addView(root)
-        setContentView(scroll)
+        screen.addView(
+            fantasyBackground,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+        screen.addView(
+            scroll,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+        setContentView(screen)
     }
 
     private fun signInWithGoogle(button: Button) {
