@@ -2,7 +2,7 @@ package com.demetrecerrone.astralforge
 
 import android.app.Activity
 import android.content.Intent
-import android.graphics.Color
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.text.InputType
 import android.util.Patterns
@@ -46,62 +46,111 @@ class MainActivity : Activity() {
             return
         }
 
-        val density = resources.displayMetrics.density
-        fun dp(value: Int) = (value * density).toInt()
+        fun dp(value: Int) = AuthUi.dp(this, value)
 
         val scroll = ScrollView(this).apply {
-            setBackgroundColor(Color.rgb(8, 10, 28))
+            background = AuthUi.screenBackground()
+            isFillViewport = true
         }
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(dp(24), dp(48), dp(24), dp(36))
+            setPadding(dp(22), dp(34), dp(22), dp(40))
         }
 
-        val title = TextView(this).apply {
-            text = getString(R.string.app_name)
-            setTextColor(Color.rgb(236, 230, 255))
-            textSize = 30f
-            gravity = Gravity.CENTER
-        }
+        root.addView(AuthUi.brandTitle(this))
+        root.addView(AuthUi.brandSubtitle(this))
+        root.addView(AuthUi.ornament(this))
 
-        val subtitle = TextView(this).apply {
+        val tagline = TextView(this).apply {
             text = getString(R.string.login_subtitle)
-            setTextColor(Color.rgb(173, 163, 214))
-            textSize = 15f
+            setTextColor(AuthUi.textSecondary)
+            textSize = 14f
             gravity = Gravity.CENTER
-            setPadding(0, dp(8), 0, dp(28))
+            setPadding(0, 0, 0, dp(22))
+        }
+        root.addView(tagline)
+
+        val card = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = AuthUi.panelBackground(this@MainActivity)
+            setPadding(dp(18), dp(20), dp(18), dp(20))
+        }
+        root.addView(
+            card,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        fun addToCard(view: android.view.View, topMargin: Int = 0) {
+            card.addView(
+                view,
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { this.topMargin = dp(topMargin) }
+            )
         }
 
         fun field(hintText: String, inputTypeValue: Int): EditText =
             EditText(this).apply {
                 hint = hintText
                 inputType = inputTypeValue
-                setTextColor(Color.WHITE)
-                setHintTextColor(Color.rgb(125, 117, 160))
-                setBackgroundColor(Color.rgb(20, 22, 48))
-                setPadding(dp(14), dp(12), dp(14), dp(12))
+                AuthUi.styleField(this@MainActivity, this)
             }
 
         val email = field(
             getString(R.string.email_hint),
             InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
         )
-
         val password = field(
             getString(R.string.password_hint),
             InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         )
 
+        addToCard(email)
+        addToCard(password, 12)
+
+        val optionsRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
         val rememberMe = CheckBox(this).apply {
             text = getString(R.string.remember_me)
-            setTextColor(Color.rgb(220, 215, 240))
+            setTextColor(AuthUi.textPrimary)
+            textSize = 13f
+            buttonTintList = ColorStateList.valueOf(AuthUi.violet)
             isChecked = authPrefs.getBoolean("remember_me", true)
         }
 
+        val forgotPassword = TextView(this).apply {
+            text = getString(R.string.forgot_password)
+            setTextColor(AuthUi.violetSoft)
+            textSize = 13f
+            gravity = Gravity.END or Gravity.CENTER_VERTICAL
+            setPadding(dp(8), dp(10), 0, dp(10))
+        }
+
+        optionsRow.addView(
+            rememberMe,
+            LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        )
+        optionsRow.addView(
+            forgotPassword,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+        addToCard(optionsRow, 4)
+
         val signIn = Button(this).apply {
             text = getString(R.string.sign_in_button)
+            AuthUi.stylePrimary(this@MainActivity, this)
             setOnClickListener {
                 val emailValue = email.text.toString().trim()
                 val passwordValue = password.text.toString()
@@ -162,96 +211,65 @@ class MainActivity : Activity() {
                 }
             }
         }
+        addToCard(signIn, 10)
+
+        forgotPassword.setOnClickListener {
+            val emailValue = email.text.toString().trim()
+
+            if (!Patterns.EMAIL_ADDRESS.matcher(emailValue).matches()) {
+                email.error = getString(R.string.error_email_for_reset)
+                email.requestFocus()
+                return@setOnClickListener
+            }
+
+            forgotPassword.isEnabled = false
+            auth.sendPasswordResetEmail(emailValue)
+                .addOnSuccessListener {
+                    forgotPassword.isEnabled = true
+                    Toast.makeText(
+                        this@MainActivity,
+                        getString(R.string.password_reset_sent),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+                .addOnFailureListener { error ->
+                    forgotPassword.isEnabled = true
+                    Toast.makeText(
+                        this@MainActivity,
+                        getString(
+                            R.string.password_reset_failed,
+                            error.localizedMessage ?: getString(R.string.unknown_error)
+                        ),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+        }
+
+        val divider = AuthUi.divider(this, "OR CONTINUE WITH")
+        addToCard(divider, 18)
 
         val googleSignIn = Button(this).apply {
-            text = getString(R.string.sign_in_with_google)
-            setOnClickListener {
-                signInWithGoogle(this)
-            }
+            text = "G   " + getString(R.string.sign_in_with_google)
+            AuthUi.styleGoogle(this@MainActivity, this)
+            setOnClickListener { signInWithGoogle(this) }
         }
+        addToCard(googleSignIn, 16)
+
+        val guest = Button(this).apply {
+            text = getString(R.string.continue_as_guest)
+            AuthUi.styleSecondary(this@MainActivity, this)
+            setOnClickListener { continueAsGuest(this) }
+        }
+        addToCard(guest, 10)
 
         val createAccount = Button(this).apply {
             text = getString(R.string.create_account_button)
+            AuthUi.styleSecondary(this@MainActivity, this)
             setOnClickListener {
                 startActivity(Intent(this@MainActivity, CreateAccountActivity::class.java))
             }
         }
-
-        val forgotPassword = Button(this).apply {
-            text = getString(R.string.forgot_password)
-            setOnClickListener {
-                val emailValue = email.text.toString().trim()
-
-                if (!Patterns.EMAIL_ADDRESS.matcher(emailValue).matches()) {
-                    email.error = getString(R.string.error_email_for_reset)
-                    email.requestFocus()
-                    return@setOnClickListener
-                }
-
-                isEnabled = false
-                auth.sendPasswordResetEmail(emailValue)
-                    .addOnSuccessListener {
-                        isEnabled = true
-                        Toast.makeText(
-                            this@MainActivity,
-                            getString(R.string.password_reset_sent),
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                    .addOnFailureListener { error ->
-                        isEnabled = true
-                        Toast.makeText(
-                            this@MainActivity,
-                            getString(
-                                R.string.password_reset_failed,
-                                error.localizedMessage ?: getString(R.string.unknown_error)
-                            ),
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-            }
-        }
-
-        val guest = Button(this).apply {
-            text = getString(R.string.continue_as_guest)
-            setOnClickListener {
-                continueAsGuest(this)
-            }
-        }
-
-        fun spacer(height: Int = 10) {
-            root.addView(
-                TextView(this),
-                LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dp(height)
-                )
-            )
-        }
-
-        root.addView(title)
-        root.addView(subtitle)
-
-        listOf(email, password).forEach {
-            root.addView(
-                it,
-                LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-            )
-            spacer()
-        }
-
-        root.addView(rememberMe)
-        spacer()
-        root.addView(signIn)
-        spacer()
-        root.addView(googleSignIn)
-        spacer()
-        root.addView(createAccount)
-        root.addView(forgotPassword)
-        root.addView(guest)
+        addToCard(createAccount, 10)
 
         scroll.addView(root)
         setContentView(scroll)
@@ -388,7 +406,7 @@ class MainActivity : Activity() {
 
     private fun restoreGoogleButton(button: Button) {
         button.isEnabled = true
-        button.text = getString(R.string.sign_in_with_google)
+        button.text = "G   " + getString(R.string.sign_in_with_google)
     }
 
     private fun continueAsGuest(button: Button) {
