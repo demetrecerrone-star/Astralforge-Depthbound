@@ -39,5 +39,9 @@
     <string name="account_create_failed_with_reason">Account creation failed: %1$s</string>
     <string name="profile_save_failed">Account created, but the player profile could not be saved: %1$s</string>
     <string name="unknown_error">Unknown error</string>
-    <string name="guest_flow_placeholder">Guest mode will be connected after Firebase Anonymous sign-in is enabled.</string>
+    <string name="starting_guest">Starting Guest…</string>
+    <string name="guest_sign_in_success">Guest profile ready. Main Hub is the next destination to connect.</string>
+    <string name="guest_sign_in_failed">Guest sign in failed. Please try again.</string>
+    <string name="guest_sign_in_failed_with_reason">Guest sign in failed: %1$s</string>
+    <string name="guest_profile_save_failed">Guest signed in, but the player profile could not be saved: %1$s</string>
 </resources>
