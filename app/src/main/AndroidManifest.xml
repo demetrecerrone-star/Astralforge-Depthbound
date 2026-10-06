@@ -9,6 +9,10 @@
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen">
         <activity
+            android:name=".LegalDocumentActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".CreateAccountActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
