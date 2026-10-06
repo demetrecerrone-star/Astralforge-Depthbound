@@ -49,7 +49,7 @@ class CreateAccountActivity : Activity() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(dp(22), dp(28), dp(22), dp(36))
+            setPadding(dp(20), dp(20), dp(20), dp(28))
         }
 
         root.addView(AuthUi.brandTitle(this))
@@ -57,19 +57,20 @@ class CreateAccountActivity : Activity() {
         root.addView(AuthUi.ornament(this))
 
         val title = TextView(this).apply {
-            text = getString(R.string.create_account_title).uppercase()
-            setTextColor(AuthUi.textPrimary)
-            textSize = 22f
+            text = "Create Account"
+            setTextColor(Color.rgb(246, 234, 222))
+            textSize = 32f
             gravity = Gravity.CENTER
-            letterSpacing = 0.08f
+            typeface = android.graphics.Typeface.create(android.graphics.Typeface.SERIF, android.graphics.Typeface.BOLD)
         }
 
         val subtitle = TextView(this).apply {
-            text = getString(R.string.create_account_subtitle)
+            text = "Forge your identity before descending\ninto the Depths."
             setTextColor(AuthUi.textSecondary)
-            textSize = 13f
+            textSize = 16f
             gravity = Gravity.CENTER
-            setPadding(dp(8), dp(6), dp(8), dp(20))
+            typeface = android.graphics.Typeface.create(android.graphics.Typeface.SERIF, android.graphics.Typeface.NORMAL)
+            setPadding(dp(8), dp(8), dp(8), dp(18))
         }
 
         root.addView(title)
@@ -78,7 +79,7 @@ class CreateAccountActivity : Activity() {
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             background = AuthUi.panelBackground(this@CreateAccountActivity)
-            setPadding(dp(18), dp(20), dp(18), dp(20))
+            setPadding(dp(16), dp(18), dp(16), dp(18))
         }
 
         root.addView(
@@ -182,16 +183,18 @@ class CreateAccountActivity : Activity() {
             highlightColor = Color.TRANSPARENT
             setLinkTextColor(AuthUi.violetSoft)
             setTextColor(AuthUi.textPrimary)
-            textSize = 12f
-            buttonTintList = ColorStateList.valueOf(AuthUi.violet)
+            textSize = 13f
+            typeface = android.graphics.Typeface.create(android.graphics.Typeface.SERIF, android.graphics.Typeface.NORMAL)
+            buttonTintList = ColorStateList.valueOf(AuthUi.violetSoft)
         }
         addToCard(terms, 10)
 
         val updates = CheckBox(this).apply {
             text = getString(R.string.receive_updates)
             setTextColor(AuthUi.textSecondary)
-            textSize = 12f
-            buttonTintList = ColorStateList.valueOf(AuthUi.violet)
+            textSize = 13f
+            typeface = android.graphics.Typeface.create(android.graphics.Typeface.SERIF, android.graphics.Typeface.NORMAL)
+            buttonTintList = ColorStateList.valueOf(AuthUi.violetSoft)
         }
         addToCard(updates, 2)
 
