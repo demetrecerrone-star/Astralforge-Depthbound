@@ -59,4 +59,22 @@
     <string name="guest_sign_in_failed">Guest sign in failed. Please try again.</string>
     <string name="guest_sign_in_failed_with_reason">Guest sign in failed: %1$s</string>
     <string name="guest_profile_save_failed">Guest signed in, but the player profile could not be saved: %1$s</string>
+
+    <string name="hub_title">Depthbound Hub</string>
+    <string name="hub_subtitle">Prepare. Grow stronger. Descend deeper.</string>
+    <string name="hub_loading_player">Loading player…</string>
+    <string name="hub_welcome">Welcome, %1$s</string>
+    <string name="hub_default_stats">Level 1  •  Rank E  •  Unawakened\nGold 0  •  Essence 0  •  Deepest Floor 0</string>
+    <string name="hub_stats_format">Level %1$d  •  Rank %2$s  •  %3$s\nGold %4$d  •  Essence %5$d  •  Deepest Floor %6$d</string>
+    <string name="hub_actions">MAIN HUB</string>
+    <string name="hub_descend">Descend</string>
+    <string name="hub_character">Character</string>
+    <string name="hub_equipment">Equipment</string>
+    <string name="hub_class">Class</string>
+    <string name="hub_ascension">Ascension</string>
+    <string name="hub_inventory">Inventory</string>
+    <string name="hub_shop">Shop</string>
+    <string name="hub_settings">Settings</string>
+    <string name="hub_log_out">Log Out</string>
+    <string name="hub_feature_next">%1$s is connected to the hub and will be built next.</string>
 </resources>
