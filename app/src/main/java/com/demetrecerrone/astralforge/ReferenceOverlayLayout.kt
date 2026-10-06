@@ -2,7 +2,6 @@ package com.demetrecerrone.astralforge
 
 import android.content.Context
 import android.view.View
-import android.view.ViewGroup
 import android.widget.FrameLayout
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -10,7 +9,8 @@ import kotlin.math.roundToInt
 class ReferenceOverlayLayout(
     context: Context,
     private val referenceWidth: Float = 864f,
-    private val referenceHeight: Float = 1536f
+    private val referenceHeight: Float = 1536f,
+    private val stretchToFit: Boolean = false
 ) : FrameLayout(context) {
 
     data class ReferenceRect(
@@ -34,6 +34,17 @@ class ReferenceOverlayLayout(
     }
 
     private fun transform(rect: ReferenceRect): IntArray {
+        if (stretchToFit) {
+            val scaleX = width / referenceWidth
+            val scaleY = height / referenceHeight
+            return intArrayOf(
+                (rect.left * scaleX).roundToInt(),
+                (rect.top * scaleY).roundToInt(),
+                (rect.right * scaleX).roundToInt(),
+                (rect.bottom * scaleY).roundToInt()
+            )
+        }
+
         val scale = max(width / referenceWidth, height / referenceHeight)
         val renderedWidth = referenceWidth * scale
         val renderedHeight = referenceHeight * scale
@@ -53,9 +64,28 @@ class ReferenceOverlayLayout(
         setMeasuredDimension(w, h)
 
         mappedRects.forEach { (child, rect) ->
-            val scale = max(w / referenceWidth, h / referenceHeight)
-            val cw = ((rect.right - rect.left) * scale).roundToInt().coerceAtLeast(1)
-            val ch = ((rect.bottom - rect.top) * scale).roundToInt().coerceAtLeast(1)
+            val cw: Int
+            val ch: Int
+
+            if (stretchToFit) {
+                val scaleX = w / referenceWidth
+                val scaleY = h / referenceHeight
+                cw = ((rect.right - rect.left) * scaleX)
+                    .roundToInt()
+                    .coerceAtLeast(1)
+                ch = ((rect.bottom - rect.top) * scaleY)
+                    .roundToInt()
+                    .coerceAtLeast(1)
+            } else {
+                val scale = max(w / referenceWidth, h / referenceHeight)
+                cw = ((rect.right - rect.left) * scale)
+                    .roundToInt()
+                    .coerceAtLeast(1)
+                ch = ((rect.bottom - rect.top) * scale)
+                    .roundToInt()
+                    .coerceAtLeast(1)
+            }
+
             child.measure(
                 MeasureSpec.makeMeasureSpec(cw, MeasureSpec.EXACTLY),
                 MeasureSpec.makeMeasureSpec(ch, MeasureSpec.EXACTLY)
