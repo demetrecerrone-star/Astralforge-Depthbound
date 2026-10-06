@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "994438088871",
+    "project_id": "astralforge-depthbound",
+    "storage_bucket": "astralforge-depthbound.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:994438088871:android:86325fdd0f6b63ccc83382",
+        "android_client_info": {
+          "package_name": "Com.demetrecerrone.astralforge"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvtJJXUJfPvEJBpdT_mp4cOUgkDkZw0oI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:994438088871:android:912336c26a115496c83382",
+        "android_client_info": {
+          "package_name": "com.demetrecerrone.astralforge"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvtJJXUJfPvEJBpdT_mp4cOUgkDkZw0oI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
