@@ -8,6 +8,11 @@
     <string name="signing_in">Signing In…</string>
     <string name="remember_me">Remember Me</string>
     <string name="forgot_password">Forgot Password</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="signing_in_with_google">Signing in with Google…</string>
+    <string name="google_sign_in_success">Google account connected. Main Hub is the next destination to connect.</string>
+    <string name="google_sign_in_failed">Google sign in failed. Please try again.</string>
+    <string name="google_sign_in_failed_with_reason">Google sign in failed: %1$s</string>
     <string name="sign_in_success">Signed in successfully. Main Hub is the next destination to connect.</string>
     <string name="sign_in_failed">Sign in failed. Please try again.</string>
     <string name="sign_in_failed_with_reason">Sign in failed: %1$s</string>
