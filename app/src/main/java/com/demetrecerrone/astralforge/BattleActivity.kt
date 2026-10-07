@@ -61,6 +61,7 @@ class BattleActivity : Activity() {
     private var enemyAttack = 1
     private var enemyDefense = 0
     private var depth = 1
+    private var enemyEntityId = ""
     private var autoBattle = true
     private var busy = false
     private var battleOver = false
@@ -517,10 +518,21 @@ class BattleActivity : Activity() {
     private fun setupBattleStats() {
         progress = ProgressionStore.load(this)
         playerHp = progress.maxHp
-        enemyMaxHp = 105 + depth * 35
+
+        val boss = EntitySpriteStore.isBossDepth(depth)
+        val baseHp = 105 + depth * 35
+        enemyMaxHp =
+            if (boss) (baseHp * 1.65f).roundToInt()
+            else baseHp
         enemyHp = enemyMaxHp
-        enemyAttack = 10 + depth * 4
-        enemyDefense = 3 + depth * 2
+
+        val baseAttack = 10 + depth * 4
+        enemyAttack =
+            if (boss) (baseAttack * 1.30f).roundToInt()
+            else baseAttack
+        enemyDefense =
+            3 + depth * 2 + if (boss) 3 else 0
+
         playerHpBar.max = progress.maxHp
         playerHpBar.progress = playerHp
         enemyHpBar.max = enemyMaxHp
@@ -534,59 +546,64 @@ class BattleActivity : Activity() {
             playerHp.coerceAtLeast(0).toString() + " / " + progress.maxHp
         enemyHpText.text =
             enemyHp.coerceAtLeast(0).toString() + " / " + enemyMaxHp
-        depthText.text = "DEPTH " + depth + "  •  WAVE 1"
+
+        depthText.text =
+            if (EntitySpriteStore.isBossDepth(depth)) {
+                "DEPTH " + depth + "  •  BOSS"
+            } else {
+                "DEPTH " + depth + "  •  WAVE 1"
+            }
     }
 
     private fun loadSpritesAsync() {
         Thread {
-            val playerPick = SpriteZipStore.pickIdle(this, "characters.zip")
-            val enemyPick =
-                SpriteZipStore.pickIdle(this, "monsters-first-dungeon.zip")
+            val playerId =
+                EntitySpriteStore.characterIdForClass(
+                    progress.playerClass
+                )
+            enemyEntityId =
+                EntitySpriteStore.monsterIdForDepth(depth)
 
-            val loadedPlayerAttack =
-                SpriteZipStore.loadActionFrames(
-                    this, "character-frames.zip", "attack", playerPick.hint
-                )
-            val loadedPlayerHit =
-                SpriteZipStore.loadActionFrames(
-                    this, "character-frames.zip", "hit", playerPick.hint
-                )
-            val loadedPlayerDeath =
-                SpriteZipStore.loadActionFrames(
-                    this, "character-frames.zip", "death", playerPick.hint
-                )
-
-            val loadedEnemyAttack =
-                SpriteZipStore.loadActionFrames(
-                    this, "monster-frames.zip", "attack", enemyPick.hint
-                )
-            val loadedEnemyHit =
-                SpriteZipStore.loadActionFrames(
-                    this, "monster-frames.zip", "hit", enemyPick.hint
-                )
-            val loadedEnemyDeath =
-                SpriteZipStore.loadActionFrames(
-                    this, "monster-frames.zip", "death", enemyPick.hint
+            val playerSet =
+                EntitySpriteStore.loadCharacter(this, playerId)
+            val enemySet =
+                EntitySpriteStore.loadMonster(
+                    this,
+                    enemyEntityId
                 )
 
             runOnUiThread {
-                playerIdle = playerPick.bitmap ?: loadedPlayerAttack.firstOrNull()
-                enemyIdle = enemyPick.bitmap ?: loadedEnemyAttack.firstOrNull()
-                playerAttackFrames = loadedPlayerAttack
-                playerHitFrames = loadedPlayerHit
-                playerDeathFrames = loadedPlayerDeath
-                enemyAttackFrames = loadedEnemyAttack
-                enemyHitFrames = loadedEnemyHit
-                enemyDeathFrames = loadedEnemyDeath
+                playerIdle = playerSet.idle
+                enemyIdle = enemySet.idle
 
-                playerIdle?.let { playerSprite.setImageBitmap(it) }
-                enemyIdle?.let { enemySprite.setImageBitmap(it) }
+                playerAttackFrames =
+                    playerSet.attackFrames
+                playerHitFrames =
+                    playerSet.hitFrames
+                playerDeathFrames =
+                    playerSet.deathFrames
+
+                enemyAttackFrames =
+                    enemySet.attackFrames
+                enemyHitFrames =
+                    enemySet.hitFrames
+                enemyDeathFrames =
+                    enemySet.deathFrames
+
+                playerIdle?.let {
+                    playerSprite.setImageBitmap(it)
+                }
+                enemyIdle?.let {
+                    enemySprite.setImageBitmap(it)
+                }
 
                 enemyNameText.text =
-                    SpriteZipStore.displayNameFromHint(
-                        enemyPick.hint,
-                        "Astral Warden"
-                    )
+                    enemySet.displayName
+
+                if (EntitySpriteStore.isBossDepth(depth)) {
+                    enemySprite.scaleX = 1.12f
+                    enemySprite.scaleY = 1.12f
+                }
             }
         }.start()
     }
