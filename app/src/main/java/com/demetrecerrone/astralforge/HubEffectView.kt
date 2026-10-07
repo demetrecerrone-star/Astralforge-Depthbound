@@ -31,6 +31,48 @@ class HubEffectView @JvmOverloads constructor(
     private val random = Random(74031)
     private var lastFrame = System.nanoTime()
 
+    var reducedMotion: Boolean = false
+        set(value) {
+            field = value
+            lastFrame = System.nanoTime()
+            invalidate()
+        }
+
+    var visualQuality: String = "HIGH"
+        set(value) {
+            field = when (value) {
+                "LOW", "MEDIUM", "HIGH" -> value
+                else -> "HIGH"
+            }
+            rebuildParticles()
+            invalidate()
+        }
+
+    var particleDensity: Int = 75
+        set(value) {
+            field = value.coerceIn(0, 100)
+            rebuildParticles()
+            invalidate()
+        }
+
+    var batterySaver: Boolean = false
+        set(value) {
+            field = value
+            rebuildParticles()
+            lastFrame = System.nanoTime()
+            invalidate()
+        }
+
+    var fpsPreference: String = "SYSTEM"
+        set(value) {
+            field = when (value) {
+                "30", "60", "SYSTEM" -> value
+                else -> "SYSTEM"
+            }
+            lastFrame = System.nanoTime()
+            invalidate()
+        }
+
     init {
         isClickable = false
         isFocusable = false
@@ -38,11 +80,30 @@ class HubEffectView @JvmOverloads constructor(
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
+        rebuildParticles()
+    }
+
+    private fun targetParticleCount(): Int {
+        val base = when (visualQuality) {
+            "LOW" -> 26
+            "MEDIUM" -> 44
+            else -> 64
+        }
+        val densityScale = particleDensity / 100f
+        val batteryScale = if (batterySaver) 0.55f else 1f
+        return (base * densityScale * batteryScale)
+            .toInt()
+            .coerceIn(0, 72)
+    }
+
+    private fun rebuildParticles() {
+        if (width <= 0 || height <= 0) return
+        val target = targetParticleCount()
         particles.clear()
-        repeat(48) {
+        repeat(target) {
             particles += Particle(
-                x = random.nextFloat() * w,
-                y = random.nextFloat() * h,
+                x = random.nextFloat() * width,
+                y = random.nextFloat() * height,
                 speed = 8f + random.nextFloat() * 22f,
                 radius = 1f + random.nextFloat() * 2.6f,
                 drift = -5f + random.nextFloat() * 10f,
@@ -56,45 +117,85 @@ class HubEffectView @JvmOverloads constructor(
         if (width <= 0 || height <= 0) return
 
         val now = System.nanoTime()
-        val seconds = now / 1_000_000_000.0
-        val dt = ((now - lastFrame) / 1_000_000_000.0).toFloat().coerceAtMost(0.05f)
+        val staticMode = reducedMotion
+        val seconds = if (staticMode) 0.0 else now / 1_000_000_000.0
+        val dt = if (staticMode) {
+            0f
+        } else {
+            ((now - lastFrame) / 1_000_000_000.0)
+                .toFloat()
+                .coerceAtMost(0.05f)
+        }
         lastFrame = now
+
+        val qualityAlpha = when (visualQuality) {
+            "LOW" -> 0.58f
+            "MEDIUM" -> 0.78f
+            else -> 1f
+        }
+        val batteryAlpha = if (batterySaver) 0.72f else 1f
+
+        val portalPulse = if (staticMode || batterySaver) {
+            0f
+        } else {
+            sin(seconds * 1.5).toFloat()
+        }
+        val crystalPulse = if (staticMode || batterySaver) {
+            0f
+        } else {
+            sin(seconds * 1.9 + 0.7).toFloat()
+        }
 
         drawGlow(
             canvas,
             width * 0.50f,
             height * 0.285f,
-            width * (0.15f + 0.013f * sin(seconds * 1.5).toFloat()),
+            width * (0.15f + 0.013f * portalPulse),
             Color.rgb(75, 90, 255),
-            95
+            (95 * qualityAlpha * batteryAlpha).toInt()
         )
         drawGlow(
             canvas,
             width * 0.50f,
             height * 0.46f,
-            width * (0.095f + 0.009f * sin(seconds * 1.9 + 0.7).toFloat()),
+            width * (0.095f + 0.009f * crystalPulse),
             Color.rgb(124, 69, 255),
-            78
+            (78 * qualityAlpha * batteryAlpha).toInt()
         )
 
         particles.forEachIndexed { index, particle ->
-            particle.y -= particle.speed * dt
-            particle.x += particle.drift * dt
+            if (!staticMode) {
+                val speedScale = if (batterySaver) 0.55f else 1f
+                particle.y -= particle.speed * dt * speedScale
+                particle.x += particle.drift * dt * speedScale
 
-            if (particle.y < -10f) {
-                particle.y = height + 10f
-                particle.x = random.nextFloat() * width
+                if (particle.y < -10f) {
+                    particle.y = height + 10f
+                    particle.x = random.nextFloat() * width
+                }
+                if (particle.x < -10f) particle.x = width + 10f
+                if (particle.x > width + 10f) particle.x = -10f
             }
-            if (particle.x < -10f) particle.x = width + 10f
-            if (particle.x > width + 10f) particle.x = -10f
 
-            val twinkle = ((sin(seconds * (1.0 + (index % 6) * 0.13) + particle.phase) + 1.0) * 0.5)
+            val twinkle = if (staticMode || batterySaver) {
+                0.55
+            } else {
+                ((sin(
+                    seconds * (1.0 + (index % 6) * 0.13) + particle.phase
+                ) + 1.0) * 0.5)
+            }
+
+            val particleAlpha = (
+                (55 + twinkle * 150) * qualityAlpha * batteryAlpha
+            ).toInt().coerceIn(0, 255)
+
             particlePaint.color = Color.argb(
-                (55 + twinkle * 150).toInt(),
+                particleAlpha,
                 195,
                 210,
                 255
             )
+
             canvas.drawCircle(
                 particle.x,
                 particle.y,
@@ -103,7 +204,18 @@ class HubEffectView @JvmOverloads constructor(
             )
         }
 
-        postInvalidateOnAnimation()
+        if (!staticMode) {
+            postInvalidateDelayed(frameDelayMs())
+        }
+    }
+
+    private fun frameDelayMs(): Long {
+        if (batterySaver) return 33L
+        return when (fpsPreference) {
+            "30" -> 33L
+            "60" -> 16L
+            else -> 16L
+        }
     }
 
     private fun drawGlow(
@@ -114,15 +226,25 @@ class HubEffectView @JvmOverloads constructor(
         color: Int,
         alpha: Int
     ) {
-        if (radius <= 1f) return
+        if (radius <= 1f || alpha <= 0) return
 
         glowPaint.shader = RadialGradient(
             cx,
             cy,
             radius,
             intArrayOf(
-                Color.argb(alpha, Color.red(color), Color.green(color), Color.blue(color)),
-                Color.argb(alpha / 3, Color.red(color), Color.green(color), Color.blue(color)),
+                Color.argb(
+                    alpha,
+                    Color.red(color),
+                    Color.green(color),
+                    Color.blue(color)
+                ),
+                Color.argb(
+                    alpha / 3,
+                    Color.red(color),
+                    Color.green(color),
+                    Color.blue(color)
+                ),
                 Color.TRANSPARENT
             ),
             floatArrayOf(0f, 0.45f, 1f),
