@@ -120,6 +120,9 @@ private class SplashMotionView(
         strokeCap = Paint.Cap.ROUND
     }
     private val ripplePath = Path()
+    private fun sinf(value: Float): Float =
+        sin(value.toDouble()).toFloat()
+
     private var phase = 0f
     private var animator: ValueAnimator? = null
 
@@ -176,7 +179,7 @@ private class SplashMotionView(
         h: Float
     ) {
         val pulse = if (motionEnabled) {
-            ((sin(phase * PI.toFloat() * 4f) + 1f) * 0.5f)
+            ((sinf(phase * PI.toFloat() * 4f) + 1f) * 0.5f)
         } else {
             0.45f
         }
@@ -210,7 +213,7 @@ private class SplashMotionView(
     ) {
         smoke.forEach { puff ->
             val drift = if (motionEnabled) {
-                sin(
+                sinf(
                     (phase * puff.speed + puff.offset) *
                         PI.toFloat() * 2f
                 )
@@ -219,7 +222,7 @@ private class SplashMotionView(
             }
 
             val lift = if (motionEnabled) {
-                sin(
+                sinf(
                     (phase * puff.speed * 0.73f + puff.offset) *
                         PI.toFloat() * 2f
                 )
@@ -355,7 +358,7 @@ private class SplashMotionView(
             for (i in 0..segments) {
                 val x = w * i / segments.toFloat()
                 val wave =
-                    sin(
+                    sinf(
                         i * 0.46f +
                             rowPhase +
                             row * 0.75f
