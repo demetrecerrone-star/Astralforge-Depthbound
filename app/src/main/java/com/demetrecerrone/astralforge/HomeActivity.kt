@@ -249,9 +249,11 @@ class HomeActivity : Activity() {
             isClickable = true
             isFocusable = true
             setOnClickListener {
-                openSection(
-                    "BATTLE",
-                    "Enter the Depths and face the monsters below."
+                startActivity(
+                    Intent(
+                        this@HomeActivity,
+                        BattleActivity::class.java
+                    )
                 )
             }
             installTouchFeedback()
@@ -773,9 +775,11 @@ class HomeActivity : Activity() {
                 setOnClickListener {
                     when (index) {
                         0 -> Unit
-                        1 -> openSection(
-                            "BATTLE",
-                            "Enter the Depths and face the monsters below."
+                        1 -> startActivity(
+                            Intent(
+                                this@HomeActivity,
+                                BattleActivity::class.java
+                            )
                         )
                         2 -> startActivity(
                             Intent(
