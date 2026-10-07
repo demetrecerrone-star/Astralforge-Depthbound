@@ -142,7 +142,7 @@ class AboutActivity : Activity() {
         infoPanel.addView(detailRow("PLATFORM", "Android • Landscape"))
 
         infoPanel.addView(sectionTitle("CREDITS"))
-        infoPanel.addView(bodyText("Created and directed by Demetre Cerrone"))
+        infoPanel.addView(bodyText("Created and directed by Dabski"))
         infoPanel.addView(bodyText("Development assistance: ChatGPT by OpenAI"))
         infoPanel.addView(bodyText(
             "Additional art, interface, gameplay systems, and production assets are " +
@@ -220,18 +220,34 @@ class AboutActivity : Activity() {
 
         actions.addView(actionButton(
             "PRIVACY POLICY",
-            "Policy page will be added before public release.",
+            "Read how account, local game, and service data are handled.",
             Color.rgb(106, 171, 255)
         ) {
-            showComingSoon(root, "PRIVACY POLICY")
+            startActivity(
+                Intent(
+                    this@AboutActivity,
+                    LegalActivity::class.java
+                ).putExtra(
+                    LegalActivity.EXTRA_PAGE,
+                    LegalActivity.PAGE_PRIVACY
+                )
+            )
         })
 
         actions.addView(actionButton(
             "TERMS & LEGAL",
-            "Terms, licenses, and legal notices will be added before release.",
+            "Read the development-build terms, acceptable use, and legal notices.",
             Color.rgb(206, 151, 255)
         ) {
-            showComingSoon(root, "TERMS & LEGAL")
+            startActivity(
+                Intent(
+                    this@AboutActivity,
+                    LegalActivity::class.java
+                ).putExtra(
+                    LegalActivity.EXTRA_PAGE,
+                    LegalActivity.PAGE_TERMS
+                )
+            )
         })
 
         content.addView(
