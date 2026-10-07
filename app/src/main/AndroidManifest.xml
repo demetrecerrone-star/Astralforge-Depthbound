@@ -13,6 +13,11 @@
         android:theme="@style/Theme.AstralForge">
 
         <activity
+            android:name=".BattleV2Activity"
+            android:exported="false"
+            android:screenOrientation="landscape" />
+
+        <activity
             android:name=".BattleActivity"
             android:exported="false"
             android:screenOrientation="landscape" />
