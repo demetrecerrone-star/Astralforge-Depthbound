@@ -233,27 +233,13 @@ class HomeActivity : Activity() {
             )
         }
 
-        val battleButton = ImageView(this).apply {
-            setImageResource(R.drawable.file_00000000b44481f6b8c3df3c70bf55e3)
-            scaleType = ImageView.ScaleType.FIT_CENTER
-            adjustViewBounds = true
+        val battleWidth = screenW * 42 / 100
+        val battleHeight = battleWidth * 34 / 100
+
+        val battleButton = FrameLayout(this).apply {
             contentDescription = "Battle"
             isClickable = true
             isFocusable = true
-            background = GradientDrawable().apply {
-                setColor(Color.argb(225, 0, 0, 0))
-                cornerRadius = AuthUi.dp(this@HomeActivity, 18).toFloat()
-                setStroke(
-                    AuthUi.dp(this@HomeActivity, 1),
-                    Color.argb(200, 130, 92, 225)
-                )
-            }
-            setPadding(
-                AuthUi.dp(this@HomeActivity, 5),
-                AuthUi.dp(this@HomeActivity, 2),
-                AuthUi.dp(this@HomeActivity, 5),
-                AuthUi.dp(this@HomeActivity, 2)
-            )
             setOnClickListener {
                 startActivity(
                     Intent(
@@ -264,10 +250,48 @@ class HomeActivity : Activity() {
             }
             installTouchFeedback()
         }
-        val battleWidth = screenW * 42 / 100
+
+        battleButton.addView(
+            android.view.View(this).apply {
+                background = GradientDrawable().apply {
+                    setColor(Color.argb(222, 0, 0, 0))
+                    cornerRadius =
+                        AuthUi.dp(this@HomeActivity, 12).toFloat()
+                }
+            },
+            FrameLayout.LayoutParams(
+                battleWidth * 67 / 100,
+                battleHeight * 42 / 100,
+                Gravity.END or Gravity.CENTER_VERTICAL
+            ).apply {
+                marginEnd = battleWidth * 6 / 100
+            }
+        )
+
+        battleButton.addView(
+            ImageView(this).apply {
+                setImageResource(
+                    R.drawable.file_00000000b44481f6b8c3df3c70bf55e3
+                )
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                adjustViewBounds = true
+                contentDescription = null
+                setPadding(
+                    AuthUi.dp(this@HomeActivity, 2),
+                    0,
+                    AuthUi.dp(this@HomeActivity, 2),
+                    0
+                )
+            },
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+
         val battleParams = FrameLayout.LayoutParams(
             battleWidth,
-            battleWidth * 34 / 100,
+            battleHeight,
             Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
         ).apply {
             bottomMargin = AuthUi.dp(this@HomeActivity, 118)
@@ -714,24 +738,28 @@ class HomeActivity : Activity() {
             contentDescription = description
             isClickable = true
             isFocusable = true
-            background = GradientDrawable().apply {
-                setColor(Color.argb(220, 0, 0, 0))
-                cornerRadius =
-                    AuthUi.dp(this@HomeActivity, 15).toFloat()
-                setStroke(
-                    AuthUi.dp(this@HomeActivity, 1),
-                    Color.argb(185, 113, 82, 205)
-                )
-            }
-            setPadding(
-                AuthUi.dp(this@HomeActivity, 4),
-                AuthUi.dp(this@HomeActivity, 2),
-                AuthUi.dp(this@HomeActivity, 4),
-                AuthUi.dp(this@HomeActivity, 2)
-            )
             setOnClickListener { onClick() }
             installTouchFeedback()
         }
+
+        // Only darken the actual word/nameplate area. The emblem side of
+        // the button stays transparent so the hub artwork remains visible.
+        holder.addView(
+            android.view.View(this).apply {
+                background = GradientDrawable().apply {
+                    setColor(Color.argb(218, 0, 0, 0))
+                    cornerRadius =
+                        AuthUi.dp(this@HomeActivity, 10).toFloat()
+                }
+            },
+            FrameLayout.LayoutParams(
+                (widthPx * 63 / 100),
+                (heightPx * 42 / 100),
+                Gravity.END or Gravity.CENTER_VERTICAL
+            ).apply {
+                marginEnd = widthPx * 4 / 100
+            }
+        )
 
         holder.addView(
             ImageView(this).apply {
@@ -739,6 +767,12 @@ class HomeActivity : Activity() {
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 adjustViewBounds = true
                 contentDescription = null
+                setPadding(
+                    AuthUi.dp(this@HomeActivity, 2),
+                    0,
+                    AuthUi.dp(this@HomeActivity, 2),
+                    0
+                )
             },
             FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
