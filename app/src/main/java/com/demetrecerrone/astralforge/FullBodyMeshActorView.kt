@@ -610,8 +610,11 @@ class FullBodyMeshActorView @JvmOverloads constructor(
         // so place it by its shoulder clasp instead of stretching it
         // across the entire actor canvas.
         canvas.save()
-        canvas.translate(735f, 245f)
-        canvas.scale(0.60f, 0.60f)
+        // Anchor the cape high across the shoulder line and keep most
+        // of its cloth trailing behind the Knight instead of filling
+        // the entire actor box.
+        canvas.translate(775f, 275f)
+        canvas.scale(0.42f, 0.42f)
         canvas.translate(
             -bitmap.width * 0.82f,
             -bitmap.height * 0.14f
