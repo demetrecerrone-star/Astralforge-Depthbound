@@ -305,8 +305,8 @@ class StatsActivity : Activity() {
                     null,
                     android.R.attr.progressBarStyleHorizontal
                 ).apply {
-                    max = progress.xpToNext.coerceAtLeast(1)
-                    this.progress = progress.xp.coerceIn(0, max)
+                    max = this@StatsActivity.progress.xpToNext.coerceAtLeast(1)
+                    this.progress = this@StatsActivity.progress.xp.coerceIn(0, max)
                     progressTintList = ColorStateList.valueOf(Color.rgb(145, 72, 255))
                     progressBackgroundTintList = ColorStateList.valueOf(Color.rgb(35, 29, 66))
                 },
