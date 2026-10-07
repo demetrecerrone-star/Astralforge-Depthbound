@@ -753,11 +753,11 @@ class HomeActivity : Activity() {
                 }
             },
             FrameLayout.LayoutParams(
-                (widthPx * 63 / 100),
-                (heightPx * 42 / 100),
+                (widthPx * 55 / 100),
+                (heightPx * 28 / 100),
                 Gravity.END or Gravity.CENTER_VERTICAL
             ).apply {
-                marginEnd = widthPx * 4 / 100
+                marginEnd = widthPx * 5 / 100
             }
         )
 
