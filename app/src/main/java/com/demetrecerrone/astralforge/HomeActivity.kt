@@ -605,6 +605,7 @@ class HomeActivity : Activity() {
                 label = "DAILY",
                 description = "Daily Reward"
             ) {
+                dismissHubMenuDropdown(root)
                 showComingSoonPopup(root, "DAILY REWARD")
             },
             LinearLayout.LayoutParams(
@@ -622,6 +623,7 @@ class HomeActivity : Activity() {
                 label = "EVENT",
                 description = "Events"
             ) {
+                dismissHubMenuDropdown(root)
                 showComingSoonPopup(root, "EVENT")
             },
             LinearLayout.LayoutParams(
@@ -640,12 +642,7 @@ class HomeActivity : Activity() {
                 label = "MENU",
                 description = "Menu"
             ) {
-                startActivity(
-                    Intent(
-                        this@HomeActivity,
-                        MenuActivity::class.java
-                    )
-                )
+                toggleHubMenuDropdown(root)
             },
             LinearLayout.LayoutParams(
                 0,
@@ -747,6 +744,214 @@ class HomeActivity : Activity() {
 
             installTouchFeedback()
             setOnClickListener { onClick() }
+        }
+    }
+
+    private fun toggleHubMenuDropdown(root: FrameLayout) {
+        val existing = root.findViewWithTag<View>("hub_menu_dropdown")
+        if (existing != null) {
+            root.removeView(existing)
+            return
+        }
+
+        root.findViewWithTag<View>("hub_coming_soon")?.let {
+            root.removeView(it)
+        }
+
+        val screenW = resources.displayMetrics.widthPixels
+        val screenH = resources.displayMetrics.heightPixels
+        val menuWidth = (screenW * 0.205f).toInt()
+            .coerceAtLeast(AuthUi.dp(this, 190))
+
+        val menu = LinearLayout(this).apply {
+            tag = "hub_menu_dropdown"
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            elevation = AuthUi.dp(this@HomeActivity, 16).toFloat()
+            setPadding(
+                AuthUi.dp(this@HomeActivity, 7),
+                AuthUi.dp(this@HomeActivity, 7),
+                AuthUi.dp(this@HomeActivity, 7),
+                AuthUi.dp(this@HomeActivity, 7)
+            )
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(
+                    Color.argb(248, 35, 15, 74),
+                    Color.argb(250, 7, 7, 28)
+                )
+            ).apply {
+                cornerRadius = AuthUi.dp(this@HomeActivity, 13).toFloat()
+                setStroke(
+                    AuthUi.dp(this@HomeActivity, 1),
+                    Color.rgb(221, 176, 93)
+                )
+            }
+        }
+
+        menu.addView(
+            TextView(this).apply {
+                text = "MENU"
+                textSize = 9f
+                setTextColor(Color.rgb(224, 188, 112))
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = Gravity.CENTER
+                letterSpacing = 0.12f
+                setPadding(
+                    0,
+                    AuthUi.dp(this@HomeActivity, 2),
+                    0,
+                    AuthUi.dp(this@HomeActivity, 6)
+                )
+            },
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        menu.addView(
+            createHubMenuRow(
+                icon = "♙",
+                title = "PLAYER ACCOUNT",
+                subtitle = "Profile, player identity, and account details."
+            ) {
+                root.removeView(menu)
+                startActivity(
+                    Intent(
+                        this@HomeActivity,
+                        AccountActivity::class.java
+                    )
+                )
+            }
+        )
+
+        menu.addView(
+            createHubMenuRow(
+                icon = "⚙",
+                title = "SETTINGS",
+                subtitle = "Audio, display, controls, and accessibility."
+            ) {
+                root.removeView(menu)
+                startActivity(
+                    Intent(
+                        this@HomeActivity,
+                        SettingsActivity::class.java
+                    )
+                )
+            }
+        )
+
+        root.addView(
+            menu,
+            FrameLayout.LayoutParams(
+                menuWidth,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP or Gravity.END
+            ).apply {
+                topMargin = (screenH * 0.102f).toInt()
+                marginEnd = (screenW * 0.021f).toInt()
+            }
+        )
+    }
+
+    private fun dismissHubMenuDropdown(root: FrameLayout) {
+        root.findViewWithTag<View>("hub_menu_dropdown")?.let {
+            root.removeView(it)
+        }
+    }
+
+    private fun createHubMenuRow(
+        icon: String,
+        title: String,
+        subtitle: String,
+        onClick: () -> Unit
+    ): LinearLayout {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            isClickable = true
+            isFocusable = true
+            setPadding(
+                AuthUi.dp(this@HomeActivity, 9),
+                AuthUi.dp(this@HomeActivity, 7),
+                AuthUi.dp(this@HomeActivity, 9),
+                AuthUi.dp(this@HomeActivity, 7)
+            )
+            background = GradientDrawable().apply {
+                setColor(Color.argb(222, 11, 9, 40))
+                cornerRadius = AuthUi.dp(this@HomeActivity, 9).toFloat()
+                setStroke(
+                    AuthUi.dp(this@HomeActivity, 1),
+                    Color.rgb(118, 82, 194)
+                )
+            }
+            installTouchFeedback()
+            setOnClickListener { onClick() }
+
+            addView(
+                TextView(this@HomeActivity).apply {
+                    text = icon
+                    textSize = 18f
+                    setTextColor(Color.rgb(220, 193, 255))
+                    typeface = Typeface.DEFAULT_BOLD
+                    gravity = Gravity.CENTER
+                    setShadowLayer(
+                        6f,
+                        0f,
+                        0f,
+                        Color.rgb(126, 74, 239)
+                    )
+                },
+                LinearLayout.LayoutParams(
+                    AuthUi.dp(this@HomeActivity, 34),
+                    LinearLayout.LayoutParams.MATCH_PARENT
+                )
+            )
+
+            addView(
+                LinearLayout(this@HomeActivity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.CENTER_VERTICAL
+
+                    addView(
+                        TextView(this@HomeActivity).apply {
+                            text = title
+                            textSize = 10.5f
+                            setTextColor(Color.WHITE)
+                            typeface = Typeface.DEFAULT_BOLD
+                            letterSpacing = 0.04f
+                        }
+                    )
+
+                    addView(
+                        TextView(this@HomeActivity).apply {
+                            text = subtitle
+                            textSize = 7.8f
+                            setTextColor(Color.rgb(182, 169, 211))
+                            maxLines = 2
+                            setPadding(
+                                0,
+                                AuthUi.dp(this@HomeActivity, 2),
+                                0,
+                                0
+                            )
+                        }
+                    )
+                },
+                LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
+            )
+
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                AuthUi.dp(this@HomeActivity, 54)
+            ).apply {
+                bottomMargin = AuthUi.dp(this@HomeActivity, 6)
+            }
         }
     }
 
