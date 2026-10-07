@@ -10,7 +10,10 @@
         "Updated the login and create account backgrounds to fit the full landscape display instead of cropping.",
         "Reduced and tightened authentication fields and buttons for a cleaner layout with less scrolling.",
         "Narrowed and centered the authentication form area while keeping scrolling available as a fallback.",
-        "Included the latest Help & Support, About, Privacy Policy, Terms & Legal, and DABSKY splash improvements."
+        "Included the latest Help & Support, About, Privacy Policy, Terms & Legal, and DABSKY splash improvements.",
+        "Replaced the unstable splash renderer with hardware-safe animated glow, haze, shimmer, and water movement.",
+        "Rebuilt authentication sizing for landscape and changed Create Account to a compact two-row field layout.",
+        "Made fullscreen apply from the app theme and automatically re-hide Android system bars."
       ]
     },
     {
