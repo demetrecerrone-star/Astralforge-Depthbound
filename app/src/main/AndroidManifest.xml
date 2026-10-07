@@ -19,43 +19,53 @@
 
         <activity
             android:name=".SettingsActivity"
-            android:exported="false"\n            android:screenOrientation="landscape" />
+            android:exported="false"
+            android:screenOrientation="landscape" />
 
         <activity
             android:name=".AccountActivity"
-            android:exported="false"\n            android:screenOrientation="landscape" />
+            android:exported="false"
+            android:screenOrientation="landscape" />
 
         <activity
             android:name=".MenuActivity"
-            android:exported="false"\n            android:screenOrientation="landscape" />
+            android:exported="false"
+            android:screenOrientation="landscape" />
 
         <activity
             android:name=".HeroesActivity"
-            android:exported="false"\n            android:screenOrientation="landscape" />
+            android:exported="false"
+            android:screenOrientation="landscape" />
 
         <activity
             android:name=".StatsActivity"
-            android:exported="false"\n            android:screenOrientation="landscape" />
+            android:exported="false"
+            android:screenOrientation="landscape" />
 
         <activity
             android:name=".CharacterActivity"
-            android:exported="false"\n            android:screenOrientation="landscape" />
+            android:exported="false"
+            android:screenOrientation="landscape" />
 
         <activity
             android:name=".GameSectionActivity"
-            android:exported="false"\n            android:screenOrientation="landscape" />
+            android:exported="false"
+            android:screenOrientation="landscape" />
 
         <activity
             android:name=".HomeActivity"
-            android:exported="false"\n            android:screenOrientation="landscape" />
+            android:exported="false"
+            android:screenOrientation="landscape" />
 
         <activity
             android:name=".CreateAccountActivity"
-            android:exported="false"\n            android:screenOrientation="landscape" />
+            android:exported="false"
+            android:screenOrientation="landscape" />
 
         <activity
             android:name=".MainActivity"
-            android:exported="true"\n            android:screenOrientation="landscape">
+            android:exported="true"
+            android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
