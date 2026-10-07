@@ -101,6 +101,12 @@ class HomeActivity : Activity() {
         // are intentionally not drawn over it.
         playerNameAtCreate = PlayerIdentityStore.getName(this)
 
+        addTopRightActions(
+            root = root,
+            screenW = screenW,
+            screenH = resources.displayMetrics.heightPixels
+        )
+
         val bottomNav = createBottomNav(screenW)
         val bottomNavParams = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
@@ -575,6 +581,311 @@ class HomeActivity : Activity() {
             (resources.displayMetrics.heightPixels * topFraction).toInt()
         root.addView(holder, params)
         return holder
+    }
+
+    private fun addTopRightActions(
+        root: FrameLayout,
+        screenW: Int,
+        screenH: Int
+    ) {
+        val panelWidth = (screenW * 0.19f).toInt()
+        val panelHeight = (screenH * 0.073f).toInt()
+            .coerceAtLeast(AuthUi.dp(this, 42))
+        val gap = AuthUi.dp(this, 4)
+
+        val actions = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(gap, 0, gap, 0)
+            background = ColorDrawable(Color.TRANSPARENT)
+        }
+
+        actions.addView(
+            createTopRightAction(
+                icon = "✦",
+                label = "DAILY",
+                description = "Daily Reward"
+            ) {
+                showComingSoonPopup(root, "DAILY REWARD")
+            },
+            LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                1f
+            ).apply {
+                marginEnd = gap / 2
+            }
+        )
+
+        actions.addView(
+            createTopRightAction(
+                icon = "★",
+                label = "EVENT",
+                description = "Events"
+            ) {
+                showComingSoonPopup(root, "EVENT")
+            },
+            LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                1f
+            ).apply {
+                marginStart = gap / 2
+                marginEnd = gap / 2
+            }
+        )
+
+        actions.addView(
+            createTopRightAction(
+                icon = "☰",
+                label = "MENU",
+                description = "Menu"
+            ) {
+                startActivity(
+                    Intent(
+                        this@HomeActivity,
+                        MenuActivity::class.java
+                    )
+                )
+            },
+            LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                1f
+            ).apply {
+                marginStart = gap / 2
+            }
+        )
+
+        root.addView(
+            actions,
+            FrameLayout.LayoutParams(
+                panelWidth,
+                panelHeight,
+                Gravity.TOP or Gravity.END
+            ).apply {
+                topMargin = (screenH * 0.018f).toInt()
+                marginEnd = (screenW * 0.021f).toInt()
+            }
+        )
+    }
+
+    private fun createTopRightAction(
+        icon: String,
+        label: String,
+        description: String,
+        onClick: () -> Unit
+    ): LinearLayout {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            contentDescription = description
+            isClickable = true
+            isFocusable = true
+            setPadding(
+                AuthUi.dp(this@HomeActivity, 2),
+                AuthUi.dp(this@HomeActivity, 2),
+                AuthUi.dp(this@HomeActivity, 2),
+                AuthUi.dp(this@HomeActivity, 1)
+            )
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(
+                    Color.argb(230, 47, 19, 93),
+                    Color.argb(235, 12, 8, 39)
+                )
+            ).apply {
+                cornerRadius = AuthUi.dp(this@HomeActivity, 10).toFloat()
+                setStroke(
+                    AuthUi.dp(this@HomeActivity, 1),
+                    Color.rgb(221, 176, 93)
+                )
+            }
+
+            addView(
+                TextView(this@HomeActivity).apply {
+                    text = icon
+                    textSize = if (icon == "☰") 17f else 15f
+                    setTextColor(Color.rgb(239, 220, 255))
+                    typeface = Typeface.DEFAULT_BOLD
+                    gravity = Gravity.CENTER
+                    includeFontPadding = false
+                    setShadowLayer(
+                        7f,
+                        0f,
+                        0f,
+                        Color.rgb(147, 69, 255)
+                    )
+                },
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    0,
+                    1f
+                )
+            )
+
+            addView(
+                TextView(this@HomeActivity).apply {
+                    text = label
+                    textSize = 6.8f
+                    setTextColor(Color.WHITE)
+                    typeface = Typeface.DEFAULT_BOLD
+                    gravity = Gravity.CENTER
+                    letterSpacing = 0.06f
+                    includeFontPadding = false
+                    setShadowLayer(
+                        4f,
+                        0f,
+                        0f,
+                        Color.rgb(100, 69, 225)
+                    )
+                },
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    AuthUi.dp(this@HomeActivity, 13)
+                )
+            )
+
+            installTouchFeedback()
+            setOnClickListener { onClick() }
+        }
+    }
+
+    private fun showComingSoonPopup(
+        root: FrameLayout,
+        sectionTitle: String
+    ) {
+        val existing = root.findViewWithTag<View>("hub_coming_soon")
+        if (existing != null) {
+            root.removeView(existing)
+        }
+
+        val screenW = resources.displayMetrics.widthPixels
+        val screenH = resources.displayMetrics.heightPixels
+        val panel = FrameLayout(this).apply {
+            tag = "hub_coming_soon"
+            isClickable = true
+            isFocusable = true
+            elevation = AuthUi.dp(this@HomeActivity, 14).toFloat()
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(
+                    Color.argb(247, 29, 13, 62),
+                    Color.argb(249, 6, 7, 27)
+                )
+            ).apply {
+                cornerRadius = AuthUi.dp(this@HomeActivity, 14).toFloat()
+                setStroke(
+                    AuthUi.dp(this@HomeActivity, 1),
+                    Color.rgb(221, 176, 93)
+                )
+            }
+        }
+
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(
+                AuthUi.dp(this@HomeActivity, 18),
+                AuthUi.dp(this@HomeActivity, 10),
+                AuthUi.dp(this@HomeActivity, 18),
+                AuthUi.dp(this@HomeActivity, 10)
+            )
+
+            addView(
+                TextView(this@HomeActivity).apply {
+                    text = sectionTitle
+                    textSize = 9.5f
+                    setTextColor(Color.rgb(224, 188, 112))
+                    typeface = Typeface.DEFAULT_BOLD
+                    gravity = Gravity.CENTER
+                    letterSpacing = 0.08f
+                },
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            )
+
+            addView(
+                TextView(this@HomeActivity).apply {
+                    text = "COMING SOON"
+                    textSize = 18f
+                    setTextColor(Color.WHITE)
+                    typeface = Typeface.create(
+                        Typeface.SERIF,
+                        Typeface.BOLD
+                    )
+                    gravity = Gravity.CENTER
+                    letterSpacing = 0.06f
+                    setShadowLayer(
+                        8f,
+                        0f,
+                        0f,
+                        Color.rgb(133, 75, 255)
+                    )
+                },
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    0,
+                    1f
+                )
+            )
+        }
+        panel.addView(
+            content,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+
+        val close = TextView(this).apply {
+            text = "×"
+            textSize = 20f
+            setTextColor(Color.rgb(232, 214, 255))
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+            contentDescription = "Close"
+            isClickable = true
+            isFocusable = true
+            background = GradientDrawable().apply {
+                setColor(Color.argb(180, 11, 8, 34))
+                shape = GradientDrawable.OVAL
+                setStroke(
+                    AuthUi.dp(this@HomeActivity, 1),
+                    Color.rgb(139, 94, 225)
+                )
+            }
+            installTouchFeedback()
+            setOnClickListener {
+                root.removeView(panel)
+            }
+        }
+        panel.addView(
+            close,
+            FrameLayout.LayoutParams(
+                AuthUi.dp(this, 28),
+                AuthUi.dp(this, 28),
+                Gravity.TOP or Gravity.END
+            ).apply {
+                topMargin = AuthUi.dp(this@HomeActivity, 5)
+                marginEnd = AuthUi.dp(this@HomeActivity, 5)
+            }
+        )
+
+        root.addView(
+            panel,
+            FrameLayout.LayoutParams(
+                (screenW * 0.23f).toInt(),
+                (screenH * 0.14f).toInt()
+                    .coerceAtLeast(AuthUi.dp(this, 84)),
+                Gravity.TOP or Gravity.END
+            ).apply {
+                topMargin = (screenH * 0.125f).toInt()
+                marginEnd = (screenW * 0.022f).toInt()
+            }
+        )
     }
 
     private fun createBottomNav(screenW: Int): LinearLayout {
