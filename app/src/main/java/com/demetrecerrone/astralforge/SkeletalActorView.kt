@@ -278,9 +278,13 @@ class SkeletalActorView @JvmOverloads constructor(
                 )
                 canvas.rotate(attachment.restRotation)
                 canvas.scale(imageScale, imageScale)
+                // restX/restY in the v2 rigs are visual centers, not
+                // pivot anchors. Center the art on the stored rest position;
+                // the bone matrix itself already provides the joint pivot
+                // used for animation.
                 canvas.translate(
-                    -attachment.pivotX * bitmap.width,
-                    -attachment.pivotY * bitmap.height
+                    -bitmap.width / 2f,
+                    -bitmap.height / 2f
                 )
                 canvas.drawBitmap(bitmap, 0f, 0f, null)
                 canvas.restore()
