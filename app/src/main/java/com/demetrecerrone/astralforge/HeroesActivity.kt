@@ -96,7 +96,15 @@ class HeroesActivity : Activity() {
         }
 
         content.addView(buildHeader())
-        content.addView(buildPreviewPanel(), sectionParams(dp(12)))
+        content.addView(
+            buildPreviewPanel(),
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(270)
+            ).apply {
+                topMargin = dp(12)
+            }
+        )
         content.addView(buildDetailPanel(), sectionParams(dp(12)))
         content.addView(buildRosterHeader(), sectionParams(dp(18)))
 
