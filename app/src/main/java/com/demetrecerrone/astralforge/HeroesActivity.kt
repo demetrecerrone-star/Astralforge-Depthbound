@@ -415,12 +415,7 @@ class HeroesActivity : Activity() {
             }
         )
 
-        return panel.apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(270)
-            )
-        }
+        return panel
     }
 
     private fun buildDetailPanel(): LinearLayout {
