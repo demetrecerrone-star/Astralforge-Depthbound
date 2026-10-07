@@ -29,10 +29,7 @@ object BattleActorFactory {
     }
 
     fun skeletalRigEnabled(entityId: String): Boolean {
-        return entityId !in setOf(
-            "mage",
-            "ranger"
-        )
+        return true
     }
 
     fun enemyDisplayName(entityId: String): String {
