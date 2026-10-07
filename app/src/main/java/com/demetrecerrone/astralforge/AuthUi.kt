@@ -30,20 +30,19 @@ object AuthUi {
         (value * context.resources.displayMetrics.density).toInt()
 
     fun setupWindow(activity: Activity) {
-        activity.window.statusBarColor = Color.TRANSPARENT
-        activity.window.navigationBarColor = Color.rgb(3, 5, 14)
-        activity.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-        @Suppress("DEPRECATION")
-        activity.window.decorView.systemUiVisibility =
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        activity.window.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        )
     }
 
     fun createScreen(activity: Activity, topFraction: Float): LinearLayout {
-        val root = FrameLayout(activity)
+        val root = FrameLayout(activity).apply {
+            setBackgroundColor(Color.rgb(3, 5, 14))
+        }
 
         val bgImage = ImageView(activity).apply {
             setImageResource(R.drawable.file_00000000bfc081f5b0a1931c13d627e8)
-            scaleType = ImageView.ScaleType.CENTER_CROP
+            scaleType = ImageView.ScaleType.FIT_XY
             contentDescription = null
         }
         root.addView(
@@ -55,13 +54,13 @@ object AuthUi {
         )
 
         val shade = View(activity).apply {
-            this.background = GradientDrawable(
+            background = GradientDrawable(
                 GradientDrawable.Orientation.TOP_BOTTOM,
                 intArrayOf(
                     Color.argb(0, 1, 2, 10),
-                    Color.argb(40, 1, 2, 10),
-                    Color.argb(180, 1, 2, 10),
-                    Color.argb(225, 1, 2, 10)
+                    Color.argb(25, 1, 2, 10),
+                    Color.argb(135, 1, 2, 10),
+                    Color.argb(215, 1, 2, 10)
                 )
             )
         }
@@ -73,31 +72,61 @@ object AuthUi {
             )
         )
 
+        val metrics = activity.resources.displayMetrics
+        val screenWidth = metrics.widthPixels
+        val screenHeight = metrics.heightPixels
+        val horizontalInset = dp(activity, 16)
+        val bottomInset = dp(activity, 8)
+        val top = (screenHeight * topFraction).toInt()
+
+        val targetWidth = (screenWidth * 0.64f).toInt()
+        val maxWidth = dp(activity, 760)
+        val minWidth = dp(activity, 320)
+        val availableWidth = (screenWidth - horizontalInset * 2).coerceAtLeast(1)
+        val formWidth = targetWidth
+            .coerceAtLeast(minWidth)
+            .coerceAtMost(minOf(maxWidth, availableWidth))
+
+        val formHeight = (screenHeight - top - bottomInset)
+            .coerceAtLeast(dp(activity, 150))
+
         val scroll = ScrollView(activity).apply {
-            isFillViewport = true
+            isFillViewport = false
+            isVerticalScrollBarEnabled = false
             overScrollMode = View.OVER_SCROLL_NEVER
         }
+
         val content = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            val screenHeight = activity.resources.displayMetrics.heightPixels
-            val top = (screenHeight * topFraction).toInt()
-            setPadding(dp(activity, 28), top, dp(activity, 28), dp(activity, 36))
+            setPadding(
+                dp(activity, 10),
+                dp(activity, 2),
+                dp(activity, 10),
+                dp(activity, 10)
+            )
         }
+
         scroll.addView(
             content,
-            FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT
+            ScrollView.LayoutParams(
+                ScrollView.LayoutParams.MATCH_PARENT,
+                ScrollView.LayoutParams.WRAP_CONTENT
             )
         )
+
         root.addView(
             scroll,
             FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
+                formWidth,
+                formHeight
+            ).apply {
+                gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+                topMargin = top
+                bottomMargin = bottomInset
+            }
         )
+
         activity.setContentView(root)
         return content
     }
@@ -113,16 +142,16 @@ object AuthUi {
             this.hint = hint
             setHintTextColor(Color.rgb(145, 137, 188))
             setTextColor(Color.WHITE)
-            textSize = 16f
+            textSize = 14.5f
             setSingleLine(true)
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(context, 18), 0, dp(context, 18), 0)
+            setPadding(dp(context, 14), 0, dp(context, 14), 0)
             background = GradientDrawable().apply {
                 setColor(Color.argb(206, 6, 10, 28))
-                cornerRadius = dp(context, 14).toFloat()
+                cornerRadius = dp(context, 12).toFloat()
                 setStroke(dp(context, 1), Color.rgb(132, 111, 205))
             }
-            compoundDrawablePadding = dp(context, 14)
+            compoundDrawablePadding = dp(context, 10)
             setCompoundDrawablesWithIntrinsicBounds(
                 iconRes,
                 0,
@@ -139,10 +168,14 @@ object AuthUi {
                 if (event.action == MotionEvent.ACTION_UP &&
                     event.x >= edit.width - edit.totalPaddingEnd
                 ) {
-                    val hidden = edit.transformationMethod is PasswordTransformationMethod
+                    val hidden =
+                        edit.transformationMethod is PasswordTransformationMethod
                     edit.transformationMethod =
-                        if (hidden) HideReturnsTransformationMethod.getInstance()
-                        else PasswordTransformationMethod.getInstance()
+                        if (hidden) {
+                            HideReturnsTransformationMethod.getInstance()
+                        } else {
+                            PasswordTransformationMethod.getInstance()
+                        }
                     edit.setSelection(edit.text.length)
                     true
                 } else {
@@ -150,17 +183,24 @@ object AuthUi {
                 }
             }
         }
+
         return edit
     }
 
-    fun addField(parent: LinearLayout, field: EditText, topMarginDp: Int = 12) {
+    fun addField(
+        parent: LinearLayout,
+        field: EditText,
+        topMarginDp: Int = 8
+    ) {
         val context = parent.context
         parent.addView(
             field,
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(context, 60)
-            ).apply { topMargin = dp(context, topMarginDp) }
+                dp(context, 48)
+            ).apply {
+                topMargin = dp(context, topMarginDp)
+            }
         )
     }
 
@@ -181,7 +221,8 @@ object AuthUi {
         setOnTouchListener { view, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> view.alpha = 0.72f
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> view.alpha = 1f
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL -> view.alpha = 1f
             }
             false
         }
@@ -208,7 +249,8 @@ object AuthUi {
         setOnTouchListener { view, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> view.alpha = 0.72f
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> view.alpha = 1f
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL -> view.alpha = 1f
             }
             false
         }
@@ -222,12 +264,16 @@ object AuthUi {
         text = "—   OR CONTINUE WITH   —"
         gravity = Gravity.CENTER
         setTextColor(LAVENDER)
-        textSize = 13f
-        letterSpacing = 0.17f
-        setPadding(0, dp(context, 6), 0, dp(context, 6))
+        textSize = 12f
+        letterSpacing = 0.14f
+        setPadding(0, dp(context, 2), 0, dp(context, 2))
     }
 
-    fun heading(context: Context, text: String, size: Float): TextView = TextView(context).apply {
+    fun heading(
+        context: Context,
+        text: String,
+        size: Float
+    ): TextView = TextView(context).apply {
         this.text = text
         gravity = Gravity.CENTER
         setTextColor(Color.WHITE)
@@ -236,13 +282,14 @@ object AuthUi {
         letterSpacing = 0.05f
     }
 
-    fun subtitle(context: Context, text: String): TextView = TextView(context).apply {
-        this.text = text
-        gravity = Gravity.CENTER
-        setTextColor(MUTED)
-        textSize = 15f
-        setPadding(0, dp(context, 8), 0, dp(context, 8))
-    }
+    fun subtitle(context: Context, text: String): TextView =
+        TextView(context).apply {
+            this.text = text
+            gravity = Gravity.CENTER
+            setTextColor(MUTED)
+            textSize = 13f
+            setPadding(0, dp(context, 3), 0, dp(context, 3))
+        }
 
     fun linkRow(
         context: Context,
@@ -256,13 +303,13 @@ object AuthUi {
         addView(TextView(context).apply {
             text = prefix
             setTextColor(MUTED)
-            textSize = 14f
+            textSize = 12.5f
         })
 
         addView(TextView(context).apply {
             text = "  " + link
             setTextColor(PURPLE)
-            textSize = 14f
+            textSize = 12.5f
             typeface = Typeface.DEFAULT_BOLD
             isClickable = true
             setOnClickListener { onLink() }
@@ -272,18 +319,24 @@ object AuthUi {
     fun rememberBox(context: Context): CheckBox = CheckBox(context).apply {
         text = context.getString(R.string.remember_me)
         setTextColor(MUTED)
-        textSize = 13f
+        textSize = 12f
         buttonTintList = ColorStateList.valueOf(PURPLE)
+        minHeight = 0
+        minimumHeight = 0
+        setPadding(0, 0, 0, 0)
     }
 
-    fun smallLink(context: Context, text: String, onClick: () -> Unit): TextView =
-        TextView(context).apply {
-            this.text = text
-            setTextColor(PURPLE)
-            textSize = 13f
-            gravity = Gravity.END
-            setPadding(dp(context, 8), dp(context, 12), 0, dp(context, 12))
-            isClickable = true
-            setOnClickListener { onClick() }
-        }
+    fun smallLink(
+        context: Context,
+        text: String,
+        onClick: () -> Unit
+    ): TextView = TextView(context).apply {
+        this.text = text
+        setTextColor(PURPLE)
+        textSize = 12f
+        gravity = Gravity.END
+        setPadding(dp(context, 6), dp(context, 5), 0, dp(context, 5))
+        isClickable = true
+        setOnClickListener { onClick() }
+    }
 }
