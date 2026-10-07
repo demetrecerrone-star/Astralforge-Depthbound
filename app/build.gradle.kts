@@ -337,7 +337,7 @@ kotlin {
 }
 
 dependencies {
-    implementation("com.google.android.filament:filament-utils-android:1.77.1")
+    implementation("com.google.android.filament:filament-utils-android:1.75.1")
     implementation(platform("com.google.firebase:firebase-bom:34.19.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
