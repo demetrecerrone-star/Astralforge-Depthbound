@@ -11,16 +11,25 @@ data class GameSettings(
     val battleEffects: Boolean = true,
     val damageNumbers: Boolean = true,
     val reducedMotion: Boolean = false,
-    val notifications: Boolean = true
+    val notifications: Boolean = true,
+    val visualQuality: String = "HIGH",
+    val particleDensity: Int = 75,
+    val batterySaver: Boolean = false,
+    val fpsPreference: String = "SYSTEM"
 )
 
 object GameSettingsStore {
     private const val PREFS = "astralforge_game_settings"
+    private val validQualities = setOf("LOW", "MEDIUM", "HIGH")
+    private val validFps = setOf("SYSTEM", "30", "60")
 
     fun defaults(): GameSettings = GameSettings()
 
     fun load(context: Context): GameSettings {
         val p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val quality = p.getString("visualQuality", "HIGH") ?: "HIGH"
+        val fps = p.getString("fpsPreference", "SYSTEM") ?: "SYSTEM"
+
         return GameSettings(
             music = p.getBoolean("music", true),
             musicVolume = p.getInt("musicVolume", 45).coerceIn(0, 100),
@@ -30,7 +39,11 @@ object GameSettingsStore {
             battleEffects = p.getBoolean("battleEffects", true),
             damageNumbers = p.getBoolean("damageNumbers", true),
             reducedMotion = p.getBoolean("reducedMotion", false),
-            notifications = p.getBoolean("notifications", true)
+            notifications = p.getBoolean("notifications", true),
+            visualQuality = if (quality in validQualities) quality else "HIGH",
+            particleDensity = p.getInt("particleDensity", 75).coerceIn(0, 100),
+            batterySaver = p.getBoolean("batterySaver", false),
+            fpsPreference = if (fps in validFps) fps else "SYSTEM"
         )
     }
 
@@ -45,6 +58,16 @@ object GameSettingsStore {
             .putBoolean("damageNumbers", settings.damageNumbers)
             .putBoolean("reducedMotion", settings.reducedMotion)
             .putBoolean("notifications", settings.notifications)
+            .putString(
+                "visualQuality",
+                if (settings.visualQuality in validQualities) settings.visualQuality else "HIGH"
+            )
+            .putInt("particleDensity", settings.particleDensity.coerceIn(0, 100))
+            .putBoolean("batterySaver", settings.batterySaver)
+            .putString(
+                "fpsPreference",
+                if (settings.fpsPreference in validFps) settings.fpsPreference else "SYSTEM"
+            )
             .apply()
     }
 

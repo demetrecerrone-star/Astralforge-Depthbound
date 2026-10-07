@@ -7,6 +7,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.MotionEvent
@@ -25,7 +26,7 @@ class HomeActivity : Activity() {
     private val hubPack = "astral_hub_buttons_individual.zip"
     private val bottomPack = "bottomnav.zip"
     private val avatarPack = "avatarcorner.zip"
-    private var reducedMotionAtCreate: Boolean? = null
+    private var performanceSignatureAtCreate: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,7 +35,22 @@ class HomeActivity : Activity() {
         val screenW = resources.displayMetrics.widthPixels
         val root = FrameLayout(this)
         val gameSettings = GameSettingsStore.load(this)
-        reducedMotionAtCreate = gameSettings.reducedMotion
+        performanceSignatureAtCreate = performanceSignature(gameSettings)
+        val allowAmbientMotion =
+            !gameSettings.reducedMotion && !gameSettings.batterySaver
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val preferredRate = when {
+                gameSettings.batterySaver -> 30f
+                gameSettings.fpsPreference == "30" -> 30f
+                gameSettings.fpsPreference == "60" -> 60f
+                else -> 0f
+            }
+            root.setFrameRate(
+                preferredRate,
+                View.FRAME_RATE_COMPATIBILITY_DEFAULT
+            )
+        }
 
         val backgroundImage = ImageView(this).apply {
             setImageResource(R.drawable.file_00000000a45881f5ad657cc79abf1338)
@@ -50,7 +66,7 @@ class HomeActivity : Activity() {
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
         )
-        if (!gameSettings.reducedMotion) {
+        if (allowAmbientMotion) {
             animateBackground(backgroundImage)
         }
 
@@ -74,6 +90,10 @@ class HomeActivity : Activity() {
 
         val hubEffects = HubEffectView(this).apply {
             reducedMotion = gameSettings.reducedMotion
+            visualQuality = gameSettings.visualQuality
+            particleDensity = gameSettings.particleDensity
+            batterySaver = gameSettings.batterySaver
+            fpsPreference = gameSettings.fpsPreference
         }
         root.addView(
             hubEffects,
@@ -133,7 +153,7 @@ class HomeActivity : Activity() {
                 "Choose a depth, enter a dungeon, and claim its rewards."
             )
         }
-        if (!gameSettings.reducedMotion) {
+        if (allowAmbientMotion) {
             pulse(dungeons, 1.0f, 1.022f, 1850L)
         }
 
@@ -178,7 +198,7 @@ class HomeActivity : Activity() {
                 "Call heroes, relics, and rare astral powers from beyond the veil."
             )
         }
-        if (!gameSettings.reducedMotion) {
+        if (allowAmbientMotion) {
             pulse(summon, 1.0f, 1.018f, 2100L)
         }
 
@@ -245,7 +265,7 @@ class HomeActivity : Activity() {
             bottomMargin = AuthUi.dp(this@HomeActivity, 118)
         }
         root.addView(battleButton, battleParams)
-        if (!gameSettings.reducedMotion) {
+        if (allowAmbientMotion) {
             pulse(battleButton, 1.0f, 1.026f, 1600L)
         }
 
@@ -288,9 +308,9 @@ class HomeActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
-        val previous = reducedMotionAtCreate ?: return
-        val current = GameSettingsStore.load(this).reducedMotion
-        if (previous != current) {
+        val previous = performanceSignatureAtCreate ?: return
+        val currentSettings = GameSettingsStore.load(this)
+        if (previous != performanceSignature(currentSettings)) {
             recreate()
         }
     }
@@ -584,7 +604,8 @@ class HomeActivity : Activity() {
                 topMargin = cardHeight * 67 / 100
             }
         )
-        if (!GameSettingsStore.load(this).reducedMotion) {
+        val performance = GameSettingsStore.load(this)
+        if (!performance.reducedMotion && !performance.batterySaver) {
             pulse(holder, 1f, 1.045f, 1900L)
         }
     }
@@ -871,6 +892,16 @@ class HomeActivity : Activity() {
             interpolator = AccelerateDecelerateInterpolator()
             start()
         }
+    }
+
+    private fun performanceSignature(settings: GameSettings): String {
+        return listOf(
+            settings.reducedMotion.toString(),
+            settings.visualQuality,
+            settings.particleDensity.toString(),
+            settings.batterySaver.toString(),
+            settings.fpsPreference
+        ).joinToString("|")
     }
 
     private fun openSection(

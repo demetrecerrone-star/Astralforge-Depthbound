@@ -33,6 +33,7 @@ class SettingsActivity : Activity() {
         super.onCreate(savedInstanceState)
         AuthUi.setupWindow(this)
         settings = GameSettingsStore.load(this)
+
         if (needsNotificationPermission() && settings.notifications) {
             settings = settings.copy(notifications = false)
             save()
@@ -139,6 +140,48 @@ class SettingsActivity : Activity() {
             save()
         })
 
+        content.addView(sectionTitle("GRAPHICS & PERFORMANCE"))
+
+        content.addView(choiceRow(
+            "Visual Quality",
+            "Controls glow intensity and effect detail.",
+            settings.visualQuality,
+            listOf("LOW", "MEDIUM", "HIGH"),
+            ::qualityLabel
+        ) { value ->
+            settings = settings.copy(visualQuality = value)
+            save()
+        })
+
+        content.addView(sliderRow(
+            "Particle Density",
+            "Controls how many ambient particles are drawn.",
+            settings.particleDensity
+        ) {
+            settings = settings.copy(particleDensity = it)
+            save()
+        })
+
+        content.addView(toggleRow(
+            "Battery Saver",
+            "Reduces particles, caps animated effects near 30 FPS, and disables hub parallax/pulsing.",
+            settings.batterySaver
+        ) {
+            settings = settings.copy(batterySaver = it)
+            save()
+        })
+
+        content.addView(choiceRow(
+            "FPS Preference",
+            "Choose the preferred refresh rate for animated game effects.",
+            settings.fpsPreference,
+            listOf("SYSTEM", "30", "60"),
+            ::fpsLabel
+        ) { value ->
+            settings = settings.copy(fpsPreference = value)
+            save()
+        })
+
         content.addView(sectionTitle("GAMEPLAY"))
 
         content.addView(toggleRow(
@@ -173,7 +216,7 @@ class SettingsActivity : Activity() {
 
         content.addView(toggleRow(
             "Reduced Motion",
-            "Disable hub parallax, pulsing, drifting particles, and extra motion.",
+            "Freezes nonessential hub motion while keeping the interface readable.",
             settings.reducedMotion
         ) {
             settings = settings.copy(reducedMotion = it)
@@ -335,7 +378,7 @@ class SettingsActivity : Activity() {
             )
 
             val valueText = TextView(this@SettingsActivity).apply {
-                text = "${initialValue.coerceIn(0, 100)}%"
+                text = initialValue.coerceIn(0, 100).toString() + "%"
                 textSize = 13f
                 setTextColor(Color.rgb(222, 207, 255))
                 typeface = Typeface.DEFAULT_BOLD
@@ -374,10 +417,8 @@ class SettingsActivity : Activity() {
                             progress: Int,
                             fromUser: Boolean
                         ) {
-                            valueText.text = "$progress%"
-                            if (fromUser) {
-                                onChanged(progress)
-                            }
+                            valueText.text = progress.toString() + "%"
+                            if (fromUser) onChanged(progress)
                         }
 
                         override fun onStartTrackingTouch(seekBar: SeekBar?) {
@@ -388,6 +429,84 @@ class SettingsActivity : Activity() {
                     }
                 )
             })
+        }
+    }
+
+    private fun choiceRow(
+        title: String,
+        subtitle: String,
+        initialValue: String,
+        choices: List<String>,
+        labelFor: (String) -> String,
+        onChanged: (String) -> Unit
+    ): LinearLayout {
+        var current = if (initialValue in choices) initialValue else choices.first()
+
+        return basePanel().apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            isClickable = true
+            isFocusable = true
+
+            val textColumn = LinearLayout(this@SettingsActivity).apply {
+                orientation = LinearLayout.VERTICAL
+                addView(primaryText(title))
+                addView(secondaryText(subtitle))
+            }
+            addView(
+                textColumn,
+                LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
+            )
+
+            val valueText = TextView(this@SettingsActivity).apply {
+                text = labelFor(current)
+                textSize = 13f
+                setTextColor(Color.rgb(222, 207, 255))
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = Gravity.CENTER
+                setPadding(
+                    AuthUi.dp(this@SettingsActivity, 10),
+                    0,
+                    0,
+                    0
+                )
+            }
+            addView(valueText)
+
+            setOnClickListener {
+                AppHaptics.tap(this@SettingsActivity)
+                val index = choices.indexOf(current)
+                current = choices[(index + 1) % choices.size]
+                valueText.text = labelFor(current)
+                onChanged(current)
+            }
+
+            setOnTouchListener { view, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        view.animate()
+                            .scaleX(0.987f)
+                            .scaleY(0.987f)
+                            .alpha(0.9f)
+                            .setDuration(55)
+                            .start()
+                    }
+                    MotionEvent.ACTION_UP,
+                    MotionEvent.ACTION_CANCEL -> {
+                        view.animate()
+                            .scaleX(1f)
+                            .scaleY(1f)
+                            .alpha(1f)
+                            .setDuration(85)
+                            .start()
+                    }
+                }
+                false
+            }
         }
     }
 
@@ -492,6 +611,22 @@ class SettingsActivity : Activity() {
                 0,
                 0
             )
+        }
+    }
+
+    private fun qualityLabel(value: String): String {
+        return when (value) {
+            "LOW" -> "Low"
+            "MEDIUM" -> "Medium"
+            else -> "High"
+        }
+    }
+
+    private fun fpsLabel(value: String): String {
+        return when (value) {
+            "30" -> "30 FPS"
+            "60" -> "60 FPS"
+            else -> "System"
         }
     }
 
