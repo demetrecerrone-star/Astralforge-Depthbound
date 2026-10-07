@@ -7,27 +7,12 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
-import android.view.MotionEvent
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.TextView
-import org.json.JSONObject
-import java.net.URL
-import javax.net.ssl.HttpsURLConnection
 
 class GameSectionActivity : Activity() {
-
-    companion object {
-        private const val UPDATE_FEED_URL =
-            "https://raw.githubusercontent.com/demetrecerrone-star/Astralforge-Depthbound/main/README.md"
-        private const val UPDATE_START = "<!-- ASTRALFORGE_UPDATE_LOG_START"
-        private const val UPDATE_END = "ASTRALFORGE_UPDATE_LOG_END -->"
-        private const val UPDATE_PREFS = "update_log_cache"
-        private const val UPDATE_JSON = "cached_json"
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AuthUi.setupWindow(this)
@@ -35,11 +20,6 @@ class GameSectionActivity : Activity() {
         val title = intent.getStringExtra("section_title") ?: "DEPTHBOUND"
         val subtitle = intent.getStringExtra("section_subtitle")
             ?: "This system is ready for its next development pass."
-
-        if (title == "UPDATE LOG") {
-            showUpdateLog()
-            return
-        }
 
         val root = FrameLayout(this)
 
