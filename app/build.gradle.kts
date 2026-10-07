@@ -14,6 +14,45 @@ val generatedAstralSpritesDir =
 val generatedBattleV2ThreeDDir =
     layout.buildDirectory.dir("generated/battleV2ThreeDAssets")
 
+val generatedDabskyIntroResDir =
+    layout.buildDirectory.dir("generated/dabskyIntroRes")
+
+val generateDabskyCompatIntro =
+    tasks.register<org.gradle.api.tasks.Exec>("generateDabskyCompatIntro") {
+        val source =
+            file("video_sources/dabsky_intro_source.mp4")
+        val output =
+            generatedDabskyIntroResDir.get().asFile
+                .resolve("raw/dabsky_intro.mp4")
+
+        inputs.file(source)
+        outputs.file(output)
+
+        doFirst {
+            output.parentFile.mkdirs()
+        }
+
+        commandLine(
+            "ffmpeg",
+            "-y",
+            "-i", source.absolutePath,
+            "-c:v", "libx264",
+            "-profile:v", "main",
+            "-level:v", "4.0",
+            "-preset", "medium",
+            "-crf", "20",
+            "-maxrate", "10M",
+            "-bufsize", "20M",
+            "-pix_fmt", "yuv420p",
+            "-movflags", "+faststart",
+            "-c:a", "aac",
+            "-b:a", "160k",
+            "-ar", "48000",
+            "-ac", "2",
+            output.absolutePath
+        )
+    }
+
 val generateBattleV2ThreeD =
     tasks.register<org.gradle.api.tasks.Exec>("generateBattleV2ThreeD") {
         workingDir(rootProject.projectDir)
@@ -279,7 +318,7 @@ android {
         applicationId = "com.demetrecerrone.astralforge"
         minSdk = 26
         targetSdk = 35
-        versionCode = 23
+        versionCode = 24
         versionName = "0.0.1.0"
     }
 
@@ -310,13 +349,15 @@ android {
     sourceSets {
         getByName("main").assets.srcDir(generatedAstralSpritesDir)
         getByName("main").assets.srcDir(generatedBattleV2ThreeDDir)
+        getByName("main").res.srcDir(generatedDabskyIntroResDir)
     }
 }
 
 tasks.matching { it.name == "preBuild" }.configureEach {
     dependsOn(
         splitAstralSpriteSheets,
-        generateBattleV2ThreeD
+        generateBattleV2ThreeD,
+        generateDabskyCompatIntro
     )
 }
 

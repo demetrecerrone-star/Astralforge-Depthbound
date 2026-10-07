@@ -33,7 +33,7 @@ class MainActivity : Activity() {
             auth.signOut()
         }
 
-        val content = AuthUi.createScreen(this, 0.41f)
+        val content = AuthUi.createScreen(this, 0.43f)
 
         emailField = AuthUi.field(
             this,

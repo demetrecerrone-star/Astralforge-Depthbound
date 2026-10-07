@@ -1,22 +1,24 @@
 package com.demetrecerrone.astralforge
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.net.Uri
+import android.graphics.Matrix
+import android.graphics.SurfaceTexture
+import android.media.MediaPlayer
 import android.os.Bundle
+import android.view.Surface
+import android.view.TextureView
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
-import android.widget.VideoView
 import kotlin.math.max
-import kotlin.math.roundToInt
 
 class SplashActivity : Activity() {
 
     private var leaving = false
-    private var videoView: VideoView? = null
+    private var mediaPlayer: MediaPlayer? = null
+    private var textureView: TextureView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,49 +73,178 @@ class SplashActivity : Activity() {
         root: FrameLayout,
         poster: ImageView
     ) {
-        val video = CropVideoView(this).apply {
-            setBackgroundColor(Color.BLACK)
-            setVideoURI(
-                Uri.parse(
-                    "android.resource://" +
-                        packageName +
-                        "/" +
-                        R.raw.dabsky_intro
-                )
-            )
-            setOnPreparedListener { mediaPlayer ->
-                mediaPlayer.isLooping = false
-                mediaPlayer.setVolume(1f, 1f)
-                setSourceSize(
-                    mediaPlayer.videoWidth,
-                    mediaPlayer.videoHeight
-                )
-                poster.visibility = View.GONE
-                start()
-            }
-            setOnCompletionListener {
-                leaveSplash(root, true)
-            }
-            setOnErrorListener { _, _, _ ->
-                visibility = View.GONE
-                poster.visibility = View.VISIBLE
-                root.postDelayed(
-                    { leaveSplash(root, true) },
-                    1000L
-                )
-                true
-            }
+        val texture = TextureView(this).apply {
+            alpha = 0f
+            isOpaque = false
         }
+        textureView = texture
 
-        videoView = video
         root.addView(
-            video,
+            texture,
             FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
-            ).apply {
-                gravity = android.view.Gravity.CENTER
+            )
+        )
+
+        texture.surfaceTextureListener =
+            object : TextureView.SurfaceTextureListener {
+                override fun onSurfaceTextureAvailable(
+                    surfaceTexture: SurfaceTexture,
+                    width: Int,
+                    height: Int
+                ) {
+                    preparePlayer(
+                        root,
+                        poster,
+                        texture,
+                        surfaceTexture
+                    )
+                }
+
+                override fun onSurfaceTextureSizeChanged(
+                    surfaceTexture: SurfaceTexture,
+                    width: Int,
+                    height: Int
+                ) {
+                    mediaPlayer?.let { player ->
+                        applyCenterCrop(
+                            texture,
+                            player.videoWidth,
+                            player.videoHeight
+                        )
+                    }
+                }
+
+                override fun onSurfaceTextureDestroyed(
+                    surfaceTexture: SurfaceTexture
+                ): Boolean {
+                    releasePlayer()
+                    return true
+                }
+
+                override fun onSurfaceTextureUpdated(
+                    surfaceTexture: SurfaceTexture
+                ) = Unit
             }
+    }
+
+    private fun preparePlayer(
+        root: FrameLayout,
+        poster: ImageView,
+        texture: TextureView,
+        surfaceTexture: SurfaceTexture
+    ) {
+        releasePlayer()
+
+        val player = MediaPlayer()
+        mediaPlayer = player
+
+        runCatching {
+            resources.openRawResourceFd(R.raw.dabsky_intro).use { afd ->
+                player.setDataSource(
+                    afd.fileDescriptor,
+                    afd.startOffset,
+                    afd.length
+                )
+            }
+
+            val surface = Surface(surfaceTexture)
+            player.setSurface(surface)
+            surface.release()
+
+            player.isLooping = false
+            player.setVolume(1f, 1f)
+
+            player.setOnVideoSizeChangedListener {
+                    mediaPlayer,
+                    videoWidth,
+                    videoHeight ->
+                applyCenterCrop(
+                    texture,
+                    videoWidth,
+                    videoHeight
+                )
+            }
+
+            player.setOnPreparedListener { prepared ->
+                applyCenterCrop(
+                    texture,
+                    prepared.videoWidth,
+                    prepared.videoHeight
+                )
+                prepared.start()
+            }
+
+            player.setOnInfoListener { _, what, _ ->
+                if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) {
+                    texture.alpha = 1f
+                    poster.visibility = View.GONE
+                }
+                false
+            }
+
+            player.setOnCompletionListener {
+                leaveSplash(root, true)
+            }
+
+            player.setOnErrorListener { _, _, _ ->
+                showPosterFallback(root, poster, texture)
+                true
+            }
+
+            player.prepareAsync()
+        }.onFailure {
+            showPosterFallback(root, poster, texture)
+        }
+    }
+
+    private fun applyCenterCrop(
+        texture: TextureView,
+        videoWidth: Int,
+        videoHeight: Int
+    ) {
+        if (videoWidth <= 0 || videoHeight <= 0) return
+
+        texture.post {
+            val viewWidth = texture.width.toFloat()
+            val viewHeight = texture.height.toFloat()
+            if (viewWidth <= 0f || viewHeight <= 0f) return@post
+
+            val scale = max(
+                viewWidth / videoWidth.toFloat(),
+                viewHeight / videoHeight.toFloat()
+            )
+
+            val scaledWidth = videoWidth * scale
+            val scaledHeight = videoHeight * scale
+            val scaleX = scaledWidth / viewWidth
+            val scaleY = scaledHeight / viewHeight
+
+            texture.setTransform(
+                Matrix().apply {
+                    setScale(
+                        scaleX,
+                        scaleY,
+                        viewWidth / 2f,
+                        viewHeight / 2f
+                    )
+                }
+            )
+        }
+    }
+
+    private fun showPosterFallback(
+        root: FrameLayout,
+        poster: ImageView,
+        texture: TextureView
+    ) {
+        releasePlayer()
+        texture.visibility = View.GONE
+        poster.visibility = View.VISIBLE
+        root.postDelayed(
+            { leaveSplash(root, true) },
+            1200L
         )
     }
 
@@ -124,7 +255,7 @@ class SplashActivity : Activity() {
         if (leaving) return
         leaving = true
 
-        videoView?.stopPlayback()
+        releasePlayer()
 
         fun openLogin() {
             startActivity(
@@ -148,6 +279,14 @@ class SplashActivity : Activity() {
             .start()
     }
 
+    private fun releasePlayer() {
+        val player = mediaPlayer ?: return
+        mediaPlayer = null
+        runCatching { player.stop() }
+        runCatching { player.reset() }
+        runCatching { player.release() }
+    }
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
@@ -156,51 +295,8 @@ class SplashActivity : Activity() {
     }
 
     override fun onDestroy() {
-        videoView?.stopPlayback()
-        videoView = null
+        releasePlayer()
+        textureView = null
         super.onDestroy()
-    }
-
-    private class CropVideoView(
-        context: Context
-    ) : VideoView(context) {
-
-        private var sourceWidth = 16
-        private var sourceHeight = 9
-
-        fun setSourceSize(width: Int, height: Int) {
-            if (width <= 0 || height <= 0) return
-            sourceWidth = width
-            sourceHeight = height
-            requestLayout()
-        }
-
-        override fun onMeasure(
-            widthMeasureSpec: Int,
-            heightMeasureSpec: Int
-        ) {
-            val parentWidth =
-                View.MeasureSpec.getSize(widthMeasureSpec)
-            val parentHeight =
-                View.MeasureSpec.getSize(heightMeasureSpec)
-
-            if (parentWidth <= 0 || parentHeight <= 0) {
-                super.onMeasure(
-                    widthMeasureSpec,
-                    heightMeasureSpec
-                )
-                return
-            }
-
-            val scale = max(
-                parentWidth.toFloat() / sourceWidth.toFloat(),
-                parentHeight.toFloat() / sourceHeight.toFloat()
-            )
-
-            setMeasuredDimension(
-                (sourceWidth * scale).roundToInt(),
-                (sourceHeight * scale).roundToInt()
-            )
-        }
     }
 }

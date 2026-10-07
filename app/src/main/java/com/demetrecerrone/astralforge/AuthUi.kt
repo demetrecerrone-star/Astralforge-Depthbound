@@ -64,35 +64,17 @@ object AuthUi {
             )
         )
 
-        val shade = View(activity).apply {
-            background = GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(
-                    Color.argb(0, 1, 2, 10),
-                    Color.argb(18, 1, 2, 10),
-                    Color.argb(92, 1, 2, 10),
-                    Color.argb(178, 1, 2, 10)
-                )
-            )
-        }
-        root.addView(
-            shade,
-            FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-        )
-
         val metrics = activity.resources.displayMetrics
         val screenWidth = metrics.widthPixels
         val screenHeight = metrics.heightPixels
-        val horizontalInset = (screenWidth * 0.025f).toInt()
         val bottomInset = (screenHeight * 0.018f).toInt()
         val top = (screenHeight * topFraction).toInt()
 
-        val formWidth = (screenWidth * 0.45f).toInt()
-            .coerceAtMost(screenWidth - horizontalInset * 2)
-            .coerceAtLeast((screenWidth * 0.38f).toInt())
+        // The artwork already contains a centered dark auth panel.
+        // Keep every interactive control centered inside that panel.
+        val formWidth = (screenWidth * 0.48f).toInt()
+            .coerceAtMost((screenWidth * 0.52f).toInt())
+            .coerceAtLeast((screenWidth * 0.42f).toInt())
 
         val formHeight = (screenHeight - top - bottomInset)
             .coerceAtLeast((screenHeight * 0.42f).toInt())
@@ -129,9 +111,8 @@ object AuthUi {
                 formWidth,
                 formHeight
             ).apply {
-                gravity = Gravity.TOP or Gravity.END
+                gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
                 topMargin = top
-                rightMargin = horizontalInset
                 bottomMargin = bottomInset
             }
         )
