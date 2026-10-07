@@ -14,6 +14,35 @@ val generatedAstralSpritesDir =
 val generatedBattleV2ThreeDDir =
     layout.buildDirectory.dir("generated/battleV2ThreeDAssets")
 
+val generatedDabskyIntroResDir =
+    layout.buildDirectory.dir("generated/dabskyIntroRes")
+
+val downloadDabskyIntro = tasks.register("downloadDabskyIntro") {
+    val destination = generatedDabskyIntroResDir.map {
+        it.file("raw/dabsky_intro.mp4")
+    }
+
+    outputs.file(destination)
+
+    doLast {
+        val out = destination.get().asFile
+        out.parentFile.mkdirs()
+
+        val url =
+            "https://cdn.openart.ai/openart-ai/production/2026-10/create-video/sfvqlFRqJn6BHsU2rFXD/sample_0_1791414083364_3c9b52c0.mp4"
+
+        java.net.URI(url).toURL().openStream().use { input ->
+            out.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+
+        check(out.length() > 1_000_000L) {
+            "DABSKY cinematic intro download failed."
+        }
+    }
+}
+
 val generateBattleV2ThreeD =
     tasks.register<org.gradle.api.tasks.Exec>("generateBattleV2ThreeD") {
         workingDir(rootProject.projectDir)
@@ -279,7 +308,7 @@ android {
         applicationId = "com.demetrecerrone.astralforge"
         minSdk = 26
         targetSdk = 35
-        versionCode = 22
+        versionCode = 23
         versionName = "0.0.1.0"
     }
 
@@ -310,13 +339,15 @@ android {
     sourceSets {
         getByName("main").assets.srcDir(generatedAstralSpritesDir)
         getByName("main").assets.srcDir(generatedBattleV2ThreeDDir)
+        getByName("main").res.srcDir(generatedDabskyIntroResDir)
     }
 }
 
 tasks.matching { it.name == "preBuild" }.configureEach {
     dependsOn(
         splitAstralSpriteSheets,
-        generateBattleV2ThreeD
+        generateBattleV2ThreeD,
+        downloadDabskyIntro
     )
 }
 
