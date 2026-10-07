@@ -17,6 +17,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.google.firebase.auth.FirebaseAuth
 import kotlin.math.min
 
 class HomeActivity : Activity() {
@@ -757,11 +758,14 @@ class HomeActivity : Activity() {
         root.findViewWithTag<View>("hub_coming_soon")?.let {
             root.removeView(it)
         }
+        root.findViewWithTag<View>("hub_signout_confirm")?.let {
+            root.removeView(it)
+        }
 
         val screenW = resources.displayMetrics.widthPixels
         val screenH = resources.displayMetrics.heightPixels
-        val menuWidth = (screenW * 0.205f).toInt()
-            .coerceAtLeast(AuthUi.dp(this, 190))
+        val menuWidth = (screenW * 0.225f).toInt()
+            .coerceAtLeast(AuthUi.dp(this, 210))
 
         val menu = LinearLayout(this).apply {
             tag = "hub_menu_dropdown"
@@ -777,8 +781,8 @@ class HomeActivity : Activity() {
             background = GradientDrawable(
                 GradientDrawable.Orientation.TOP_BOTTOM,
                 intArrayOf(
-                    Color.argb(248, 35, 15, 74),
-                    Color.argb(250, 7, 7, 28)
+                    Color.argb(250, 38, 16, 81),
+                    Color.argb(252, 7, 7, 28)
                 )
             ).apply {
                 cornerRadius = AuthUi.dp(this@HomeActivity, 13).toFloat()
@@ -791,15 +795,15 @@ class HomeActivity : Activity() {
 
         menu.addView(
             TextView(this).apply {
-                text = "MENU"
+                text = "ACCOUNT & SETTINGS"
                 textSize = 9f
-                setTextColor(Color.rgb(224, 188, 112))
+                setTextColor(Color.rgb(230, 196, 125))
                 typeface = Typeface.DEFAULT_BOLD
                 gravity = Gravity.CENTER
-                letterSpacing = 0.12f
+                letterSpacing = 0.10f
                 setPadding(
                     0,
-                    AuthUi.dp(this@HomeActivity, 2),
+                    AuthUi.dp(this@HomeActivity, 1),
                     0,
                     AuthUi.dp(this@HomeActivity, 6)
                 )
@@ -810,37 +814,102 @@ class HomeActivity : Activity() {
             )
         )
 
-        menu.addView(
-            createHubMenuRow(
-                icon = "♙",
-                title = "PLAYER ACCOUNT",
-                subtitle = "Profile, player identity, and account details."
-            ) {
-                root.removeView(menu)
-                startActivity(
-                    Intent(
-                        this@HomeActivity,
-                        AccountActivity::class.java
-                    )
-                )
-            }
-        )
+        fun addEntry(
+            icon: String,
+            title: String,
+            subtitle: String,
+            accent: Int,
+            danger: Boolean = false,
+            action: () -> Unit
+        ) {
+            menu.addView(
+                createHubMenuRow(
+                    icon = icon,
+                    title = title,
+                    subtitle = subtitle,
+                    accentColor = accent,
+                    danger = danger
+                ) {
+                    root.removeView(menu)
+                    action()
+                }
+            )
+        }
 
-        menu.addView(
-            createHubMenuRow(
-                icon = "⚙",
-                title = "SETTINGS",
-                subtitle = "Audio, display, controls, and accessibility."
-            ) {
-                root.removeView(menu)
-                startActivity(
-                    Intent(
-                        this@HomeActivity,
-                        SettingsActivity::class.java
-                    )
+        addEntry(
+            icon = "◈",
+            title = "PLAYER ACCOUNT",
+            subtitle = "Player name, email, identity, and account details.",
+            accent = Color.rgb(169, 118, 255)
+        ) {
+            startActivity(
+                Intent(
+                    this@HomeActivity,
+                    AccountActivity::class.java
                 )
-            }
-        )
+            )
+        }
+
+        addEntry(
+            icon = "⚙",
+            title = "SETTINGS",
+            subtitle = "Audio, display, performance, controls, and accessibility.",
+            accent = Color.rgb(106, 171, 255)
+        ) {
+            startActivity(
+                Intent(
+                    this@HomeActivity,
+                    SettingsActivity::class.java
+                )
+            )
+        }
+
+        addEntry(
+            icon = "↻",
+            title = "UPDATE LOG",
+            subtitle = "Recent changes, additions, fixes, and development notes.",
+            accent = Color.rgb(101, 221, 192)
+        ) {
+            openSection(
+                "UPDATE LOG",
+                "Latest development updates: rebuilt hub artwork, landscape lock, " +
+                    "Daily Reward and Event hub popups, and the new account/settings menu."
+            )
+        }
+
+        addEntry(
+            icon = "?",
+            title = "HELP & SUPPORT",
+            subtitle = "Gameplay help, controls, troubleshooting, and support.",
+            accent = Color.rgb(245, 201, 105)
+        ) {
+            openSection(
+                "HELP & SUPPORT",
+                "Gameplay help, controls, troubleshooting, and support options will live here."
+            )
+        }
+
+        addEntry(
+            icon = "i",
+            title = "ABOUT",
+            subtitle = "Version information, credits, and game details.",
+            accent = Color.rgb(197, 145, 255)
+        ) {
+            openSection(
+                "ABOUT",
+                "Astral Forge: Depthbound • current development build."
+            )
+        }
+
+        addEntry(
+            icon = "⇥",
+            title = "SIGN OUT",
+            subtitle = "Sign out of this account and return to the login screen.",
+            accent = Color.rgb(224, 82, 112),
+            danger = true
+        ) {
+            showSignOutConfirmation(root)
+        }
 
         root.addView(
             menu,
@@ -849,7 +918,7 @@ class HomeActivity : Activity() {
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 Gravity.TOP or Gravity.END
             ).apply {
-                topMargin = (screenH * 0.102f).toInt()
+                topMargin = (screenH * 0.098f).toInt()
                 marginEnd = (screenW * 0.021f).toInt()
             }
         )
@@ -865,6 +934,8 @@ class HomeActivity : Activity() {
         icon: String,
         title: String,
         subtitle: String,
+        accentColor: Int,
+        danger: Boolean = false,
         onClick: () -> Unit
     ): LinearLayout {
         return LinearLayout(this).apply {
@@ -873,17 +944,27 @@ class HomeActivity : Activity() {
             isClickable = true
             isFocusable = true
             setPadding(
-                AuthUi.dp(this@HomeActivity, 9),
-                AuthUi.dp(this@HomeActivity, 7),
-                AuthUi.dp(this@HomeActivity, 9),
-                AuthUi.dp(this@HomeActivity, 7)
+                AuthUi.dp(this@HomeActivity, 8),
+                AuthUi.dp(this@HomeActivity, 5),
+                AuthUi.dp(this@HomeActivity, 8),
+                AuthUi.dp(this@HomeActivity, 5)
             )
-            background = GradientDrawable().apply {
-                setColor(Color.argb(222, 11, 9, 40))
+            background = GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(
+                    Color.argb(
+                        if (danger) 235 else 222,
+                        if (danger) 55 else 13,
+                        if (danger) 13 else 10,
+                        if (danger) 25 else 42
+                    ),
+                    Color.argb(225, 8, 8, 29)
+                )
+            ).apply {
                 cornerRadius = AuthUi.dp(this@HomeActivity, 9).toFloat()
                 setStroke(
                     AuthUi.dp(this@HomeActivity, 1),
-                    Color.rgb(118, 82, 194)
+                    accentColor
                 )
             }
             installTouchFeedback()
@@ -892,15 +973,15 @@ class HomeActivity : Activity() {
             addView(
                 TextView(this@HomeActivity).apply {
                     text = icon
-                    textSize = 18f
-                    setTextColor(Color.rgb(220, 193, 255))
+                    textSize = if (icon.length > 1) 15f else 18f
+                    setTextColor(accentColor)
                     typeface = Typeface.DEFAULT_BOLD
                     gravity = Gravity.CENTER
                     setShadowLayer(
-                        6f,
+                        7f,
                         0f,
                         0f,
-                        Color.rgb(126, 74, 239)
+                        accentColor
                     )
                 },
                 LinearLayout.LayoutParams(
@@ -917,22 +998,29 @@ class HomeActivity : Activity() {
                     addView(
                         TextView(this@HomeActivity).apply {
                             text = title
-                            textSize = 10.5f
-                            setTextColor(Color.WHITE)
+                            textSize = 10.2f
+                            setTextColor(
+                                if (danger) Color.rgb(255, 174, 190)
+                                else Color.WHITE
+                            )
                             typeface = Typeface.DEFAULT_BOLD
                             letterSpacing = 0.04f
+                            maxLines = 1
                         }
                     )
 
                     addView(
                         TextView(this@HomeActivity).apply {
                             text = subtitle
-                            textSize = 7.8f
-                            setTextColor(Color.rgb(182, 169, 211))
+                            textSize = 7.3f
+                            setTextColor(
+                                if (danger) Color.rgb(218, 145, 160)
+                                else Color.rgb(183, 170, 213)
+                            )
                             maxLines = 2
                             setPadding(
                                 0,
-                                AuthUi.dp(this@HomeActivity, 2),
+                                AuthUi.dp(this@HomeActivity, 1),
                                 0,
                                 0
                             )
@@ -948,11 +1036,163 @@ class HomeActivity : Activity() {
 
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                AuthUi.dp(this@HomeActivity, 54)
+                AuthUi.dp(this@HomeActivity, 46)
             ).apply {
-                bottomMargin = AuthUi.dp(this@HomeActivity, 6)
+                bottomMargin = AuthUi.dp(this@HomeActivity, 5)
             }
         }
+    }
+
+    private fun showSignOutConfirmation(root: FrameLayout) {
+        root.findViewWithTag<View>("hub_signout_confirm")?.let {
+            root.removeView(it)
+        }
+
+        val screenW = resources.displayMetrics.widthPixels
+        val screenH = resources.displayMetrics.heightPixels
+
+        val panel = LinearLayout(this).apply {
+            tag = "hub_signout_confirm"
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            elevation = AuthUi.dp(this@HomeActivity, 18).toFloat()
+            setPadding(
+                AuthUi.dp(this@HomeActivity, 16),
+                AuthUi.dp(this@HomeActivity, 12),
+                AuthUi.dp(this@HomeActivity, 16),
+                AuthUi.dp(this@HomeActivity, 12)
+            )
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(
+                    Color.argb(252, 54, 14, 32),
+                    Color.argb(252, 10, 7, 23)
+                )
+            ).apply {
+                cornerRadius = AuthUi.dp(this@HomeActivity, 14).toFloat()
+                setStroke(
+                    AuthUi.dp(this@HomeActivity, 1),
+                    Color.rgb(224, 82, 112)
+                )
+            }
+
+            addView(
+                TextView(this@HomeActivity).apply {
+                    text = "SIGN OUT?"
+                    textSize = 15f
+                    setTextColor(Color.WHITE)
+                    typeface = Typeface.DEFAULT_BOLD
+                    gravity = Gravity.CENTER
+                }
+            )
+
+            addView(
+                TextView(this@HomeActivity).apply {
+                    text = "You will return to the login screen."
+                    textSize = 9f
+                    setTextColor(Color.rgb(211, 177, 190))
+                    gravity = Gravity.CENTER
+                    setPadding(
+                        0,
+                        AuthUi.dp(this@HomeActivity, 3),
+                        0,
+                        AuthUi.dp(this@HomeActivity, 8)
+                    )
+                }
+            )
+
+            val actions = LinearLayout(this@HomeActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+            }
+
+            fun confirmButton(
+                label: String,
+                accent: Int,
+                action: () -> Unit
+            ): TextView {
+                return TextView(this@HomeActivity).apply {
+                    text = label
+                    textSize = 10f
+                    setTextColor(Color.WHITE)
+                    typeface = Typeface.DEFAULT_BOLD
+                    gravity = Gravity.CENTER
+                    isClickable = true
+                    isFocusable = true
+                    background = GradientDrawable().apply {
+                        setColor(Color.argb(225, 13, 10, 37))
+                        cornerRadius = AuthUi.dp(this@HomeActivity, 9).toFloat()
+                        setStroke(
+                            AuthUi.dp(this@HomeActivity, 1),
+                            accent
+                        )
+                    }
+                    installTouchFeedback()
+                    setOnClickListener { action() }
+                }
+            }
+
+            actions.addView(
+                confirmButton(
+                    "CANCEL",
+                    Color.rgb(119, 93, 181)
+                ) {
+                    root.removeView(this@apply)
+                },
+                LinearLayout.LayoutParams(
+                    0,
+                    AuthUi.dp(this@HomeActivity, 36),
+                    1f
+                ).apply {
+                    marginEnd = AuthUi.dp(this@HomeActivity, 4)
+                }
+            )
+
+            actions.addView(
+                confirmButton(
+                    "SIGN OUT",
+                    Color.rgb(224, 82, 112)
+                ) {
+                    FirebaseAuth.getInstance().signOut()
+                    getSharedPreferences("auth_prefs", MODE_PRIVATE)
+                        .edit()
+                        .clear()
+                        .apply()
+                    startActivity(
+                        Intent(
+                            this@HomeActivity,
+                            MainActivity::class.java
+                        )
+                    )
+                    finishAffinity()
+                },
+                LinearLayout.LayoutParams(
+                    0,
+                    AuthUi.dp(this@HomeActivity, 36),
+                    1f
+                ).apply {
+                    marginStart = AuthUi.dp(this@HomeActivity, 4)
+                }
+            )
+
+            addView(
+                actions,
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            )
+        }
+
+        root.addView(
+            panel,
+            FrameLayout.LayoutParams(
+                (screenW * 0.25f).toInt()
+                    .coerceAtLeast(AuthUi.dp(this, 220)),
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER
+            )
+        )
     }
 
     private fun showComingSoonPopup(
