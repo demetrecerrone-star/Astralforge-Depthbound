@@ -30,9 +30,10 @@ jobs:
         with:
           gradle-version: "8.9"
 
-      - name: Verify brand asset generator tools
+      - name: Install brand asset encoder
         run: |
-          python3 --version
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
           ffmpeg -version | head -n 1
 
       - name: Build debug APK
