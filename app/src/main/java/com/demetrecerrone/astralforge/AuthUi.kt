@@ -53,7 +53,7 @@ object AuthUi {
 
         val bgImage = ImageView(activity).apply {
             setImageResource(R.drawable.file_00000000bfc081f5b0a1931c13d627e8)
-            scaleType = ImageView.ScaleType.CENTER_CROP
+            scaleType = ImageView.ScaleType.FIT_CENTER
             contentDescription = null
         }
         root.addView(
