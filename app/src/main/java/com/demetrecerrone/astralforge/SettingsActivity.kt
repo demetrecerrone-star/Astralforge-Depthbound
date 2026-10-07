@@ -33,6 +33,10 @@ class SettingsActivity : Activity() {
         super.onCreate(savedInstanceState)
         AuthUi.setupWindow(this)
         settings = GameSettingsStore.load(this)
+        if (needsNotificationPermission() && settings.notifications) {
+            settings = settings.copy(notifications = false)
+            save()
+        }
 
         val root = FrameLayout(this)
 
@@ -205,19 +209,6 @@ class SettingsActivity : Activity() {
             AppMusicManager.sync(this)
             AppMusicManager.setVolume(settings.musicVolume)
             recreate()
-        })
-
-        content.addView(TextView(this).apply {
-            text = "Audio: ${settings.musicVolume}% music • ${settings.soundEffectsVolume}% SFX"
-            textSize = 11f
-            setTextColor(Color.rgb(130, 120, 162))
-            gravity = Gravity.CENTER
-            setPadding(
-                0,
-                AuthUi.dp(this@SettingsActivity, 14),
-                0,
-                0
-            )
         })
 
         scroll.addView(
