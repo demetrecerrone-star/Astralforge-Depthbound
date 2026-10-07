@@ -41,13 +41,13 @@ object AuthUi {
     fun createScreen(activity: Activity, topFraction: Float): LinearLayout {
         val root = FrameLayout(activity)
 
-        val background = ImageView(activity).apply {
+        val bgImage = ImageView(activity).apply {
             setImageResource(R.drawable.file_00000000bfc081f5b0a1931c13d627e8)
             scaleType = ImageView.ScaleType.CENTER_CROP
             contentDescription = null
         }
         root.addView(
-            background,
+            bgImage,
             FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
@@ -55,7 +55,7 @@ object AuthUi {
         )
 
         val shade = View(activity).apply {
-            background = GradientDrawable(
+            this.background = GradientDrawable(
                 GradientDrawable.Orientation.TOP_BOTTOM,
                 intArrayOf(
                     Color.argb(0, 1, 2, 10),
@@ -86,9 +86,9 @@ object AuthUi {
         }
         scroll.addView(
             content,
-            ScrollView.LayoutParams(
-                ScrollView.LayoutParams.MATCH_PARENT,
-                ScrollView.LayoutParams.WRAP_CONTENT
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
             )
         )
         root.addView(
@@ -114,7 +114,7 @@ object AuthUi {
             setHintTextColor(Color.rgb(145, 137, 188))
             setTextColor(Color.WHITE)
             textSize = 16f
-            singleLine = true
+            setSingleLine(true)
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(context, 18), 0, dp(context, 18), 0)
             background = GradientDrawable().apply {
@@ -123,7 +123,12 @@ object AuthUi {
                 setStroke(dp(context, 1), Color.rgb(132, 111, 205))
             }
             compoundDrawablePadding = dp(context, 14)
-            setCompoundDrawablesWithIntrinsicBounds(iconRes, 0, if (isPassword) R.drawable.ic_eye else 0, 0)
+            setCompoundDrawablesWithIntrinsicBounds(
+                iconRes,
+                0,
+                if (isPassword) R.drawable.ic_eye else 0,
+                0
+            )
             this.inputType = inputType
         }
 
@@ -131,7 +136,9 @@ object AuthUi {
             edit.transformationMethod = PasswordTransformationMethod.getInstance()
             edit.setSelection(edit.text.length)
             edit.setOnTouchListener { _, event ->
-                if (event.action == MotionEvent.ACTION_UP && event.x >= edit.width - edit.totalPaddingEnd) {
+                if (event.action == MotionEvent.ACTION_UP &&
+                    event.x >= edit.width - edit.totalPaddingEnd
+                ) {
                     val hidden = edit.transformationMethod is PasswordTransformationMethod
                     edit.transformationMethod =
                         if (hidden) HideReturnsTransformationMethod.getInstance()
@@ -165,6 +172,33 @@ object AuthUi {
         onClick: () -> Unit
     ): ImageView = ImageView(context).apply {
         setImageResource(drawableRes)
+        scaleType = ImageView.ScaleType.FIT_CENTER
+        adjustViewBounds = true
+        isClickable = true
+        isFocusable = true
+        contentDescription = description
+        setOnClickListener { onClick() }
+        setOnTouchListener { view, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> view.alpha = 0.72f
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> view.alpha = 1f
+            }
+            false
+        }
+        layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            dp(context, heightDp)
+        )
+    }
+
+    fun zipAssetButton(
+        context: Context,
+        entryName: String,
+        description: String,
+        heightDp: Int,
+        onClick: () -> Unit
+    ): ImageView = ImageView(context).apply {
+        ButtonAssetStore.load(context, entryName)?.let { setImageBitmap(it) }
         scaleType = ImageView.ScaleType.FIT_CENTER
         adjustViewBounds = true
         isClickable = true

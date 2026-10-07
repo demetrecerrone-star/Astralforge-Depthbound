@@ -8,6 +8,10 @@
         android:theme="@android:style/Theme.Material.NoActionBar">
 
         <activity
+            android:name=".GameSectionActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".HomeActivity"
             android:exported="false" />
 
