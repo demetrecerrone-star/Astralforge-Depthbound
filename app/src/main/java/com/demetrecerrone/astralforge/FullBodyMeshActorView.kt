@@ -586,21 +586,12 @@ class FullBodyMeshActorView @JvmOverloads constructor(
                         freeEdge
 
                 if (name == "attack") {
-                    x -=
-                        pulse *
-                            16f *
-                            freeEdge
-                    y +=
-                        pulse *
-                            4f *
-                            freeEdge
+                    x -= pulse * 16f * freeEdge
+                    y += pulse * 4f * freeEdge
                 }
 
                 if (name == "hit") {
-                    x +=
-                        pulse *
-                            11f *
-                            freeEdge
+                    x += pulse * 11f * freeEdge
                 }
 
                 if (name == "death") {
@@ -615,6 +606,16 @@ class FullBodyMeshActorView @JvmOverloads constructor(
             }
         }
 
+        // The cape asset was generated independently from the body,
+        // so place it by its shoulder clasp instead of stretching it
+        // across the entire actor canvas.
+        canvas.save()
+        canvas.translate(735f, 245f)
+        canvas.scale(0.60f, 0.60f)
+        canvas.translate(
+            -bitmap.width * 0.82f,
+            -bitmap.height * 0.14f
+        )
         canvas.drawBitmapMesh(
             bitmap,
             meshW,
@@ -625,6 +626,7 @@ class FullBodyMeshActorView @JvmOverloads constructor(
             0,
             paint
         )
+        canvas.restore()
     }
 
     private fun drawSword(
@@ -637,28 +639,25 @@ class FullBodyMeshActorView @JvmOverloads constructor(
             sin(progress * PI.toFloat())
                 .coerceAtLeast(0f)
 
-        canvas.save()
-
-        if (name == "attack") {
-            canvas.rotate(
-                -72f * pulse,
-                bitmap.width * 0.77f,
-                bitmap.height * 0.45f
-            )
-        } else if (name == "hit") {
-            canvas.rotate(
-                7f * pulse,
-                bitmap.width * 0.77f,
-                bitmap.height * 0.45f
-            )
-        } else if (name == "death") {
-            canvas.rotate(
-                34f * smoothStep(progress),
-                bitmap.width * 0.77f,
-                bitmap.height * 0.45f
-            )
+        val actionRotation = when (name) {
+            "attack" -> -72f * pulse
+            "hit" -> 7f * pulse
+            "death" ->
+                34f * smoothStep(progress)
+            else -> 0f
         }
 
+        // Anchor the grip to the Knight's right hand. The independent
+        // sword illustration intentionally gets a narrower X scale so
+        // its oversized generated crossguard does not cover the torso.
+        canvas.save()
+        canvas.translate(1035f, 535f)
+        canvas.rotate(-18f + actionRotation)
+        canvas.scale(0.22f, 0.34f)
+        canvas.translate(
+            -bitmap.width * 0.50f,
+            -bitmap.height * 0.18f
+        )
         canvas.drawBitmap(bitmap, 0f, 0f, paint)
         canvas.restore()
     }
@@ -673,32 +672,24 @@ class FullBodyMeshActorView @JvmOverloads constructor(
             sin(progress * PI.toFloat())
                 .coerceAtLeast(0f)
 
-        canvas.save()
-
-        when (name) {
-            "attack" ->
-                canvas.rotate(
-                    7f * pulse,
-                    bitmap.width * 0.31f,
-                    bitmap.height * 0.42f
-                )
-
-            "hit" ->
-                canvas.rotate(
-                    -10f * pulse,
-                    bitmap.width * 0.31f,
-                    bitmap.height * 0.42f
-                )
-
+        val rotation = when (name) {
+            "attack" -> 7f * pulse
+            "hit" -> -10f * pulse
             "death" ->
-                canvas.rotate(
-                    -22f *
-                        smoothStep(progress),
-                    bitmap.width * 0.31f,
-                    bitmap.height * 0.42f
-                )
+                -22f * smoothStep(progress)
+            else -> 0f
         }
 
+        // Keep the shield as a rigid front layer and attach it to the
+        // left forearm instead of rendering it at full actor size.
+        canvas.save()
+        canvas.translate(425f, 515f)
+        canvas.rotate(-8f + rotation)
+        canvas.scale(0.24f, 0.24f)
+        canvas.translate(
+            -bitmap.width * 0.50f,
+            -bitmap.height * 0.50f
+        )
         canvas.drawBitmap(bitmap, 0f, 0f, paint)
         canvas.restore()
     }
