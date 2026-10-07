@@ -34,7 +34,7 @@ object AuthUi {
         context.resources.displayMetrics.heightPixels
 
     private fun fieldHeight(context: Context): Int =
-        (screenHeight(context) * 0.067f).toInt().coerceAtLeast(42)
+        (screenHeight(context) * 0.058f).toInt().coerceAtLeast(40)
 
     private fun controlGap(context: Context): Int =
         (screenHeight(context) * 0.008f).toInt().coerceAtLeast(4)
@@ -72,9 +72,9 @@ object AuthUi {
 
         // The artwork already contains a centered dark auth panel.
         // Keep every interactive control centered inside that panel.
-        val formWidth = (screenWidth * 0.44f).toInt()
-            .coerceAtMost((screenWidth * 0.47f).toInt())
-            .coerceAtLeast((screenWidth * 0.40f).toInt())
+        val formWidth = (screenWidth * 0.395f).toInt()
+            .coerceAtMost((screenWidth * 0.41f).toInt())
+            .coerceAtLeast((screenWidth * 0.37f).toInt())
 
         val formHeight = (screenHeight - top - bottomInset)
             .coerceAtLeast((screenHeight * 0.42f).toInt())
@@ -133,10 +133,10 @@ object AuthUi {
             this.hint = hint
             setHintTextColor(Color.rgb(160, 151, 199))
             setTextColor(Color.WHITE)
-            textSize = 13f
+            textSize = 12.5f
             setSingleLine(true)
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(context, 14), 0, dp(context, 14), 0)
+            setPadding(dp(context, 11), 0, dp(context, 11), 0)
             background = GradientDrawable().apply {
                 setColor(Color.argb(214, 6, 10, 28))
                 cornerRadius = dp(context, 12).toFloat()
@@ -268,7 +268,15 @@ object AuthUi {
         }
 
         val requested = dp(context, heightDp)
-        val cap = (screenHeight(context) * 0.082f).toInt()
+        val maxFraction =
+            if (description == "Continue with Google" ||
+                description == "Continue as Guest"
+            ) {
+                0.125f
+            } else {
+                0.105f
+            }
+        val cap = (screenHeight(context) * maxFraction).toInt()
         layoutParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             min(requested, cap)

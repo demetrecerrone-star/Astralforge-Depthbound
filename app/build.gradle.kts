@@ -318,7 +318,7 @@ android {
         applicationId = "com.demetrecerrone.astralforge"
         minSdk = 26
         targetSdk = 35
-        versionCode = 26
+        versionCode = 27
         versionName = "0.0.1.0"
     }
 
