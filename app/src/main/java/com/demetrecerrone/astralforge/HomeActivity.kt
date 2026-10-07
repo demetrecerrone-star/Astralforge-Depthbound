@@ -888,9 +888,11 @@ class HomeActivity : Activity() {
             subtitle = "Gameplay help, controls, troubleshooting, and support.",
             accent = Color.rgb(245, 201, 105)
         ) {
-            openSection(
-                "HELP & SUPPORT",
-                "Gameplay help, controls, troubleshooting, and support options will live here."
+            startActivity(
+                Intent(
+                    this@HomeActivity,
+                    HelpSupportActivity::class.java
+                )
             )
         }
 
