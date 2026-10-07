@@ -668,9 +668,7 @@ class BattleActivity : Activity() {
     private fun loadSpritesAsync() {
         Thread {
             val playerId =
-                BattleActorFactory.playerRigId(
-                    progress.playerClass
-                )
+                HeroRosterStore.activeHero(this).id
             enemyEntityId =
                 BattleActorFactory.enemyRigId(depth)
 
@@ -703,9 +701,7 @@ class BattleActivity : Activity() {
                 if (skeletalPlayer == null) {
                     EntitySpriteStore.loadCharacter(
                         this,
-                        EntitySpriteStore.characterIdForClass(
-                            progress.playerClass
-                        )
+                        playerId
                     )
                 } else {
                     null
