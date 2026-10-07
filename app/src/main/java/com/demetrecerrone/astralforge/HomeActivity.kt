@@ -1,5 +1,7 @@
 package com.demetrecerrone.astralforge
 
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
@@ -7,41 +9,55 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
+import android.view.WindowInsets
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.TextView
 import com.google.firebase.auth.FirebaseAuth
+import kotlin.math.min
 
 class HomeActivity : Activity() {
+
+    private val hubPack = "astral_hub_buttons_individual.zip"
+    private val bottomPack = "bottomnav.zip"
+    private val avatarPack = "avatarcorner.zip"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AuthUi.setupWindow(this)
 
+        val screenW = resources.displayMetrics.widthPixels
         val root = FrameLayout(this)
 
+        val backgroundImage = ImageView(this).apply {
+            setImageResource(R.drawable.file_00000000a45881f5ad657cc79abf1338)
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            scaleX = 1.055f
+            scaleY = 1.055f
+            contentDescription = null
+        }
         root.addView(
-            ImageView(this).apply {
-                setImageResource(R.drawable.file_00000000bfc081f5b0a1931c13d627e8)
-                scaleType = ImageView.ScaleType.CENTER_CROP
-                contentDescription = null
-            },
+            backgroundImage,
             FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
         )
+        animateBackground(backgroundImage)
 
         root.addView(
             View(this).apply {
                 background = GradientDrawable(
                     GradientDrawable.Orientation.TOP_BOTTOM,
                     intArrayOf(
-                        Color.argb(95, 2, 4, 18),
-                        Color.argb(160, 2, 4, 18),
-                        Color.argb(225, 2, 4, 18)
+                        Color.argb(48, 3, 5, 20),
+                        Color.argb(14, 3, 5, 20),
+                        Color.argb(24, 3, 5, 20),
+                        Color.argb(118, 3, 5, 20)
                     )
                 )
             },
@@ -51,166 +67,629 @@ class HomeActivity : Activity() {
             )
         )
 
-        val scroll = ScrollView(this).apply {
-            overScrollMode = View.OVER_SCROLL_NEVER
-        }
-        val content = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(
-                AuthUi.dp(this@HomeActivity, 18),
-                AuthUi.dp(this@HomeActivity, 66),
-                AuthUi.dp(this@HomeActivity, 18),
-                AuthUi.dp(this@HomeActivity, 40)
+        root.addView(
+            HubEffectView(this),
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
             )
-        }
+        )
 
+        val progress = ProgressionStore.load(this)
         val user = FirebaseAuth.getInstance().currentUser
         val displayName = when {
             user?.isAnonymous == true -> "Guest Delver"
             !user?.displayName.isNullOrBlank() -> user?.displayName ?: "Delver"
             else -> "Delver"
         }
-        val progress = ProgressionStore.load(this)
 
-        content.addView(TextView(this).apply {
+        val playerCard = createPlayerCorner(displayName, progress, screenW)
+        val playerCardParams = FrameLayout.LayoutParams(
+            min(screenW * 58 / 100, AuthUi.dp(this, 340)),
+            AuthUi.dp(this, 112),
+            Gravity.TOP or Gravity.START
+        ).apply {
+            topMargin = AuthUi.dp(this@HomeActivity, 14)
+            marginStart = AuthUi.dp(this@HomeActivity, 6)
+        }
+        root.addView(playerCard, playerCardParams)
+
+        val statusPanel = createStatusPanel(progress)
+        val statusParams = FrameLayout.LayoutParams(
+            min(screenW * 37 / 100, AuthUi.dp(this, 188)),
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            Gravity.TOP or Gravity.END
+        ).apply {
+            topMargin = AuthUi.dp(this@HomeActivity, 18)
+            marginEnd = AuthUi.dp(this@HomeActivity, 8)
+        }
+        root.addView(statusPanel, statusParams)
+
+        val titleView = TextView(this).apply {
             text = "ASTRAL FORGE: DEPTHBOUND"
-            textSize = 24f
             setTextColor(Color.WHITE)
+            textSize = 16f
             typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
             gravity = Gravity.CENTER
-            letterSpacing = 0.04f
-        })
-
-        content.addView(TextView(this).apply {
-            text = displayName
-            textSize = 18f
-            setTextColor(Color.rgb(218, 205, 255))
-            typeface = Typeface.DEFAULT_BOLD
-            gravity = Gravity.CENTER
-            setPadding(0, AuthUi.dp(this@HomeActivity, 8), 0, 0)
-        })
-
-        val status = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setPadding(
-                AuthUi.dp(this@HomeActivity, 18),
-                AuthUi.dp(this@HomeActivity, 14),
-                AuthUi.dp(this@HomeActivity, 18),
-                AuthUi.dp(this@HomeActivity, 14)
-            )
-            background = GradientDrawable().apply {
-                setColor(Color.argb(205, 6, 9, 28))
-                cornerRadius = AuthUi.dp(this@HomeActivity, 16).toFloat()
-                setStroke(AuthUi.dp(this@HomeActivity, 1), Color.rgb(119, 86, 205))
-            }
+            letterSpacing = 0.03f
+            setShadowLayer(8f, 0f, 0f, Color.rgb(95, 70, 255))
         }
-        status.addView(TextView(this).apply {
-            text = "LEVEL ${progress.level}   •   DEPTH ${progress.depth}   •   RANK ${progress.rank}"
-            textSize = 15f
-            setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
-            gravity = Gravity.CENTER
-        })
-        status.addView(TextView(this).apply {
-            text = "${progress.xp} / ${progress.xpToNext} XP     ✦ ${progress.astralShards} Astral Shards     ⬡ ${progress.gold} Gold"
-            textSize = 12f
-            setTextColor(Color.rgb(194, 185, 230))
-            gravity = Gravity.CENTER
-            setPadding(0, AuthUi.dp(this@HomeActivity, 7), 0, 0)
-        })
-        content.addView(
-            status,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                topMargin = AuthUi.dp(this@HomeActivity, 14)
-                bottomMargin = AuthUi.dp(this@HomeActivity, 14)
-            }
-        )
-
-        addHubButton(content, "continue_adventure.png", "Continue Adventure", 84) {
-            openSection("CONTINUE ADVENTURE", "Your next descent into the Depthbound awaits.")
+        val titleParams = FrameLayout.LayoutParams(
+            screenW * 64 / 100,
+            AuthUi.dp(this, 40),
+            Gravity.TOP or Gravity.CENTER_HORIZONTAL
+        ).apply {
+            topMargin = AuthUi.dp(this@HomeActivity, 104)
         }
-        addHubButton(content, "character.png", "Character") {
+        root.addView(titleView, titleParams)
+
+        val dungeons = addHubButton(
+            root, "dungeons.png", "Dungeons", screenW * 56 / 100, 0.22f, 0.245f
+        ) {
+            openSection("DUNGEONS", "Choose a depth, enter a dungeon, and claim its rewards.")
+        }
+        pulse(dungeons, 1.0f, 1.025f, 1850L)
+
+        addHubButton(root, "shop.png", "Shop", screenW * 42 / 100, 0.015f, 0.405f) {
+            openSection("SHOP", "Spend gold and Astral Shards on supplies and upgrades.")
+        }
+
+        addHubButton(root, "forge.png", "Forge", screenW * 42 / 100, 0.565f, 0.405f) {
+            openSection("FORGE", "Enhance weapons, armor, and relics at the Astral Forge.")
+        }
+
+        val summon = addHubButton(
+            root, "summon.png", "Summon", screenW * 43 / 100, 0.285f, 0.515f
+        ) {
+            openSection("SUMMON", "Call heroes, relics, and rare astral powers from beyond the veil.")
+        }
+        pulse(summon, 1.0f, 1.02f, 2100L)
+
+        addHubButton(root, "heroes.png", "Heroes", screenW * 42 / 100, 0.02f, 0.635f) {
             startActivity(Intent(this, CharacterActivity::class.java))
         }
-        addHubButton(content, "equipment.png", "Equipment") {
-            openSection("EQUIPMENT", "Weapons, armor, accessories, loadouts, and item power.")
-        }
-        addHubButton(content, "class.png", "Class") {
-            openSection("CLASS", "Class progression, skills, evolutions, and hidden paths.")
-        }
-        addHubButton(content, "ascension.png", "Ascension") {
-            openSection("ASCENSION", "Permanent advancement beyond ordinary level limits.")
-        }
-        addHubButton(content, "forge.png", "Forge") {
-            openSection("FORGE", "Upgrade, enhance, refine, and craft equipment.")
-        }
-        addHubButton(content, "quests.png", "Quests") {
-            openSection("QUESTS", "Main objectives, side quests, dailies, and rewards.")
-        }
-        addHubButton(content, "shop.png", "Shop") {
-            openSection("SHOP", "Currency, consumables, cosmetics, and future store systems.")
-        }
-        addHubButton(content, "inventory.png", "Inventory") {
-            openSection("INVENTORY", "Items, materials, loot, keys, and consumables.")
-        }
-        addHubButton(content, "achievements.png", "Achievements") {
-            openSection("ACHIEVEMENTS", "Milestones, account accomplishments, and special rewards.")
-        }
-        addHubButton(content, "settings.png", "Settings") {
-            openSection("SETTINGS", "Audio, display, account, accessibility, and game preferences.")
-        }
-        addHubButton(content, "sign_out.png", "Sign Out") {
-            FirebaseAuth.getInstance().signOut()
-            getSharedPreferences("auth_prefs", MODE_PRIVATE).edit().clear().apply()
-            startActivity(Intent(this, MainActivity::class.java))
-            finish()
+
+        addHubButton(root, "guild.png", "Guild", screenW * 42 / 100, 0.56f, 0.635f) {
+            openSection("GUILD", "Guild progression, members, raids, contributions, and rewards.")
         }
 
-        scroll.addView(
-            content,
+        addHubButton(root, "quests.png", "Quests", screenW * 40 / 100, 0.585f, 0.748f) {
+            openSection("QUESTS", "Main quests, side missions, dailies, and milestone rewards.")
+        }
+
+        val battleButton = ImageView(this).apply {
+            setImageResource(R.drawable.file_00000000b44481f6b8c3df3c70bf55e3)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            adjustViewBounds = true
+            contentDescription = "Battle"
+            isClickable = true
+            isFocusable = true
+            setOnClickListener {
+                openSection("BATTLE", "Enter the Depths and face the monsters below.")
+            }
+            installTouchFeedback()
+        }
+        val battleWidth = screenW * 60 / 100
+        val battleParams = FrameLayout.LayoutParams(
+            battleWidth,
+            battleWidth * 34 / 100,
+            Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+        ).apply {
+            bottomMargin = AuthUi.dp(this@HomeActivity, 102)
+        }
+        root.addView(battleButton, battleParams)
+        pulse(battleButton, 1.0f, 1.035f, 1600L)
+
+        val bottomNav = createBottomNav(screenW)
+        val bottomNavParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            AuthUi.dp(this, 88),
+            Gravity.BOTTOM
+        ).apply {
+            bottomMargin = AuthUi.dp(this@HomeActivity, 8)
+        }
+        root.addView(bottomNav, bottomNavParams)
+
+        root.setOnApplyWindowInsetsListener { _, insets: WindowInsets ->
+            val systemTop = insets.systemWindowInsetTop
+            val systemBottom = insets.systemWindowInsetBottom
+            val safeGap = AuthUi.dp(this@HomeActivity, 8)
+
+            playerCardParams.topMargin = systemTop + AuthUi.dp(this@HomeActivity, 6)
+            playerCard.layoutParams = playerCardParams
+
+            statusParams.topMargin = systemTop + AuthUi.dp(this@HomeActivity, 10)
+            statusPanel.layoutParams = statusParams
+
+            titleParams.topMargin = systemTop + AuthUi.dp(this@HomeActivity, 96)
+            titleView.layoutParams = titleParams
+
+            bottomNavParams.bottomMargin = systemBottom + safeGap
+            bottomNav.layoutParams = bottomNavParams
+
+            battleParams.bottomMargin =
+                systemBottom + safeGap + AuthUi.dp(this@HomeActivity, 94)
+            battleButton.layoutParams = battleParams
+
+            insets
+        }
+        root.requestApplyInsets()
+
+        setContentView(root)
+    }
+
+    private fun createPlayerCorner(
+        displayName: String,
+        progress: PlayerProgress,
+        screenW: Int
+    ): FrameLayout {
+        val card = FrameLayout(this).apply {
+            contentDescription = "Player profile"
+            isClickable = true
+            isFocusable = true
+            setOnClickListener {
+                startActivity(Intent(this@HomeActivity, CharacterActivity::class.java))
+            }
+            installTouchFeedback()
+        }
+
+        val cardWidth = min(screenW * 58 / 100, AuthUi.dp(this, 340))
+        val cardHeight = AuthUi.dp(this, 112)
+
+        val avatarPlaceholderSize = AuthUi.dp(this, 65)
+        val avatarPlaceholder = TextView(this).apply {
+            text = displayName.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "D"
+            gravity = Gravity.CENTER
+            textSize = 27f
+            setTextColor(Color.WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                intArrayOf(
+                    Color.rgb(44, 24, 92),
+                    Color.rgb(83, 52, 170),
+                    Color.rgb(18, 35, 95)
+                )
+            ).apply {
+                shape = GradientDrawable.OVAL
+                setStroke(AuthUi.dp(this@HomeActivity, 1), Color.rgb(137, 102, 255))
+            }
+            setShadowLayer(7f, 0f, 0f, Color.rgb(113, 82, 255))
+        }
+        card.addView(
+            avatarPlaceholder,
             FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT
-            )
+                avatarPlaceholderSize,
+                avatarPlaceholderSize,
+                Gravity.START or Gravity.CENTER_VERTICAL
+            ).apply {
+                marginStart = AuthUi.dp(this@HomeActivity, 17)
+            }
         )
-        root.addView(
-            scroll,
+
+        ButtonAssetStore.load(
+            this,
+            avatarPack,
+            "celestial_fantasy_profile_banner_frame.png"
+        )?.let { bitmap ->
+            card.addView(
+                ImageView(this).apply {
+                    setImageBitmap(bitmap)
+                    scaleType = ImageView.ScaleType.FIT_XY
+                    contentDescription = null
+                },
+                FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+                )
+            )
+        }
+
+        ButtonAssetStore.load(
+            this,
+            avatarPack,
+            "celestial_gold_and_amethyst_avatar_frame.png"
+        )?.let { bitmap ->
+            card.addView(
+                ImageView(this).apply {
+                    setImageBitmap(bitmap)
+                    scaleType = ImageView.ScaleType.FIT_CENTER
+                    contentDescription = null
+                },
+                FrameLayout.LayoutParams(
+                    AuthUi.dp(this@HomeActivity, 82),
+                    AuthUi.dp(this@HomeActivity, 82),
+                    Gravity.START or Gravity.CENTER_VERTICAL
+                ).apply {
+                    marginStart = AuthUi.dp(this@HomeActivity, 8)
+                }
+            )
+        }
+
+        card.addView(
+            TextView(this).apply {
+                text = displayName
+                maxLines = 1
+                textSize = 14f
+                setTextColor(Color.WHITE)
+                typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+                gravity = Gravity.CENTER_VERTICAL
+                setShadowLayer(6f, 0f, 0f, Color.rgb(100, 78, 255))
+            },
+            FrameLayout.LayoutParams(
+                cardWidth - AuthUi.dp(this@HomeActivity, 116),
+                AuthUi.dp(this@HomeActivity, 31)
+            ).apply {
+                leftMargin = AuthUi.dp(this@HomeActivity, 101)
+                topMargin = AuthUi.dp(this@HomeActivity, 17)
+            }
+        )
+
+        addLevelBadge(card, progress.level, cardWidth, cardHeight)
+        addBattlePowerBadge(card, progress.powerRating, cardWidth, cardHeight)
+        addRankBadge(card, progress.rank)
+
+        return card
+    }
+
+    private fun addLevelBadge(
+        card: FrameLayout,
+        level: Int,
+        cardWidth: Int,
+        cardHeight: Int
+    ) {
+        val badgeWidth = cardWidth * 36 / 100
+        val badgeHeight = cardHeight * 34 / 100
+        val holder = FrameLayout(this)
+
+        ButtonAssetStore.load(
+            this,
+            avatarPack,
+            "celestial_lv_fantasy_game_badge.png"
+        )?.let { bitmap ->
+            holder.addView(
+                ImageView(this).apply {
+                    setImageBitmap(bitmap)
+                    scaleType = ImageView.ScaleType.FIT_XY
+                    contentDescription = null
+                },
+                FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+                )
+            )
+        }
+
+        holder.addView(
+            TextView(this).apply {
+                text = level.toString()
+                textSize = 13f
+                setTextColor(Color.WHITE)
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = Gravity.CENTER
+                setShadowLayer(4f, 0f, 0f, Color.rgb(127, 88, 255))
+            },
+            FrameLayout.LayoutParams(
+                badgeWidth * 48 / 100,
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                Gravity.END
+            ).apply {
+                marginEnd = AuthUi.dp(this@HomeActivity, 7)
+            }
+        )
+
+        card.addView(
+            holder,
+            FrameLayout.LayoutParams(
+                badgeWidth,
+                badgeHeight
+            ).apply {
+                leftMargin = cardWidth * 31 / 100
+                topMargin = cardHeight * 52 / 100
+            }
+        )
+    }
+
+    private fun addBattlePowerBadge(
+        card: FrameLayout,
+        battlePower: Int,
+        cardWidth: Int,
+        cardHeight: Int
+    ) {
+        val badgeWidth = cardWidth * 47 / 100
+        val badgeHeight = cardHeight * 34 / 100
+        val holder = FrameLayout(this)
+
+        ButtonAssetStore.load(
+            this,
+            avatarPack,
+            "celestial_bp_battle_power_badge.png"
+        )?.let { bitmap ->
+            holder.addView(
+                ImageView(this).apply {
+                    setImageBitmap(bitmap)
+                    scaleType = ImageView.ScaleType.FIT_XY
+                    contentDescription = null
+                },
+                FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+                )
+            )
+        }
+
+        holder.addView(
+            TextView(this).apply {
+                text = battlePower.toString()
+                textSize = 12f
+                setTextColor(Color.WHITE)
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = Gravity.CENTER
+                setShadowLayer(5f, 0f, 0f, Color.rgb(131, 84, 255))
+            },
+            FrameLayout.LayoutParams(
+                badgeWidth * 54 / 100,
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                Gravity.END
+            ).apply {
+                marginEnd = AuthUi.dp(this@HomeActivity, 8)
+            }
+        )
+
+        card.addView(
+            holder,
+            FrameLayout.LayoutParams(
+                badgeWidth,
+                badgeHeight
+            ).apply {
+                leftMargin = cardWidth * 53 / 100
+                topMargin = cardHeight * 52 / 100
+            }
+        )
+    }
+
+    private fun addRankBadge(card: FrameLayout, rank: String) {
+        val holder = FrameLayout(this)
+        val badgeSize = AuthUi.dp(this, 31)
+
+        ButtonAssetStore.load(
+            this,
+            avatarPack,
+            "ornate_purple_celestial_rank_emblem.png"
+        )?.let { bitmap ->
+            holder.addView(
+                ImageView(this).apply {
+                    setImageBitmap(bitmap)
+                    scaleType = ImageView.ScaleType.FIT_CENTER
+                    contentDescription = null
+                },
+                FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+                )
+            )
+        }
+
+        holder.addView(
+            TextView(this).apply {
+                text = rank
+                textSize = 11f
+                setTextColor(Color.WHITE)
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = Gravity.CENTER
+                setShadowLayer(5f, 0f, 0f, Color.rgb(120, 75, 255))
+            },
             FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
         )
-        setContentView(root)
+
+        card.addView(
+            holder,
+            FrameLayout.LayoutParams(
+                badgeSize,
+                badgeSize
+            ).apply {
+                leftMargin = AuthUi.dp(this@HomeActivity, 57)
+                topMargin = AuthUi.dp(this@HomeActivity, 71)
+            }
+        )
+        pulse(holder, 1f, 1.06f, 1900L)
+    }
+
+    private fun createStatusPanel(progress: PlayerProgress): LinearLayout {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.END
+            setPadding(
+                AuthUi.dp(this@HomeActivity, 10),
+                AuthUi.dp(this@HomeActivity, 7),
+                AuthUi.dp(this@HomeActivity, 10),
+                AuthUi.dp(this@HomeActivity, 7)
+            )
+            background = GradientDrawable().apply {
+                setColor(Color.argb(205, 5, 8, 24))
+                cornerRadius = AuthUi.dp(this@HomeActivity, 10).toFloat()
+                setStroke(AuthUi.dp(this@HomeActivity, 1), Color.rgb(202, 165, 92))
+            }
+
+            addView(statusLine("Gold", progress.gold.toString(), Color.rgb(255, 204, 72)))
+            addView(statusLine("Shards", progress.astralShards.toString(), Color.rgb(128, 113, 255)))
+            addView(statusLine("Energy", progress.energy.toString() + "/" + progress.maxEnergy, Color.rgb(80, 192, 255)))
+        }
+    }
+
+    private fun statusLine(label: String, value: String, glowColor: Int): TextView {
+        return TextView(this).apply {
+            text = label + "  " + value
+            textSize = 12f
+            setTextColor(Color.WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.END
+            setPadding(0, AuthUi.dp(this@HomeActivity, 2), 0, AuthUi.dp(this@HomeActivity, 2))
+            setShadowLayer(4f, 0f, 0f, glowColor)
+        }
     }
 
     private fun addHubButton(
-        parent: LinearLayout,
+        root: FrameLayout,
         fileName: String,
         description: String,
-        heightDp: Int = 72,
+        widthPx: Int,
+        leftFraction: Float,
+        topFraction: Float,
         onClick: () -> Unit
-    ) {
-        val button = AuthUi.zipAssetButton(
-            this,
-            fileName,
-            description,
-            heightDp,
-            onClick
+    ): ImageView {
+        val bitmap = ButtonAssetStore.load(this, hubPack, fileName)
+        val ratio = if (bitmap != null && bitmap.width > 0) {
+            bitmap.height.toFloat() / bitmap.width.toFloat()
+        } else {
+            0.42f
+        }
+
+        val button = ImageView(this).apply {
+            if (bitmap != null) setImageBitmap(bitmap)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            adjustViewBounds = true
+            contentDescription = description
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { onClick() }
+            installTouchFeedback()
+        }
+
+        val params = FrameLayout.LayoutParams(
+            widthPx,
+            (widthPx * ratio).toInt().coerceAtLeast(AuthUi.dp(this, 48))
         )
-        parent.addView(
-            button,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                AuthUi.dp(this, heightDp)
-            ).apply {
-                topMargin = AuthUi.dp(this@HomeActivity, 5)
+        params.leftMargin = (resources.displayMetrics.widthPixels * leftFraction).toInt()
+        params.topMargin = (resources.displayMetrics.heightPixels * topFraction).toInt()
+        root.addView(button, params)
+        return button
+    }
+
+    private fun createBottomNav(screenW: Int): LinearLayout {
+        val nav = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(
+                AuthUi.dp(this@HomeActivity, 8),
+                AuthUi.dp(this@HomeActivity, 4),
+                AuthUi.dp(this@HomeActivity, 8),
+                AuthUi.dp(this@HomeActivity, 4)
+            )
+            background = GradientDrawable().apply {
+                setColor(Color.argb(224, 4, 7, 22))
+                setStroke(AuthUi.dp(this@HomeActivity, 1), Color.rgb(126, 99, 225))
             }
-        )
+        }
+
+        val navFiles = listOf("home.png", "battle.png", "heroes.png", "gear.png", "menu.png")
+        val navLabels = listOf("Home", "Battle", "Heroes", "Gear", "Menu")
+        val itemWidth = (screenW - AuthUi.dp(this, 16)) / navFiles.size
+
+        navFiles.forEachIndexed { index, fileName ->
+            val bitmap = ButtonAssetStore.load(this, bottomPack, fileName)
+            val item = ImageView(this).apply {
+                if (bitmap != null) setImageBitmap(bitmap)
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                adjustViewBounds = true
+                contentDescription = navLabels[index]
+                isClickable = true
+                isFocusable = true
+                installTouchFeedback()
+
+                setOnClickListener {
+                    when (index) {
+                        0 -> Unit
+                        1 -> openSection("BATTLE", "Enter the Depths and face the monsters below.")
+                        2 -> startActivity(Intent(this@HomeActivity, CharacterActivity::class.java))
+                        3 -> openSection("GEAR", "Weapons, armor, accessories, loadouts, and equipment power.")
+                        4 -> openSection("MENU", "Settings, account options, achievements, and additional systems.")
+                    }
+                }
+            }
+            nav.addView(
+                item,
+                LinearLayout.LayoutParams(
+                    itemWidth,
+                    LinearLayout.LayoutParams.MATCH_PARENT
+                )
+            )
+        }
+
+        return nav
+    }
+
+    private fun View.installTouchFeedback() {
+        setOnTouchListener { view, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    view.animate()
+                        .scaleX(0.965f)
+                        .scaleY(0.965f)
+                        .alpha(0.84f)
+                        .setDuration(70)
+                        .start()
+                }
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL -> {
+                    view.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .alpha(1f)
+                        .setDuration(110)
+                        .start()
+                }
+            }
+            false
+        }
+    }
+
+    private fun animateBackground(view: ImageView) {
+        ObjectAnimator.ofFloat(
+            view,
+            View.TRANSLATION_X,
+            -AuthUi.dp(this, 8).toFloat(),
+            AuthUi.dp(this, 8).toFloat()
+        ).apply {
+            duration = 9000L
+            repeatCount = ValueAnimator.INFINITE
+            repeatMode = ValueAnimator.REVERSE
+            interpolator = AccelerateDecelerateInterpolator()
+            start()
+        }
+
+        ObjectAnimator.ofFloat(
+            view,
+            View.TRANSLATION_Y,
+            -AuthUi.dp(this, 6).toFloat(),
+            AuthUi.dp(this, 6).toFloat()
+        ).apply {
+            duration = 11000L
+            repeatCount = ValueAnimator.INFINITE
+            repeatMode = ValueAnimator.REVERSE
+            interpolator = AccelerateDecelerateInterpolator()
+            start()
+        }
+    }
+
+    private fun pulse(view: View, from: Float, to: Float, durationMs: Long) {
+        ObjectAnimator.ofFloat(view, View.SCALE_X, from, to).apply {
+            duration = durationMs
+            repeatCount = ValueAnimator.INFINITE
+            repeatMode = ValueAnimator.REVERSE
+            interpolator = AccelerateDecelerateInterpolator()
+            start()
+        }
+        ObjectAnimator.ofFloat(view, View.SCALE_Y, from, to).apply {
+            duration = durationMs
+            repeatCount = ValueAnimator.INFINITE
+            repeatMode = ValueAnimator.REVERSE
+            interpolator = AccelerateDecelerateInterpolator()
+            start()
+        }
     }
 
     private fun openSection(title: String, subtitle: String) {

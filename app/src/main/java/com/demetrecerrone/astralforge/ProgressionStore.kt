@@ -10,6 +10,8 @@ data class PlayerProgress(
     val depth: Int = 1,
     val gold: Int = 0,
     val astralShards: Int = 0,
+    val energy: Int = 120,
+    val maxEnergy: Int = 120,
     val rank: String = "E",
     val playerClass: String = "Unawakened",
     val title: String = "Depthbound Initiate",
@@ -43,23 +45,25 @@ object ProgressionStore {
     private const val PREFS = "astralforge_player_progress"
 
     fun load(context: Context): PlayerProgress {
-        val p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         return PlayerProgress(
-            level = p.getInt("level", 1),
-            xp = p.getInt("xp", 0),
-            xpToNext = p.getInt("xpToNext", 100),
-            depth = p.getInt("depth", 1),
-            gold = p.getInt("gold", 0),
-            astralShards = p.getInt("astralShards", 0),
-            rank = p.getString("rank", "E") ?: "E",
-            playerClass = p.getString("playerClass", "Unawakened") ?: "Unawakened",
-            title = p.getString("title", "Depthbound Initiate") ?: "Depthbound Initiate",
-            strength = p.getInt("strength", 5),
-            vitality = p.getInt("vitality", 5),
-            agility = p.getInt("agility", 5),
-            intelligence = p.getInt("intelligence", 5),
-            luck = p.getInt("luck", 5),
-            attributePoints = p.getInt("attributePoints", 0)
+            level = prefs.getInt("level", 1),
+            xp = prefs.getInt("xp", 0),
+            xpToNext = prefs.getInt("xpToNext", 100),
+            depth = prefs.getInt("depth", 1),
+            gold = prefs.getInt("gold", 0),
+            astralShards = prefs.getInt("astralShards", 0),
+            energy = prefs.getInt("energy", 120),
+            maxEnergy = prefs.getInt("maxEnergy", 120),
+            rank = prefs.getString("rank", "E") ?: "E",
+            playerClass = prefs.getString("playerClass", "Unawakened") ?: "Unawakened",
+            title = prefs.getString("title", "Depthbound Initiate") ?: "Depthbound Initiate",
+            strength = prefs.getInt("strength", 5),
+            vitality = prefs.getInt("vitality", 5),
+            agility = prefs.getInt("agility", 5),
+            intelligence = prefs.getInt("intelligence", 5),
+            luck = prefs.getInt("luck", 5),
+            attributePoints = prefs.getInt("attributePoints", 0)
         )
     }
 
@@ -71,6 +75,8 @@ object ProgressionStore {
             .putInt("depth", value.depth)
             .putInt("gold", value.gold)
             .putInt("astralShards", value.astralShards)
+            .putInt("energy", value.energy)
+            .putInt("maxEnergy", value.maxEnergy)
             .putString("rank", value.rank)
             .putString("playerClass", value.playerClass)
             .putString("title", value.title)

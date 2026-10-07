@@ -8,15 +8,20 @@ import java.io.ByteArrayOutputStream
 import java.util.zip.ZipInputStream
 
 object ButtonAssetStore {
-    private const val PACK = "astralforge_button_pngs.zip"
+    private const val DEFAULT_PACK = "astralforge_button_pngs.zip"
     private val cache = mutableMapOf<String, Bitmap>()
 
     @Synchronized
-    fun load(context: Context, entryName: String): Bitmap? {
-        cache[entryName]?.let { return it }
+    fun load(context: Context, entryName: String): Bitmap? =
+        load(context, DEFAULT_PACK, entryName)
+
+    @Synchronized
+    fun load(context: Context, packName: String, entryName: String): Bitmap? {
+        val key = "$packName::$entryName"
+        cache[key]?.let { return it }
 
         return runCatching {
-            context.assets.open(PACK).use { raw ->
+            context.assets.open(packName).use { raw ->
                 ZipInputStream(BufferedInputStream(raw)).use { zip ->
                     var entry = zip.nextEntry
                     while (entry != null) {
@@ -29,13 +34,13 @@ object ButtonAssetStore {
                                 output.write(buffer, 0, read)
                                 read = zip.read(buffer)
                             }
+
                             val bytes = output.toByteArray()
                             val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                            if (bitmap != null) {
-                                cache[entryName] = bitmap
-                            }
+                            if (bitmap != null) cache[key] = bitmap
                             return@runCatching bitmap
                         }
+
                         zip.closeEntry()
                         entry = zip.nextEntry
                     }
