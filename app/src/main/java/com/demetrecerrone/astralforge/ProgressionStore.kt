@@ -45,7 +45,7 @@ object ProgressionStore {
     private const val PREFS = "astralforge_player_progress"
 
     fun load(context: Context): PlayerProgress {
-        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val prefs = AccountScopedStorage.preferences(context, PREFS)
         return PlayerProgress(
             level = prefs.getInt("level", 1),
             xp = prefs.getInt("xp", 0),
@@ -68,7 +68,7 @@ object ProgressionStore {
     }
 
     fun save(context: Context, value: PlayerProgress) {
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+        AccountScopedStorage.preferences(context, PREFS).edit()
             .putInt("level", value.level)
             .putInt("xp", value.xp)
             .putInt("xpToNext", value.xpToNext)
