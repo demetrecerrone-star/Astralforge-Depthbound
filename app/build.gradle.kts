@@ -11,21 +11,6 @@ plugins {
 val generatedAstralSpritesDir =
     layout.buildDirectory.dir("generated/astralSpriteAssets")
 
-val generatedThreeDModelsDir =
-    layout.buildDirectory.dir("generated/threeDModelAssets")
-
-val generateThreeDPrototypeModels =
-    tasks.register<org.gradle.api.tasks.Exec>("generateThreeDPrototypeModels") {
-        workingDir(rootProject.projectDir)
-        commandLine(
-            "python3",
-            "tools/generate_3d_prototypes.py",
-            generatedThreeDModelsDir.get().asFile.absolutePath
-        )
-        inputs.file(rootProject.file("tools/generate_3d_prototypes.py"))
-        outputs.dir(generatedThreeDModelsDir)
-    }
-
 val splitAstralSpriteSheets = tasks.register("splitAstralSpriteSheets") {
     val characterIdleZip = file("sprite_sources/characters.zip")
     val characterActionZip = file("sprite_sources/character-frames.zip")
@@ -277,7 +262,7 @@ android {
         applicationId = "com.demetrecerrone.astralforge"
         minSdk = 26
         targetSdk = 35
-        versionCode = 19
+        versionCode = 20
         versionName = "0.0.1.0"
     }
 
@@ -307,15 +292,11 @@ android {
 
     sourceSets {
         getByName("main").assets.srcDir(generatedAstralSpritesDir)
-        getByName("main").assets.srcDir(generatedThreeDModelsDir)
     }
 }
 
 tasks.matching { it.name == "preBuild" }.configureEach {
-    dependsOn(
-        splitAstralSpriteSheets,
-        generateThreeDPrototypeModels
-    )
+    dependsOn(splitAstralSpriteSheets)
 }
 
 kotlin {
@@ -325,7 +306,6 @@ kotlin {
 }
 
 dependencies {
-    implementation("com.google.android.filament:filament-utils-android:1.75.1")
     implementation(platform("com.google.firebase:firebase-bom:34.19.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
