@@ -11,6 +11,9 @@ plugins {
 val generatedAstralSpritesDir =
     layout.buildDirectory.dir("generated/astralSpriteAssets")
 
+val generatedThreeDModelsDir =
+    layout.buildDirectory.dir("generated/threeDModelAssets")
+
 val generateBrandAssets =
     tasks.register<org.gradle.api.tasks.Exec>("generateBrandAssets") {
         workingDir(rootProject.projectDir)
@@ -20,6 +23,18 @@ val generateBrandAssets =
             file("src/main/res/drawable-nodpi/astralforge_auth_landscape.png"),
             file("src/main/res/raw/dabsky_intro.mp4")
         )
+    }
+
+val generateThreeDPrototypeModels =
+    tasks.register<org.gradle.api.tasks.Exec>("generateThreeDPrototypeModels") {
+        workingDir(rootProject.projectDir)
+        commandLine(
+            "python3",
+            "tools/generate_3d_prototypes.py",
+            generatedThreeDModelsDir.get().asFile.absolutePath
+        )
+        inputs.file(rootProject.file("tools/generate_3d_prototypes.py"))
+        outputs.dir(generatedThreeDModelsDir)
     }
 
 val splitAstralSpriteSheets = tasks.register("splitAstralSpriteSheets") {
@@ -303,11 +318,16 @@ android {
 
     sourceSets {
         getByName("main").assets.srcDir(generatedAstralSpritesDir)
+        getByName("main").assets.srcDir(generatedThreeDModelsDir)
     }
 }
 
 tasks.matching { it.name == "preBuild" }.configureEach {
-    dependsOn(splitAstralSpriteSheets, generateBrandAssets)
+    dependsOn(
+        splitAstralSpriteSheets,
+        generateBrandAssets,
+        generateThreeDPrototypeModels
+    )
 }
 
 kotlin {
@@ -317,6 +337,7 @@ kotlin {
 }
 
 dependencies {
+    implementation("com.google.android.filament:filament-utils-android:1.77.1")
     implementation(platform("com.google.firebase:firebase-bom:34.19.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
