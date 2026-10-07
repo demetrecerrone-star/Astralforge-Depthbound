@@ -52,8 +52,8 @@ object AuthUi {
         }
 
         val bgImage = ImageView(activity).apply {
-            setImageResource(R.drawable.file_00000000bfc081f5b0a1931c13d627e8)
-            scaleType = ImageView.ScaleType.FIT_CENTER
+            setImageResource(R.drawable.astralforge_auth_landscape)
+            scaleType = ImageView.ScaleType.CENTER_CROP
             contentDescription = null
         }
         root.addView(
@@ -66,12 +66,12 @@ object AuthUi {
 
         val shade = View(activity).apply {
             background = GradientDrawable(
-                GradientDrawable.Orientation.TOP_BOTTOM,
+                GradientDrawable.Orientation.LEFT_RIGHT,
                 intArrayOf(
                     Color.argb(0, 1, 2, 10),
-                    Color.argb(15, 1, 2, 10),
-                    Color.argb(105, 1, 2, 10),
-                    Color.argb(205, 1, 2, 10)
+                    Color.argb(18, 1, 2, 10),
+                    Color.argb(92, 1, 2, 10),
+                    Color.argb(178, 1, 2, 10)
                 )
             )
         }
@@ -90,9 +90,9 @@ object AuthUi {
         val bottomInset = (screenHeight * 0.018f).toInt()
         val top = (screenHeight * topFraction).toInt()
 
-        val formWidth = (screenWidth * 0.56f).toInt()
+        val formWidth = (screenWidth * 0.45f).toInt()
             .coerceAtMost(screenWidth - horizontalInset * 2)
-            .coerceAtLeast((screenWidth * 0.44f).toInt())
+            .coerceAtLeast((screenWidth * 0.38f).toInt())
 
         val formHeight = (screenHeight - top - bottomInset)
             .coerceAtLeast((screenHeight * 0.42f).toInt())
@@ -129,8 +129,9 @@ object AuthUi {
                 formWidth,
                 formHeight
             ).apply {
-                gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+                gravity = Gravity.TOP or Gravity.END
                 topMargin = top
+                rightMargin = horizontalInset
                 bottomMargin = bottomInset
             }
         )
