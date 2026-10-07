@@ -7,10 +7,13 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.WindowInsets
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 
 class AccountActivity : Activity() {
@@ -55,11 +58,6 @@ class AccountActivity : Activity() {
         }
 
         val user = FirebaseAuth.getInstance().currentUser
-        val displayName = when {
-            user?.isAnonymous == true -> "Guest Delver"
-            !user?.displayName.isNullOrBlank() -> user?.displayName ?: "Delver"
-            else -> "Delver"
-        }
 
         content.addView(TextView(this).apply {
             text = "ACCOUNT"
@@ -84,7 +82,7 @@ class AccountActivity : Activity() {
                 AuthUi.dp(this@AccountActivity, 18)
             )
             background = GradientDrawable().apply {
-                setColor(Color.argb(220, 7, 10, 31))
+                setColor(Color.argb(230, 4, 5, 12))
                 cornerRadius = AuthUi.dp(this@AccountActivity, 16).toFloat()
                 setStroke(
                     AuthUi.dp(this@AccountActivity, 1),
@@ -93,7 +91,115 @@ class AccountActivity : Activity() {
             }
         }
 
-        panel.addView(accountLine("PLAYER", displayName))
+        panel.addView(TextView(this).apply {
+            text = "PLAYER NAME"
+            textSize = 12f
+            setTextColor(Color.rgb(166, 154, 201))
+            typeface = Typeface.DEFAULT_BOLD
+            setPadding(0, 0, 0, AuthUi.dp(this@AccountActivity, 7))
+        })
+
+        val nameRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        val nameInput = EditText(this).apply {
+            setText(PlayerIdentityStore.getName(this@AccountActivity))
+            setTextColor(Color.WHITE)
+            setHintTextColor(Color.rgb(130, 122, 158))
+            textSize = 14f
+            singleLine = true
+            imeOptions = EditorInfo.IME_ACTION_DONE
+            maxLines = 1
+            setPadding(
+                AuthUi.dp(this@AccountActivity, 12),
+                0,
+                AuthUi.dp(this@AccountActivity, 12),
+                0
+            )
+            background = GradientDrawable().apply {
+                setColor(Color.argb(235, 0, 0, 0))
+                cornerRadius = AuthUi.dp(this@AccountActivity, 10).toFloat()
+                setStroke(
+                    AuthUi.dp(this@AccountActivity, 1),
+                    Color.rgb(94, 76, 162)
+                )
+            }
+        }
+
+        nameRow.addView(
+            nameInput,
+            LinearLayout.LayoutParams(
+                0,
+                AuthUi.dp(this, 48),
+                1f
+            )
+        )
+
+        val saveButton = TextView(this).apply {
+            text = "SAVE"
+            gravity = Gravity.CENTER
+            textSize = 12f
+            setTextColor(Color.WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+            background = GradientDrawable().apply {
+                setColor(Color.rgb(34, 25, 72))
+                cornerRadius = AuthUi.dp(this@AccountActivity, 10).toFloat()
+                setStroke(
+                    AuthUi.dp(this@AccountActivity, 1),
+                    Color.rgb(165, 119, 245)
+                )
+            }
+            setOnClickListener {
+                val proposed = nameInput.text?.toString().orEmpty().trim()
+                if (proposed.length < 2) {
+                    Toast.makeText(
+                        this@AccountActivity,
+                        "Player name must be at least 2 characters.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@setOnClickListener
+                }
+
+                PlayerIdentityStore.saveName(this@AccountActivity, proposed) { synced ->
+                    runOnUiThread {
+                        nameInput.setText(PlayerIdentityStore.getName(this@AccountActivity))
+                        Toast.makeText(
+                            this@AccountActivity,
+                            if (synced) "Player name updated." else "Name saved on this device.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+        }
+
+        nameRow.addView(
+            saveButton,
+            LinearLayout.LayoutParams(
+                AuthUi.dp(this, 78),
+                AuthUi.dp(this, 48)
+            ).apply {
+                marginStart = AuthUi.dp(this@AccountActivity, 8)
+            }
+        )
+
+        panel.addView(nameRow)
+        panel.addView(
+            TextView(this).apply {
+                text = "2–24 characters. This is the name shown in the hub and battles."
+                textSize = 10.5f
+                setTextColor(Color.rgb(141, 132, 169))
+                setPadding(
+                    0,
+                    AuthUi.dp(this@AccountActivity, 5),
+                    0,
+                    AuthUi.dp(this@AccountActivity, 10)
+                )
+            }
+        )
+
         panel.addView(accountLine(
             "EMAIL",
             if (user?.isAnonymous == true) "Guest account"

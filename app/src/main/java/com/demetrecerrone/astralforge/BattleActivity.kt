@@ -20,7 +20,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
-import com.google.firebase.auth.FirebaseAuth
+import android.widget.Toast
 import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.random.Random
@@ -281,12 +281,7 @@ class BattleActivity : Activity() {
             }
         }
 
-        val user = FirebaseAuth.getInstance().currentUser
-        val playerName = when {
-            user?.isAnonymous == true -> "Guest Delver"
-            !user?.displayName.isNullOrBlank() -> user?.displayName ?: "Delver"
-            else -> "Delver"
-        }
+        val playerName = PlayerIdentityStore.getName(this)
 
         val playerHud = createHpHud(
             playerName,
@@ -304,10 +299,9 @@ class BattleActivity : Activity() {
             )
         )
 
-        val actionRow = LinearLayout(this).apply {
+        val topControls = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-            setPadding(0, AuthUi.dp(this@BattleActivity, 8), 0, 0)
+            gravity = Gravity.CENTER_VERTICAL
         }
 
         autoText = makeSmallAction("AUTO ON") {
@@ -321,20 +315,100 @@ class BattleActivity : Activity() {
                 handler.postDelayed({ performPlayerAttack() }, 350L)
             }
         }
-        actionRow.addView(
+        topControls.addView(
             autoText,
             LinearLayout.LayoutParams(
-                0,
-                AuthUi.dp(this, 54),
-                1f
+                AuthUi.dp(this, 88),
+                AuthUi.dp(this, 38)
             ).apply {
                 marginEnd = AuthUi.dp(this@BattleActivity, 6)
             }
         )
 
-        attackButton = createAssetActionButton(
-            "attack_button.png",
-            "ATTACK"
+        val settingsQuickButton = makeSmallAction("⚙") {
+            startActivity(
+                Intent(
+                    this@BattleActivity,
+                    SettingsActivity::class.java
+                )
+            )
+        }
+        settingsQuickButton.textSize = 18f
+        topControls.addView(
+            settingsQuickButton,
+            LinearLayout.LayoutParams(
+                AuthUi.dp(this, 42),
+                AuthUi.dp(this, 38)
+            )
+        )
+
+        val topControlParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            Gravity.TOP or Gravity.END
+        ).apply {
+            topMargin = AuthUi.dp(this@BattleActivity, 132)
+            marginEnd = AuthUi.dp(this@BattleActivity, 12)
+        }
+        root.addView(topControls, topControlParams)
+
+        val actionRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(
+                0,
+                AuthUi.dp(this@BattleActivity, 8),
+                0,
+                0
+            )
+        }
+
+        val skillsButton = makeCombatAction(
+            "SKILLS",
+            emphasized = false
+        ) {
+            Toast.makeText(
+                this@BattleActivity,
+                "Skills panel is coming next.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        actionRow.addView(
+            skillsButton,
+            LinearLayout.LayoutParams(
+                0,
+                AuthUi.dp(this, 58),
+                1f
+            ).apply {
+                marginEnd = AuthUi.dp(this@BattleActivity, 5)
+            }
+        )
+
+        val itemsButton = makeCombatAction(
+            "ITEMS",
+            emphasized = false
+        ) {
+            Toast.makeText(
+                this@BattleActivity,
+                "Items panel is coming next.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        actionRow.addView(
+            itemsButton,
+            LinearLayout.LayoutParams(
+                0,
+                AuthUi.dp(this, 58),
+                1f
+            ).apply {
+                marginStart = AuthUi.dp(this@BattleActivity, 3)
+                marginEnd = AuthUi.dp(this@BattleActivity, 3)
+            }
+        )
+
+        attackButton = makeCombatAction(
+            "ATTACK",
+            emphasized = true
         ) {
             performPlayerAttack()
         }
@@ -342,28 +416,10 @@ class BattleActivity : Activity() {
             attackButton,
             LinearLayout.LayoutParams(
                 0,
-                AuthUi.dp(this, 66),
-                1.25f
+                AuthUi.dp(this, 62),
+                1.08f
             ).apply {
-                marginStart = AuthUi.dp(this@BattleActivity, 4)
-                marginEnd = AuthUi.dp(this@BattleActivity, 4)
-            }
-        )
-
-        val settingsButton = createAssetActionButton(
-            "settings_button.png",
-            "SETTINGS"
-        ) {
-            startActivity(Intent(this@BattleActivity, SettingsActivity::class.java))
-        }
-        actionRow.addView(
-            settingsButton,
-            LinearLayout.LayoutParams(
-                0,
-                AuthUi.dp(this, 54),
-                1f
-            ).apply {
-                marginStart = AuthUi.dp(this@BattleActivity, 6)
+                marginStart = AuthUi.dp(this@BattleActivity, 5)
             }
         )
 
@@ -386,6 +442,11 @@ class BattleActivity : Activity() {
             enemyHudParams.topMargin =
                 insets.systemWindowInsetTop + AuthUi.dp(this@BattleActivity, 10)
             enemyHud.root.layoutParams = enemyHudParams
+
+            topControlParams.topMargin =
+                insets.systemWindowInsetTop +
+                    AuthUi.dp(this@BattleActivity, 116)
+            topControls.layoutParams = topControlParams
 
             bottomParams.bottomMargin = insets.systemWindowInsetBottom
             bottomPanel.layoutParams = bottomParams
@@ -1087,6 +1148,44 @@ class BattleActivity : Activity() {
             )
         }
         return holder
+    }
+
+    private fun makeCombatAction(
+        textValue: String,
+        emphasized: Boolean,
+        onClick: () -> Unit
+    ): TextView {
+        return TextView(this).apply {
+            text = textValue
+            gravity = Gravity.CENTER
+            textSize = if (emphasized) 14f else 12.5f
+            setTextColor(
+                if (emphasized) Color.rgb(255, 233, 178)
+                else Color.WHITE
+            )
+            typeface = Typeface.DEFAULT_BOLD
+            letterSpacing = 0.06f
+            background = GradientDrawable().apply {
+                setColor(
+                    if (emphasized) Color.argb(245, 8, 7, 16)
+                    else Color.argb(235, 0, 0, 0)
+                )
+                cornerRadius =
+                    AuthUi.dp(this@BattleActivity, 13).toFloat()
+                setStroke(
+                    AuthUi.dp(this@BattleActivity, if (emphasized) 2 else 1),
+                    if (emphasized) Color.rgb(211, 166, 74)
+                    else Color.rgb(126, 91, 207)
+                )
+            }
+            isClickable = true
+            isFocusable = true
+            setOnClickListener {
+                AppHaptics.tap(this@BattleActivity)
+                onClick()
+            }
+            installPressFeedback()
+        }
     }
 
     private fun makeSmallAction(
