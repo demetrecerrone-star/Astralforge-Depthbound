@@ -13,7 +13,10 @@
         "Included the latest Help & Support, About, Privacy Policy, Terms & Legal, and DABSKY splash improvements.",
         "Replaced the unstable splash renderer with hardware-safe animated glow, haze, shimmer, and water movement.",
         "Rebuilt authentication sizing for landscape and changed Create Account to a compact two-row field layout.",
-        "Made fullscreen apply from the app theme and automatically re-hide Android system bars."
+        "Made fullscreen apply from the app theme and automatically re-hide Android system bars.",
+        "Added a compact cinematic DABSKY video opener with water motion, emblem reveal, logo sweep, and generated ambience.",
+        "Added a purpose-built landscape Astralforge authentication background with the title composition kept clear of the form.",
+        "Moved authentication controls to the right side so the left-side game branding remains visible and uncluttered."
       ]
     },
     {
