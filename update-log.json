@@ -2,6 +2,18 @@
   "updated": "2026-10-07",
   "entries": [
     {
+      "version": "0.0.1.0",
+      "date": "2026-10-07",
+      "title": "Fullscreen & Auth Layout Update",
+      "items": [
+        "Enabled immersive fullscreen across the app so Android system bars stay hidden during play.",
+        "Updated the login and create account backgrounds to fit the full landscape display instead of cropping.",
+        "Reduced and tightened authentication fields and buttons for a cleaner layout with less scrolling.",
+        "Narrowed and centered the authentication form area while keeping scrolling available as a fallback.",
+        "Included the latest Help & Support, About, Privacy Policy, Terms & Legal, and DABSKY splash improvements."
+      ]
+    },
+    {
       "version": "Development Build",
       "date": "2026-10-07",
       "title": "Hub Rebuild & Navigation",
