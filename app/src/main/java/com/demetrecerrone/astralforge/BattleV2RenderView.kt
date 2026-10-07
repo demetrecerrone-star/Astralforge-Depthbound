@@ -213,17 +213,6 @@ class BattleV2RenderView @JvmOverloads constructor(
             maxHeight = h * 0.45f
         )
 
-        paint.color = Color.argb(190, 220, 199, 255)
-        paint.textSize = min(w, h) * 0.025f
-        paint.textAlign = Paint.Align.CENTER
-        paint.isFakeBoldText = true
-        canvas.drawText(
-            "BATTLE V2 PREVIEW",
-            w * 0.5f,
-            h * 0.11f,
-            paint
-        )
-        paint.isFakeBoldText = false
     }
 
     private fun drawActor(
@@ -308,7 +297,7 @@ class BattleV2RenderView @JvmOverloads constructor(
             runCatching {
                 BitmapFactory.decodeResource(
                     resources,
-                    R.drawable.file_000000003c3881f5b27141213085d016
+                    R.drawable.battle_v2_bg
                 )
             }.getOrNull()
 
