@@ -322,29 +322,65 @@ class StatsActivity : Activity() {
         return panel().apply {
             addView(sectionTitle("CORE ATTRIBUTES"))
 
-            val rows = listOf(
-                "Strength" to progress.strength,
-                "Vitality" to progress.vitality,
-                "Agility" to progress.agility,
-                "Intelligence" to progress.intelligence,
-                "Luck" to progress.luck
+            addView(
+                TextView(this@StatsActivity).apply {
+                    text = "UNSPENT ATTRIBUTE POINTS  •  " + progress.attributePoints
+                    textSize = 11.5f
+                    setTextColor(
+                        if (progress.attributePoints > 0) {
+                            Color.rgb(255, 220, 127)
+                        } else {
+                            Color.rgb(151, 140, 186)
+                        }
+                    )
+                    typeface = Typeface.DEFAULT_BOLD
+                    gravity = Gravity.CENTER
+                    background = rounded(
+                        Color.argb(195, 10, 12, 35),
+                        if (progress.attributePoints > 0) {
+                            Color.rgb(210, 168, 78)
+                        } else {
+                            Color.rgb(74, 59, 115)
+                        },
+                        11
+                    )
+                    setPadding(dp(8), dp(7), dp(8), dp(7))
+                },
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = dp(8)
+                }
             )
 
-            rows.forEachIndexed { index, pair ->
+            val rows = listOf(
+                Triple("Strength", progress.strength, Color.rgb(235, 103, 84)),
+                Triple("Vitality", progress.vitality, Color.rgb(101, 206, 131)),
+                Triple("Agility", progress.agility, Color.rgb(91, 190, 237)),
+                Triple("Intelligence", progress.intelligence, Color.rgb(151, 115, 243)),
+                Triple("Luck", progress.luck, Color.rgb(237, 191, 87))
+            )
+
+            rows.forEach { row ->
                 addView(
                     attributeRow(
-                        pair.first,
-                        pair.second,
-                        when (index) {
-                            0 -> Color.rgb(235, 103, 84)
-                            1 -> Color.rgb(101, 206, 131)
-                            2 -> Color.rgb(91, 190, 237)
-                            3 -> Color.rgb(151, 115, 243)
-                            else -> Color.rgb(237, 191, 87)
-                        }
+                        row.first,
+                        row.second,
+                        row.third
                     )
                 )
             }
+
+            addView(
+                TextView(this@StatsActivity).apply {
+                    text = "Each point permanently increases that attribute and immediately updates derived combat stats."
+                    textSize = 10.5f
+                    setTextColor(Color.rgb(139, 130, 176))
+                    gravity = Gravity.CENTER
+                    setPadding(dp(6), dp(9), dp(6), 0)
+                }
+            )
         }
     }
 
@@ -549,9 +585,82 @@ class StatsActivity : Activity() {
                     setTextColor(accent)
                     typeface = Typeface.DEFAULT_BOLD
                     gravity = Gravity.END
+                },
+                LinearLayout.LayoutParams(
+                    dp(44),
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            )
+
+            addView(
+                TextView(this@StatsActivity).apply {
+                    text = "+"
+                    textSize = 20f
+                    setTextColor(
+                        if (progress.attributePoints > 0) Color.WHITE
+                        else Color.rgb(104, 96, 126)
+                    )
+                    typeface = Typeface.DEFAULT_BOLD
+                    gravity = Gravity.CENTER
+                    contentDescription = "Add one point to " + label
+                    isEnabled = progress.attributePoints > 0
+                    isClickable = progress.attributePoints > 0
+                    isFocusable = progress.attributePoints > 0
+                    alpha = if (progress.attributePoints > 0) 1f else 0.45f
+                    background = rounded(
+                        if (progress.attributePoints > 0) {
+                            Color.argb(235, 61, 38, 124)
+                        } else {
+                            Color.argb(150, 21, 21, 31)
+                        },
+                        if (progress.attributePoints > 0) accent
+                        else Color.rgb(58, 52, 75),
+                        10
+                    )
+                    if (progress.attributePoints > 0) {
+                        installTouchFeedback()
+                        setOnClickListener {
+                            AppHaptics.tap(this@StatsActivity)
+                            allocateAttribute(label)
+                        }
+                    }
+                },
+                LinearLayout.LayoutParams(dp(38), dp(34)).apply {
+                    marginStart = dp(8)
                 }
             )
         }
+    }
+
+    private fun allocateAttribute(label: String) {
+        if (progress.attributePoints <= 0) return
+
+        progress = when (label) {
+            "Strength" -> progress.copy(
+                strength = progress.strength + 1,
+                attributePoints = progress.attributePoints - 1
+            )
+            "Vitality" -> progress.copy(
+                vitality = progress.vitality + 1,
+                attributePoints = progress.attributePoints - 1
+            )
+            "Agility" -> progress.copy(
+                agility = progress.agility + 1,
+                attributePoints = progress.attributePoints - 1
+            )
+            "Intelligence" -> progress.copy(
+                intelligence = progress.intelligence + 1,
+                attributePoints = progress.attributePoints - 1
+            )
+            "Luck" -> progress.copy(
+                luck = progress.luck + 1,
+                attributePoints = progress.attributePoints - 1
+            )
+            else -> return
+        }
+
+        ProgressionStore.save(this, progress)
+        recreate()
     }
 
     private fun metricTile(
