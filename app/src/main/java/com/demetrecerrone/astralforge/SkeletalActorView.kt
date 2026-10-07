@@ -7,6 +7,7 @@ import android.graphics.Paint
 import android.os.SystemClock
 import android.util.AttributeSet
 import android.view.View
+import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
@@ -26,6 +27,12 @@ class SkeletalActorView @JvmOverloads constructor(
     private var completionDelivered = false
 
     var motionEnabled: Boolean = true
+        set(value) {
+            field = value
+            invalidate()
+        }
+
+    var meshDeformationEnabled: Boolean = true
         set(value) {
             field = value
             invalidate()
@@ -338,23 +345,372 @@ class SkeletalActorView @JvmOverloads constructor(
                 localAttachmentY
             )
             canvas.rotate(attachment.restRotation)
-            canvas.scale(imageScale, imageScale)
+
+            val meshScale =
+                if (
+                    meshDeformationEnabled &&
+                    shouldMeshDeform(
+                        definition.id,
+                        attachment.role
+                    )
+                ) {
+                    1.035f
+                } else {
+                    1f
+                }
+
+            canvas.scale(
+                imageScale * meshScale,
+                imageScale * meshScale
+            )
             canvas.translate(
                 -bitmap.width / 2f,
                 -bitmap.height / 2f
             )
-            canvas.drawBitmap(
-                bitmap,
-                0f,
-                0f,
-                bitmapPaint
-            )
+
+            if (
+                meshDeformationEnabled &&
+                shouldMeshDeform(
+                    definition.id,
+                    attachment.role
+                )
+            ) {
+                drawDeformedBitmap(
+                    canvas = canvas,
+                    bitmap = bitmap,
+                    entityId = definition.id,
+                    role = attachment.role,
+                    animationName = clip?.name ?: "idle",
+                    animationProgress = if (clip != null) {
+                        (
+                            sampleTime.toFloat() /
+                                clip.durationMs
+                                    .coerceAtLeast(1L)
+                                    .toFloat()
+                        ).coerceIn(0f, 1f)
+                    } else {
+                        0f
+                    }
+                )
+            } else {
+                canvas.drawBitmap(
+                    bitmap,
+                    0f,
+                    0f,
+                    bitmapPaint
+                )
+            }
             canvas.restore()
         }
 
         if (activeClip != null && motionEnabled) {
             postInvalidateOnAnimation()
         }
+    }
+
+    private fun shouldMeshDeform(
+        entityId: String,
+        role: String
+    ): Boolean {
+        return when (entityId) {
+            "knight" -> role in setOf(
+                "cape_back",
+                "torso",
+                "hips",
+                "upper_arm_left",
+                "lower_arm_left",
+                "upper_arm_right",
+                "lower_arm_right",
+                "upper_leg_left",
+                "lower_leg_left",
+                "upper_leg_right",
+                "lower_leg_right"
+            )
+
+            "dire_wolf" -> role in setOf(
+                "neck_mane",
+                "spine_front",
+                "spine_mid",
+                "hips",
+                "front_upper_left",
+                "front_lower_left",
+                "front_upper_right",
+                "front_lower_right",
+                "hind_upper_left",
+                "hind_lower_left",
+                "hind_upper_right",
+                "hind_lower_right",
+                "tail_1",
+                "tail_2",
+                "tail_3"
+            )
+
+            else -> false
+        }
+    }
+
+    private fun drawDeformedBitmap(
+        canvas: Canvas,
+        bitmap: android.graphics.Bitmap,
+        entityId: String,
+        role: String,
+        animationName: String,
+        animationProgress: Float
+    ) {
+        val wideBody = role in setOf(
+            "cape_back",
+            "torso",
+            "spine_front",
+            "spine_mid",
+            "hips",
+            "neck_mane"
+        )
+
+        val meshWidth = if (wideBody) 6 else 4
+        val meshHeight =
+            if (role == "cape_back") 8 else 6
+
+        val vertices = FloatArray(
+            (meshWidth + 1) *
+                (meshHeight + 1) *
+                2
+        )
+
+        val phase =
+            animationProgress *
+                (PI * 2.0).toFloat()
+
+        val actionPulse = when (animationName) {
+            "attack" ->
+                sin(
+                    animationProgress *
+                        PI.toFloat()
+                ).coerceAtLeast(0f)
+
+            "hit" ->
+                sin(
+                    animationProgress *
+                        PI.toFloat()
+                ).coerceAtLeast(0f)
+
+            "death" ->
+                animationProgress
+
+            else -> 0f
+        }
+
+        val idleWave =
+            if (animationName == "idle") {
+                sin(phase)
+            } else {
+                0f
+            }
+
+        var offset = 0
+
+        for (row in 0..meshHeight) {
+            val v =
+                row.toFloat() /
+                    meshHeight.toFloat()
+
+            for (column in 0..meshWidth) {
+                val u =
+                    column.toFloat() /
+                        meshWidth.toFloat()
+
+                var x = u * bitmap.width
+                var y = v * bitmap.height
+
+                if (entityId == "knight") {
+                    when (role) {
+                        "cape_back" -> {
+                            x += (
+                                sin(
+                                    phase +
+                                        v * 2.4f +
+                                        u * 0.7f
+                                ) *
+                                    (5f + 10f * v) *
+                                    (if (
+                                        animationName ==
+                                            "idle"
+                                    ) {
+                                        1f
+                                    } else {
+                                        0.45f
+                                    })
+                                )
+
+                            x +=
+                                actionPulse *
+                                    18f *
+                                    v
+
+                            y +=
+                                cos(
+                                    phase * 0.75f +
+                                        u * 2.2f
+                                ) *
+                                    3.5f *
+                                    v
+                        }
+
+                        "torso" -> {
+                            x +=
+                                idleWave *
+                                    4.5f *
+                                    (0.5f - v)
+
+                            x +=
+                                actionPulse *
+                                    8f *
+                                    (v - 0.45f)
+
+                            y +=
+                                sin(
+                                    u *
+                                        PI.toFloat()
+                                ) *
+                                    idleWave *
+                                    2.8f
+                        }
+
+                        "hips" -> {
+                            x +=
+                                (u - 0.5f) *
+                                    idleWave *
+                                    3f
+
+                            y +=
+                                actionPulse *
+                                    3f *
+                                    sin(
+                                        u *
+                                            PI.toFloat()
+                                    )
+                        }
+
+                        else -> {
+                            val side =
+                                if (
+                                    role.contains("left")
+                                ) {
+                                    -1f
+                                } else {
+                                    1f
+                                }
+
+                            x +=
+                                sin(
+                                    v *
+                                        PI.toFloat()
+                                ) *
+                                    (
+                                        idleWave * 2.2f +
+                                            actionPulse * 6f
+                                        ) *
+                                    side
+                        }
+                    }
+                } else if (
+                    entityId == "dire_wolf"
+                ) {
+                    when (role) {
+                        "spine_front",
+                        "spine_mid",
+                        "hips",
+                        "neck_mane" -> {
+                            y +=
+                                sin(
+                                    u *
+                                        PI.toFloat() +
+                                        phase * 0.5f
+                                ) *
+                                    (
+                                        if (
+                                            animationName ==
+                                                "idle"
+                                        ) {
+                                            3.5f
+                                        } else {
+                                            1.5f
+                                        }
+                                        )
+
+                            y -=
+                                actionPulse *
+                                    sin(
+                                        u *
+                                            PI.toFloat()
+                                    ) *
+                                    8f
+
+                            x +=
+                                actionPulse *
+                                    (u - 0.5f) *
+                                    14f
+                        }
+
+                        "tail_1",
+                        "tail_2",
+                        "tail_3" -> {
+                            y +=
+                                sin(
+                                    phase +
+                                        v * 2.2f
+                                ) *
+                                    5.5f *
+                                    v
+
+                            x +=
+                                actionPulse *
+                                    7f *
+                                    v
+                        }
+
+                        else -> {
+                            val rearLeg =
+                                role.startsWith(
+                                    "hind_"
+                                )
+
+                            x +=
+                                sin(
+                                    v *
+                                        PI.toFloat()
+                                ) *
+                                    (
+                                        idleWave * 1.8f +
+                                            actionPulse *
+                                                (
+                                                    if (
+                                                        rearLeg
+                                                    ) {
+                                                        5f
+                                                    } else {
+                                                        7f
+                                                    }
+                                                    )
+                                        )
+                        }
+                    }
+                }
+
+                vertices[offset++] = x
+                vertices[offset++] = y
+            }
+        }
+
+        canvas.drawBitmapMesh(
+            bitmap,
+            meshWidth,
+            meshHeight,
+            vertices,
+            0,
+            null,
+            0,
+            bitmapPaint
+        )
     }
 
     private fun sampleTransforms(
