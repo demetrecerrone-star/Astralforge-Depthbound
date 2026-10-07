@@ -3,10 +3,13 @@ package com.demetrecerrone.astralforge
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Matrix
+import android.graphics.Paint
 import android.os.SystemClock
 import android.util.AttributeSet
 import android.view.View
+import kotlin.math.cos
 import kotlin.math.min
+import kotlin.math.sin
 
 class SkeletalActorView @JvmOverloads constructor(
     context: Context,
@@ -29,6 +32,39 @@ class SkeletalActorView @JvmOverloads constructor(
         }
 
     private var desiredFacing = "right"
+    private var boneMap: Map<String, RigBoneDefinition> = emptyMap()
+    private var orderedAttachments: List<RigAttachmentDefinition> = emptyList()
+
+    private val bitmapPaint = Paint(
+        Paint.ANTI_ALIAS_FLAG or
+            Paint.FILTER_BITMAP_FLAG or
+            Paint.DITHER_FLAG
+    )
+
+    private data class Affine(
+        val a: Float,
+        val b: Float,
+        val c: Float,
+        val d: Float,
+        val tx: Float,
+        val ty: Float
+    ) {
+        fun toMatrix(): Matrix {
+            return Matrix().apply {
+                setValues(
+                    floatArrayOf(
+                        a, c, tx,
+                        b, d, ty,
+                        0f, 0f, 1f
+                    )
+                )
+            }
+        }
+    }
+
+    init {
+        setLayerType(LAYER_TYPE_HARDWARE, null)
+    }
 
     val isRigLoaded: Boolean
         get() = rig != null
@@ -36,6 +72,9 @@ class SkeletalActorView @JvmOverloads constructor(
     fun setRig(loadedRig: LoadedRig) {
         rig = loadedRig
         desiredFacing = loadedRig.definition.defaultFacing
+        boneMap = loadedRig.definition.bones.associateBy { it.name }
+        orderedAttachments =
+            loadedRig.definition.attachments.sortedBy { it.z }
         heldClip = null
         heldTimeMs = 0L
         playIdle()
@@ -44,6 +83,8 @@ class SkeletalActorView @JvmOverloads constructor(
 
     fun clearRig() {
         rig = null
+        boneMap = emptyMap()
+        orderedAttachments = emptyList()
         activeClip = null
         heldClip = null
         completion = null
@@ -152,65 +193,86 @@ class SkeletalActorView @JvmOverloads constructor(
         }
 
         val transforms = sampleTransforms(clip, sampleTime)
-        val boneMap = definition.bones.associateBy { it.name }
-        val worldMatrices = mutableMapOf<String, Matrix>()
+        val worldTransforms = mutableMapOf<String, Affine>()
 
-        fun resolveBone(name: String): Matrix {
-            worldMatrices[name]?.let { return it }
+        fun multiply(parent: Affine, local: Affine): Affine {
+            return Affine(
+                a = parent.a * local.a + parent.c * local.b,
+                b = parent.b * local.a + parent.d * local.b,
+                c = parent.a * local.c + parent.c * local.d,
+                d = parent.b * local.c + parent.d * local.d,
+                tx = parent.a * local.tx +
+                    parent.c * local.ty +
+                    parent.tx,
+                ty = parent.b * local.tx +
+                    parent.d * local.ty +
+                    parent.ty
+            )
+        }
+
+        fun localTransform(
+            x: Float,
+            y: Float,
+            transform: RigBoneTransform
+        ): Affine {
+            val radians =
+                Math.toRadians(transform.rotation.toDouble())
+            val cosine = cos(radians).toFloat()
+            val sine = sin(radians).toFloat()
+
+            return Affine(
+                a = cosine * transform.scaleX,
+                b = sine * transform.scaleX,
+                c = -sine * transform.scaleY,
+                d = cosine * transform.scaleY,
+                tx = x + transform.x,
+                ty = y + transform.y
+            )
+        }
+
+        fun resolveBone(name: String): Affine {
+            worldTransforms[name]?.let { return it }
 
             val bone = boneMap[name]
             if (bone == null) {
-                val identity = Matrix()
-                worldMatrices[name] = identity
+                val identity =
+                    Affine(1f, 0f, 0f, 1f, 0f, 0f)
+                worldTransforms[name] = identity
                 return identity
             }
 
             val transform =
                 transforms[name] ?: RigBoneTransform()
 
-            val absoluteX = bone.x * definition.canvasWidth
-            val absoluteY = bone.y * definition.canvasHeight
+            val absoluteX =
+                bone.x * definition.canvasWidth
+            val absoluteY =
+                bone.y * definition.canvasHeight
 
-            val localX: Float
-            val localY: Float
-            val parentMatrix: Matrix?
-
-            if (bone.parent != null) {
+            val world = if (bone.parent != null) {
                 val parent = boneMap[bone.parent]
                 val parentX =
                     (parent?.x ?: 0f) * definition.canvasWidth
                 val parentY =
                     (parent?.y ?: 0f) * definition.canvasHeight
-                localX = absoluteX - parentX
-                localY = absoluteY - parentY
-                parentMatrix = resolveBone(bone.parent)
-            } else {
-                localX = absoluteX
-                localY = absoluteY
-                parentMatrix = null
-            }
 
-            val local = Matrix().apply {
-                setTranslate(
-                    localX + transform.x,
-                    localY + transform.y
+                multiply(
+                    resolveBone(bone.parent),
+                    localTransform(
+                        absoluteX - parentX,
+                        absoluteY - parentY,
+                        transform
+                    )
                 )
-                postRotate(transform.rotation)
-                postScale(
-                    transform.scaleX,
-                    transform.scaleY
+            } else {
+                localTransform(
+                    absoluteX,
+                    absoluteY,
+                    transform
                 )
             }
 
-            val world = Matrix()
-            if (parentMatrix != null) {
-                world.set(parentMatrix)
-                world.postConcat(local)
-            } else {
-                world.set(local)
-            }
-
-            worldMatrices[name] = world
+            worldTransforms[name] = world
             return world
         }
 
@@ -228,67 +290,67 @@ class SkeletalActorView @JvmOverloads constructor(
         val mirror =
             desiredFacing != definition.defaultFacing
 
-        definition.attachments
-            .sortedBy { it.z }
-            .forEach { attachment ->
-                val bitmap =
-                    loaded.bitmaps[attachment.role] ?: return@forEach
+        orderedAttachments.forEach { attachment ->
+            val bitmap =
+                loaded.bitmaps[attachment.role]
+                    ?: return@forEach
 
-                val bone =
-                    boneMap[attachment.bone]
-                        ?: boneMap["root"]
-                        ?: return@forEach
+            val bone =
+                boneMap[attachment.bone]
+                    ?: boneMap["root"]
+                    ?: return@forEach
 
-                val boneMatrix =
-                    resolveBone(bone.name)
+            val boneTransform =
+                resolveBone(bone.name)
 
-                val boneAbsoluteX =
-                    bone.x * definition.canvasWidth
-                val boneAbsoluteY =
-                    bone.y * definition.canvasHeight
+            val boneAbsoluteX =
+                bone.x * definition.canvasWidth
+            val boneAbsoluteY =
+                bone.y * definition.canvasHeight
 
-                val localAttachmentX =
-                    attachment.restX - boneAbsoluteX
-                val localAttachmentY =
-                    attachment.restY - boneAbsoluteY
+            val localAttachmentX =
+                attachment.restX - boneAbsoluteX
+            val localAttachmentY =
+                attachment.restY - boneAbsoluteY
 
-                val imageScale = min(
-                    attachment.maxWidth /
-                        bitmap.width.coerceAtLeast(1),
-                    attachment.maxHeight /
-                        bitmap.height.coerceAtLeast(1)
-                ) * attachment.restScale
+            val imageScale = min(
+                attachment.maxWidth /
+                    bitmap.width.coerceAtLeast(1),
+                attachment.maxHeight /
+                    bitmap.height.coerceAtLeast(1)
+            ) * attachment.restScale
 
-                canvas.save()
-                canvas.translate(offsetX, offsetY)
-                canvas.scale(fitScale, fitScale)
+            canvas.save()
+            canvas.translate(offsetX, offsetY)
+            canvas.scale(fitScale, fitScale)
 
-                if (mirror) {
-                    canvas.translate(
-                        definition.canvasWidth,
-                        0f
-                    )
-                    canvas.scale(-1f, 1f)
-                }
-
-                canvas.concat(boneMatrix)
+            if (mirror) {
                 canvas.translate(
-                    localAttachmentX,
-                    localAttachmentY
+                    definition.canvasWidth,
+                    0f
                 )
-                canvas.rotate(attachment.restRotation)
-                canvas.scale(imageScale, imageScale)
-                // restX/restY in the v2 rigs are visual centers, not
-                // pivot anchors. Center the art on the stored rest position;
-                // the bone matrix itself already provides the joint pivot
-                // used for animation.
-                canvas.translate(
-                    -bitmap.width / 2f,
-                    -bitmap.height / 2f
-                )
-                canvas.drawBitmap(bitmap, 0f, 0f, null)
-                canvas.restore()
+                canvas.scale(-1f, 1f)
             }
+
+            canvas.concat(boneTransform.toMatrix())
+            canvas.translate(
+                localAttachmentX,
+                localAttachmentY
+            )
+            canvas.rotate(attachment.restRotation)
+            canvas.scale(imageScale, imageScale)
+            canvas.translate(
+                -bitmap.width / 2f,
+                -bitmap.height / 2f
+            )
+            canvas.drawBitmap(
+                bitmap,
+                0f,
+                0f,
+                bitmapPaint
+            )
+            canvas.restore()
+        }
 
         if (activeClip != null && motionEnabled) {
             postInvalidateOnAnimation()
@@ -333,9 +395,11 @@ class SkeletalActorView @JvmOverloads constructor(
                 val span =
                     (after.first - before.first).toFloat()
                         .coerceAtLeast(1f)
-                val amount =
+                val rawAmount =
                     ((timeMs - before.first) / span)
                         .coerceIn(0f, 1f)
+                val amount =
+                    easedAmount(clip.name, rawAmount)
 
                 output[boneName] = interpolate(
                     before.second,
@@ -348,6 +412,31 @@ class SkeletalActorView @JvmOverloads constructor(
         return output
     }
 
+    private fun easedAmount(
+        animationName: String,
+        amount: Float
+    ): Float {
+        val t = amount.coerceIn(0f, 1f)
+
+        return when (animationName) {
+            "attack" -> {
+                if (t < 0.5f) {
+                    4f * t * t * t
+                } else {
+                    val p = -2f * t + 2f
+                    1f - (p * p * p) / 2f
+                }
+            }
+            "hit" -> {
+                1f - (1f - t) * (1f - t)
+            }
+            else -> {
+                t * t * t *
+                    (t * (t * 6f - 15f) + 10f)
+            }
+        }
+    }
+
     private fun interpolate(
         start: RigBoneTransform,
         end: RigBoneTransform,
@@ -356,10 +445,17 @@ class SkeletalActorView @JvmOverloads constructor(
         fun lerp(a: Float, b: Float): Float =
             a + (b - a) * amount
 
+        fun lerpAngle(a: Float, b: Float): Float {
+            var delta = (b - a) % 360f
+            if (delta > 180f) delta -= 360f
+            if (delta < -180f) delta += 360f
+            return a + delta * amount
+        }
+
         return RigBoneTransform(
             x = lerp(start.x, end.x),
             y = lerp(start.y, end.y),
-            rotation = lerp(
+            rotation = lerpAngle(
                 start.rotation,
                 end.rotation
             ),
