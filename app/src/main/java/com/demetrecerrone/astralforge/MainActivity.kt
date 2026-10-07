@@ -102,7 +102,7 @@ class MainActivity : Activity() {
         content.addView(
             link,
             LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                topMargin = AuthUi.dp(this@MainActivity, 12)
+                topMargin = AuthUi.dp(this@MainActivity, 8)
             }
         )
     }
