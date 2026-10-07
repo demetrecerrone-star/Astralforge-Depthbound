@@ -54,10 +54,10 @@ class HomeActivity : Activity() {
                 background = GradientDrawable(
                     GradientDrawable.Orientation.TOP_BOTTOM,
                     intArrayOf(
-                        Color.argb(48, 3, 5, 20),
-                        Color.argb(14, 3, 5, 20),
-                        Color.argb(24, 3, 5, 20),
-                        Color.argb(118, 3, 5, 20)
+                        Color.argb(42, 3, 5, 20),
+                        Color.argb(10, 3, 5, 20),
+                        Color.argb(20, 3, 5, 20),
+                        Color.argb(105, 3, 5, 20)
                     )
                 )
             },
@@ -83,78 +83,130 @@ class HomeActivity : Activity() {
             else -> "Delver"
         }
 
-        val playerCard = createPlayerCorner(displayName, progress, screenW)
+        val playerCardWidth = min(screenW * 44 / 100, AuthUi.dp(this, 260))
+        val playerCardHeight = AuthUi.dp(this, 84)
+        val playerCard = createPlayerCorner(
+            displayName,
+            progress,
+            playerCardWidth,
+            playerCardHeight
+        )
         val playerCardParams = FrameLayout.LayoutParams(
-            min(screenW * 58 / 100, AuthUi.dp(this, 340)),
-            AuthUi.dp(this, 112),
+            playerCardWidth,
+            playerCardHeight,
             Gravity.TOP or Gravity.START
         ).apply {
-            topMargin = AuthUi.dp(this@HomeActivity, 14)
-            marginStart = AuthUi.dp(this@HomeActivity, 6)
+            topMargin = AuthUi.dp(this@HomeActivity, 4)
+            marginStart = AuthUi.dp(this@HomeActivity, 1)
         }
         root.addView(playerCard, playerCardParams)
 
         val statusPanel = createStatusPanel(progress)
         val statusParams = FrameLayout.LayoutParams(
-            min(screenW * 37 / 100, AuthUi.dp(this, 188)),
+            min(screenW * 31 / 100, AuthUi.dp(this, 154)),
             FrameLayout.LayoutParams.WRAP_CONTENT,
             Gravity.TOP or Gravity.END
         ).apply {
-            topMargin = AuthUi.dp(this@HomeActivity, 18)
-            marginEnd = AuthUi.dp(this@HomeActivity, 8)
+            topMargin = AuthUi.dp(this@HomeActivity, 8)
+            marginEnd = AuthUi.dp(this@HomeActivity, 4)
         }
         root.addView(statusPanel, statusParams)
 
-        val titleView = TextView(this).apply {
-            text = "ASTRAL FORGE: DEPTHBOUND"
-            setTextColor(Color.WHITE)
-            textSize = 16f
-            typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
-            gravity = Gravity.CENTER
-            letterSpacing = 0.03f
-            setShadowLayer(8f, 0f, 0f, Color.rgb(95, 70, 255))
-        }
-        val titleParams = FrameLayout.LayoutParams(
-            screenW * 64 / 100,
-            AuthUi.dp(this, 40),
-            Gravity.TOP or Gravity.CENTER_HORIZONTAL
-        ).apply {
-            topMargin = AuthUi.dp(this@HomeActivity, 104)
-        }
-        root.addView(titleView, titleParams)
-
         val dungeons = addHubButton(
-            root, "dungeons.png", "Dungeons", screenW * 56 / 100, 0.22f, 0.245f
+            root,
+            "dungeons.png",
+            "Dungeons",
+            screenW * 48 / 100,
+            0.26f,
+            0.235f
         ) {
-            openSection("DUNGEONS", "Choose a depth, enter a dungeon, and claim its rewards.")
+            openSection(
+                "DUNGEONS",
+                "Choose a depth, enter a dungeon, and claim its rewards."
+            )
         }
-        pulse(dungeons, 1.0f, 1.025f, 1850L)
+        pulse(dungeons, 1.0f, 1.022f, 1850L)
 
-        addHubButton(root, "shop.png", "Shop", screenW * 42 / 100, 0.015f, 0.405f) {
-            openSection("SHOP", "Spend gold and Astral Shards on supplies and upgrades.")
+        addHubButton(
+            root,
+            "shop.png",
+            "Shop",
+            screenW * 35 / 100,
+            0.025f,
+            0.395f
+        ) {
+            openSection(
+                "SHOP",
+                "Spend gold and Astral Shards on supplies and upgrades."
+            )
         }
 
-        addHubButton(root, "forge.png", "Forge", screenW * 42 / 100, 0.565f, 0.405f) {
-            openSection("FORGE", "Enhance weapons, armor, and relics at the Astral Forge.")
+        addHubButton(
+            root,
+            "forge.png",
+            "Forge",
+            screenW * 35 / 100,
+            0.625f,
+            0.395f
+        ) {
+            openSection(
+                "FORGE",
+                "Enhance weapons, armor, and relics at the Astral Forge."
+            )
         }
 
         val summon = addHubButton(
-            root, "summon.png", "Summon", screenW * 43 / 100, 0.285f, 0.515f
+            root,
+            "summon.png",
+            "Summon",
+            screenW * 37 / 100,
+            0.315f,
+            0.505f
         ) {
-            openSection("SUMMON", "Call heroes, relics, and rare astral powers from beyond the veil.")
+            openSection(
+                "SUMMON",
+                "Call heroes, relics, and rare astral powers from beyond the veil."
+            )
         }
-        pulse(summon, 1.0f, 1.02f, 2100L)
+        pulse(summon, 1.0f, 1.018f, 2100L)
 
-        addHubButton(root, "heroes.png", "Heroes", screenW * 42 / 100, 0.02f, 0.635f) {
+        addHubButton(
+            root,
+            "heroes.png",
+            "Heroes",
+            screenW * 34 / 100,
+            0.03f,
+            0.595f
+        ) {
             startActivity(Intent(this, CharacterActivity::class.java))
         }
 
-        addHubButton(root, "guild.png", "Guild", screenW * 42 / 100, 0.56f, 0.635f) {
-            openSection("GUILD", "Guild progression, members, raids, contributions, and rewards.")
+        addHubButton(
+            root,
+            "guild.png",
+            "Guild",
+            screenW * 34 / 100,
+            0.63f,
+            0.595f
+        ) {
+            openSection(
+                "GUILD",
+                "Guild progression, members, raids, contributions, and rewards."
+            )
         }
 
-        addHubButton(root, "quests.png", "Quests", screenW * 40 / 100, 0.585f, 0.748f) {
-            openSection("QUESTS", "Main quests, side missions, dailies, and milestone rewards.")
+        addHubButton(
+            root,
+            "quests.png",
+            "Quests",
+            screenW * 29 / 100,
+            0.67f,
+            0.69f
+        ) {
+            openSection(
+                "QUESTS",
+                "Main quests, side missions, dailies, and milestone rewards."
+            )
         }
 
         val battleButton = ImageView(this).apply {
@@ -165,25 +217,28 @@ class HomeActivity : Activity() {
             isClickable = true
             isFocusable = true
             setOnClickListener {
-                openSection("BATTLE", "Enter the Depths and face the monsters below.")
+                openSection(
+                    "BATTLE",
+                    "Enter the Depths and face the monsters below."
+                )
             }
             installTouchFeedback()
         }
-        val battleWidth = screenW * 48 / 100
+        val battleWidth = screenW * 42 / 100
         val battleParams = FrameLayout.LayoutParams(
             battleWidth,
             battleWidth * 34 / 100,
             Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
         ).apply {
-            bottomMargin = AuthUi.dp(this@HomeActivity, 102)
+            bottomMargin = AuthUi.dp(this@HomeActivity, 118)
         }
         root.addView(battleButton, battleParams)
-        pulse(battleButton, 1.0f, 1.035f, 1600L)
+        pulse(battleButton, 1.0f, 1.026f, 1600L)
 
         val bottomNav = createBottomNav(screenW)
         val bottomNavParams = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
-            AuthUi.dp(this, 88),
+            AuthUi.dp(this, 74),
             Gravity.BOTTOM
         ).apply {
             bottomMargin = AuthUi.dp(this@HomeActivity, 8)
@@ -195,20 +250,19 @@ class HomeActivity : Activity() {
             val systemBottom = insets.systemWindowInsetBottom
             val safeGap = AuthUi.dp(this@HomeActivity, 8)
 
-            playerCardParams.topMargin = systemTop + AuthUi.dp(this@HomeActivity, 6)
+            playerCardParams.topMargin =
+                systemTop + AuthUi.dp(this@HomeActivity, 2)
             playerCard.layoutParams = playerCardParams
 
-            statusParams.topMargin = systemTop + AuthUi.dp(this@HomeActivity, 10)
+            statusParams.topMargin =
+                systemTop + AuthUi.dp(this@HomeActivity, 6)
             statusPanel.layoutParams = statusParams
-
-            titleParams.topMargin = systemTop + AuthUi.dp(this@HomeActivity, 96)
-            titleView.layoutParams = titleParams
 
             bottomNavParams.bottomMargin = systemBottom + safeGap
             bottomNav.layoutParams = bottomNavParams
 
             battleParams.bottomMargin =
-                systemBottom + safeGap + AuthUi.dp(this@HomeActivity, 94)
+                systemBottom + safeGap + AuthUi.dp(this@HomeActivity, 112)
             battleButton.layoutParams = battleParams
 
             insets
@@ -221,7 +275,8 @@ class HomeActivity : Activity() {
     private fun createPlayerCorner(
         displayName: String,
         progress: PlayerProgress,
-        screenW: Int
+        cardWidth: Int,
+        cardHeight: Int
     ): FrameLayout {
         val card = FrameLayout(this).apply {
             contentDescription = "Player profile"
@@ -229,14 +284,11 @@ class HomeActivity : Activity() {
             isFocusable = false
         }
 
-        val cardWidth = min(screenW * 58 / 100, AuthUi.dp(this, 340))
-        val cardHeight = AuthUi.dp(this, 112)
-
-        val avatarPlaceholderSize = AuthUi.dp(this, 65)
+        val avatarPlaceholderSize = cardHeight * 58 / 100
         val avatarPlaceholder = TextView(this).apply {
             text = displayName.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "D"
             gravity = Gravity.CENTER
-            textSize = 27f
+            textSize = 20f
             setTextColor(Color.WHITE)
             typeface = Typeface.DEFAULT_BOLD
             background = GradientDrawable(
@@ -248,9 +300,12 @@ class HomeActivity : Activity() {
                 )
             ).apply {
                 shape = GradientDrawable.OVAL
-                setStroke(AuthUi.dp(this@HomeActivity, 1), Color.rgb(137, 102, 255))
+                setStroke(
+                    AuthUi.dp(this@HomeActivity, 1),
+                    Color.rgb(137, 102, 255)
+                )
             }
-            setShadowLayer(7f, 0f, 0f, Color.rgb(113, 82, 255))
+            setShadowLayer(6f, 0f, 0f, Color.rgb(113, 82, 255))
         }
         card.addView(
             avatarPlaceholder,
@@ -259,7 +314,7 @@ class HomeActivity : Activity() {
                 avatarPlaceholderSize,
                 Gravity.START or Gravity.CENTER_VERTICAL
             ).apply {
-                marginStart = AuthUi.dp(this@HomeActivity, 17)
+                marginStart = cardWidth * 4 / 100
             }
         )
 
@@ -293,11 +348,11 @@ class HomeActivity : Activity() {
                     contentDescription = null
                 },
                 FrameLayout.LayoutParams(
-                    AuthUi.dp(this@HomeActivity, 82),
-                    AuthUi.dp(this@HomeActivity, 82),
+                    cardHeight * 78 / 100,
+                    cardHeight * 78 / 100,
                     Gravity.START or Gravity.CENTER_VERTICAL
                 ).apply {
-                    marginStart = AuthUi.dp(this@HomeActivity, 8)
+                    marginStart = cardWidth * 2 / 100
                 }
             )
         }
@@ -306,24 +361,34 @@ class HomeActivity : Activity() {
             TextView(this).apply {
                 text = displayName
                 maxLines = 1
-                textSize = 14f
+                textSize = 11.5f
                 setTextColor(Color.WHITE)
                 typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
                 gravity = Gravity.CENTER_VERTICAL
-                setShadowLayer(6f, 0f, 0f, Color.rgb(100, 78, 255))
+                setShadowLayer(5f, 0f, 0f, Color.rgb(100, 78, 255))
             },
             FrameLayout.LayoutParams(
-                cardWidth - AuthUi.dp(this@HomeActivity, 116),
-                AuthUi.dp(this@HomeActivity, 31)
+                cardWidth * 66 / 100,
+                cardHeight * 29 / 100
             ).apply {
-                leftMargin = AuthUi.dp(this@HomeActivity, 101)
-                topMargin = AuthUi.dp(this@HomeActivity, 17)
+                leftMargin = cardWidth * 29 / 100
+                topMargin = cardHeight * 13 / 100
             }
         )
 
         addLevelBadge(card, progress.level, cardWidth, cardHeight)
-        addBattlePowerBadge(card, progress.powerRating, cardWidth, cardHeight)
-        addRankBadge(card, progress.rank)
+        addBattlePowerBadge(
+            card,
+            progress.powerRating,
+            cardWidth,
+            cardHeight
+        )
+        addRankBadge(
+            card,
+            progress.rank,
+            cardWidth,
+            cardHeight
+        )
 
         return card
     }
@@ -334,8 +399,8 @@ class HomeActivity : Activity() {
         cardWidth: Int,
         cardHeight: Int
     ) {
-        val badgeWidth = cardWidth * 36 / 100
-        val badgeHeight = cardHeight * 34 / 100
+        val badgeWidth = cardWidth * 32 / 100
+        val badgeHeight = cardHeight * 31 / 100
         val holder = FrameLayout(this)
 
         ButtonAssetStore.load(
@@ -359,7 +424,7 @@ class HomeActivity : Activity() {
         holder.addView(
             TextView(this).apply {
                 text = level.toString()
-                textSize = 13f
+                textSize = 10.5f
                 setTextColor(Color.WHITE)
                 typeface = Typeface.DEFAULT_BOLD
                 gravity = Gravity.CENTER
@@ -370,7 +435,7 @@ class HomeActivity : Activity() {
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 Gravity.END
             ).apply {
-                marginEnd = AuthUi.dp(this@HomeActivity, 7)
+                marginEnd = AuthUi.dp(this@HomeActivity, 5)
             }
         )
 
@@ -380,8 +445,8 @@ class HomeActivity : Activity() {
                 badgeWidth,
                 badgeHeight
             ).apply {
-                leftMargin = cardWidth * 31 / 100
-                topMargin = cardHeight * 52 / 100
+                leftMargin = cardWidth * 29 / 100
+                topMargin = cardHeight * 54 / 100
             }
         )
     }
@@ -392,8 +457,8 @@ class HomeActivity : Activity() {
         cardWidth: Int,
         cardHeight: Int
     ) {
-        val badgeWidth = cardWidth * 47 / 100
-        val badgeHeight = cardHeight * 34 / 100
+        val badgeWidth = cardWidth * 39 / 100
+        val badgeHeight = cardHeight * 31 / 100
         val holder = FrameLayout(this)
 
         ButtonAssetStore.load(
@@ -417,18 +482,18 @@ class HomeActivity : Activity() {
         holder.addView(
             TextView(this).apply {
                 text = battlePower.toString()
-                textSize = 12f
+                textSize = 10.5f
                 setTextColor(Color.WHITE)
                 typeface = Typeface.DEFAULT_BOLD
                 gravity = Gravity.CENTER
-                setShadowLayer(5f, 0f, 0f, Color.rgb(131, 84, 255))
+                setShadowLayer(4f, 0f, 0f, Color.rgb(131, 84, 255))
             },
             FrameLayout.LayoutParams(
                 badgeWidth * 54 / 100,
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 Gravity.END
             ).apply {
-                marginEnd = AuthUi.dp(this@HomeActivity, 8)
+                marginEnd = AuthUi.dp(this@HomeActivity, 5)
             }
         )
 
@@ -438,15 +503,20 @@ class HomeActivity : Activity() {
                 badgeWidth,
                 badgeHeight
             ).apply {
-                leftMargin = cardWidth * 53 / 100
-                topMargin = cardHeight * 52 / 100
+                leftMargin = cardWidth * 59 / 100
+                topMargin = cardHeight * 54 / 100
             }
         )
     }
 
-    private fun addRankBadge(card: FrameLayout, rank: String) {
+    private fun addRankBadge(
+        card: FrameLayout,
+        rank: String,
+        cardWidth: Int,
+        cardHeight: Int
+    ) {
         val holder = FrameLayout(this)
-        val badgeSize = AuthUi.dp(this, 31)
+        val badgeSize = cardHeight * 27 / 100
 
         ButtonAssetStore.load(
             this,
@@ -469,11 +539,11 @@ class HomeActivity : Activity() {
         holder.addView(
             TextView(this).apply {
                 text = rank
-                textSize = 11f
+                textSize = 9f
                 setTextColor(Color.WHITE)
                 typeface = Typeface.DEFAULT_BOLD
                 gravity = Gravity.CENTER
-                setShadowLayer(5f, 0f, 0f, Color.rgb(120, 75, 255))
+                setShadowLayer(4f, 0f, 0f, Color.rgb(120, 75, 255))
             },
             FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
@@ -487,11 +557,11 @@ class HomeActivity : Activity() {
                 badgeSize,
                 badgeSize
             ).apply {
-                leftMargin = AuthUi.dp(this@HomeActivity, 57)
-                topMargin = AuthUi.dp(this@HomeActivity, 71)
+                leftMargin = cardWidth * 20 / 100
+                topMargin = cardHeight * 67 / 100
             }
         )
-        pulse(holder, 1f, 1.06f, 1900L)
+        pulse(holder, 1f, 1.045f, 1900L)
     }
 
     private fun createStatusPanel(progress: PlayerProgress): LinearLayout {
@@ -499,32 +569,62 @@ class HomeActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.END
             setPadding(
-                AuthUi.dp(this@HomeActivity, 10),
                 AuthUi.dp(this@HomeActivity, 7),
-                AuthUi.dp(this@HomeActivity, 10),
-                AuthUi.dp(this@HomeActivity, 7)
+                AuthUi.dp(this@HomeActivity, 4),
+                AuthUi.dp(this@HomeActivity, 7),
+                AuthUi.dp(this@HomeActivity, 4)
             )
             background = GradientDrawable().apply {
-                setColor(Color.argb(205, 5, 8, 24))
-                cornerRadius = AuthUi.dp(this@HomeActivity, 10).toFloat()
-                setStroke(AuthUi.dp(this@HomeActivity, 1), Color.rgb(202, 165, 92))
+                setColor(Color.argb(195, 5, 8, 24))
+                cornerRadius = AuthUi.dp(this@HomeActivity, 8).toFloat()
+                setStroke(
+                    AuthUi.dp(this@HomeActivity, 1),
+                    Color.rgb(202, 165, 92)
+                )
             }
 
-            addView(statusLine("Gold", progress.gold.toString(), Color.rgb(255, 204, 72)))
-            addView(statusLine("Shards", progress.astralShards.toString(), Color.rgb(128, 113, 255)))
-            addView(statusLine("Energy", progress.energy.toString() + "/" + progress.maxEnergy, Color.rgb(80, 192, 255)))
+            addView(
+                statusLine(
+                    "Gold",
+                    progress.gold.toString(),
+                    Color.rgb(255, 204, 72)
+                )
+            )
+            addView(
+                statusLine(
+                    "Shards",
+                    progress.astralShards.toString(),
+                    Color.rgb(128, 113, 255)
+                )
+            )
+            addView(
+                statusLine(
+                    "Energy",
+                    progress.energy.toString() + "/" + progress.maxEnergy,
+                    Color.rgb(80, 192, 255)
+                )
+            )
         }
     }
 
-    private fun statusLine(label: String, value: String, glowColor: Int): TextView {
+    private fun statusLine(
+        label: String,
+        value: String,
+        glowColor: Int
+    ): TextView {
         return TextView(this).apply {
             text = label + "  " + value
-            textSize = 12f
+            textSize = 10f
             setTextColor(Color.WHITE)
             typeface = Typeface.DEFAULT_BOLD
             gravity = Gravity.END
-            setPadding(0, AuthUi.dp(this@HomeActivity, 2), 0, AuthUi.dp(this@HomeActivity, 2))
-            setShadowLayer(4f, 0f, 0f, glowColor)
+            setPadding(
+                0,
+                AuthUi.dp(this@HomeActivity, 1),
+                0,
+                AuthUi.dp(this@HomeActivity, 1)
+            )
+            setShadowLayer(3f, 0f, 0f, glowColor)
         }
     }
 
@@ -537,7 +637,11 @@ class HomeActivity : Activity() {
         topFraction: Float,
         onClick: () -> Unit
     ): ImageView {
-        val bitmap = ButtonAssetStore.load(this, hubPack, fileName)
+        val bitmap = ButtonAssetStore.load(
+            this,
+            hubPack,
+            fileName
+        )
         val ratio = if (bitmap != null && bitmap.width > 0) {
             bitmap.height.toFloat() / bitmap.width.toFloat()
         } else {
@@ -557,10 +661,14 @@ class HomeActivity : Activity() {
 
         val params = FrameLayout.LayoutParams(
             widthPx,
-            (widthPx * ratio).toInt().coerceAtLeast(AuthUi.dp(this, 48))
+            (widthPx * ratio)
+                .toInt()
+                .coerceAtLeast(AuthUi.dp(this, 44))
         )
-        params.leftMargin = (resources.displayMetrics.widthPixels * leftFraction).toInt()
-        params.topMargin = (resources.displayMetrics.heightPixels * topFraction).toInt()
+        params.leftMargin =
+            (resources.displayMetrics.widthPixels * leftFraction).toInt()
+        params.topMargin =
+            (resources.displayMetrics.heightPixels * topFraction).toInt()
         root.addView(button, params)
         return button
     }
@@ -570,23 +678,43 @@ class HomeActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
             setPadding(
-                AuthUi.dp(this@HomeActivity, 8),
                 AuthUi.dp(this@HomeActivity, 4),
-                AuthUi.dp(this@HomeActivity, 8),
-                AuthUi.dp(this@HomeActivity, 4)
+                AuthUi.dp(this@HomeActivity, 2),
+                AuthUi.dp(this@HomeActivity, 4),
+                AuthUi.dp(this@HomeActivity, 2)
             )
             background = GradientDrawable().apply {
-                setColor(Color.argb(224, 4, 7, 22))
-                setStroke(AuthUi.dp(this@HomeActivity, 1), Color.rgb(126, 99, 225))
+                setColor(Color.argb(218, 4, 7, 22))
+                setStroke(
+                    AuthUi.dp(this@HomeActivity, 1),
+                    Color.rgb(126, 99, 225)
+                )
             }
         }
 
-        val navFiles = listOf("home.png", "battle.png", "heroes.png", "gear.png", "menu.png")
-        val navLabels = listOf("Home", "Battle", "Heroes", "Gear", "Menu")
-        val itemWidth = (screenW - AuthUi.dp(this, 16)) / navFiles.size
+        val navFiles = listOf(
+            "home.png",
+            "battle.png",
+            "heroes.png",
+            "gear.png",
+            "menu.png"
+        )
+        val navLabels = listOf(
+            "Home",
+            "Battle",
+            "Heroes",
+            "Gear",
+            "Menu"
+        )
+        val itemWidth =
+            (screenW - AuthUi.dp(this, 8)) / navFiles.size
 
         navFiles.forEachIndexed { index, fileName ->
-            val bitmap = ButtonAssetStore.load(this, bottomPack, fileName)
+            val bitmap = ButtonAssetStore.load(
+                this,
+                bottomPack,
+                fileName
+            )
             val item = ImageView(this).apply {
                 if (bitmap != null) setImageBitmap(bitmap)
                 scaleType = ImageView.ScaleType.FIT_CENTER
@@ -599,10 +727,24 @@ class HomeActivity : Activity() {
                 setOnClickListener {
                     when (index) {
                         0 -> Unit
-                        1 -> openSection("BATTLE", "Enter the Depths and face the monsters below.")
-                        2 -> startActivity(Intent(this@HomeActivity, CharacterActivity::class.java))
-                        3 -> openSection("GEAR", "Weapons, armor, accessories, loadouts, and equipment power.")
-                        4 -> openSection("MENU", "Settings, account options, achievements, and additional systems.")
+                        1 -> openSection(
+                            "BATTLE",
+                            "Enter the Depths and face the monsters below."
+                        )
+                        2 -> startActivity(
+                            Intent(
+                                this@HomeActivity,
+                                CharacterActivity::class.java
+                            )
+                        )
+                        3 -> openSection(
+                            "GEAR",
+                            "Weapons, armor, accessories, loadouts, and equipment power."
+                        )
+                        4 -> openSection(
+                            "MENU",
+                            "Settings, account options, achievements, and additional systems."
+                        )
                     }
                 }
             }
@@ -671,15 +813,30 @@ class HomeActivity : Activity() {
         }
     }
 
-    private fun pulse(view: View, from: Float, to: Float, durationMs: Long) {
-        ObjectAnimator.ofFloat(view, View.SCALE_X, from, to).apply {
+    private fun pulse(
+        view: View,
+        from: Float,
+        to: Float,
+        durationMs: Long
+    ) {
+        ObjectAnimator.ofFloat(
+            view,
+            View.SCALE_X,
+            from,
+            to
+        ).apply {
             duration = durationMs
             repeatCount = ValueAnimator.INFINITE
             repeatMode = ValueAnimator.REVERSE
             interpolator = AccelerateDecelerateInterpolator()
             start()
         }
-        ObjectAnimator.ofFloat(view, View.SCALE_Y, from, to).apply {
+        ObjectAnimator.ofFloat(
+            view,
+            View.SCALE_Y,
+            from,
+            to
+        ).apply {
             duration = durationMs
             repeatCount = ValueAnimator.INFINITE
             repeatMode = ValueAnimator.REVERSE
@@ -688,7 +845,10 @@ class HomeActivity : Activity() {
         }
     }
 
-    private fun openSection(title: String, subtitle: String) {
+    private fun openSection(
+        title: String,
+        subtitle: String
+    ) {
         startActivity(
             Intent(this, GameSectionActivity::class.java)
                 .putExtra("section_title", title)
