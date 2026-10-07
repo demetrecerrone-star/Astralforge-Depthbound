@@ -109,7 +109,7 @@ class AccountActivity : Activity() {
             setTextColor(Color.WHITE)
             setHintTextColor(Color.rgb(130, 122, 158))
             textSize = 14f
-            singleLine = true
+            setSingleLine(true)
             imeOptions = EditorInfo.IME_ACTION_DONE
             maxLines = 1
             setPadding(
