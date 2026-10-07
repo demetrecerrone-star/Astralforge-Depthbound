@@ -281,7 +281,8 @@ class ThreeDActorView @JvmOverloads constructor(
 
         return ModelViewer(
             textureView,
-            uiHelper = uiHelper
+            uiHelper = uiHelper,
+            manipulator = null
         ).also { viewer ->
             viewer.autoPlayAnimations = false
             viewer.scene.skybox = null
