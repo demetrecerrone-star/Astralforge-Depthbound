@@ -8,6 +8,7 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.net.Uri
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
@@ -870,10 +871,14 @@ class HomeActivity : Activity() {
             subtitle = "Recent changes, additions, fixes, and development notes.",
             accent = Color.rgb(101, 221, 192)
         ) {
-            openSection(
-                "UPDATE LOG",
-                "Latest development updates: rebuilt hub artwork, landscape lock, " +
-                    "Daily Reward and Event hub popups, and the new account/settings menu."
+            startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse(
+                        "https://github.com/demetrecerrone-star/" +
+                            "Astralforge-Depthbound#update-log"
+                    )
+                )
             )
         }
 
