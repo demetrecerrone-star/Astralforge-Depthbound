@@ -112,7 +112,7 @@ object AuthUi {
 
         val bgImage = ImageView(activity).apply {
             setImageResource(
-                R.drawable.auth_landscape_background
+                R.drawable.auth_landscape_scene
             )
             scaleType = ImageView.ScaleType.CENTER_CROP
             contentDescription = null
