@@ -411,7 +411,7 @@ class LegalActivity : Activity() {
                 text = body
                 textSize = 10.2f
                 setTextColor(Color.rgb(211, 201, 234))
-                lineSpacingMultiplier = 1.08f
+                setLineSpacing(0f, 1.08f)
             })
         }
     }
