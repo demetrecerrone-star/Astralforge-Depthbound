@@ -112,7 +112,7 @@ object AuthUi {
 
         val bgImage = ImageView(activity).apply {
             setImageResource(
-                R.drawable.file_00000000bfc081f5b0a1931c13d627e8
+                R.drawable.auth_landscape_background
             )
             scaleType = ImageView.ScaleType.CENTER_CROP
             contentDescription = null
@@ -130,9 +130,9 @@ object AuthUi {
                 background = GradientDrawable(
                     GradientDrawable.Orientation.LEFT_RIGHT,
                     intArrayOf(
-                        Color.argb(58, 2, 4, 16),
-                        Color.argb(105, 2, 4, 16),
-                        Color.argb(222, 2, 4, 16)
+                        Color.argb(12, 2, 4, 16),
+                        Color.argb(30, 2, 4, 16),
+                        Color.argb(135, 2, 4, 16)
                     )
                 )
             },
@@ -147,69 +147,14 @@ object AuthUi {
             gravity = Gravity.CENTER_VERTICAL
         }
 
-        val branding = LinearLayout(activity).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER_VERTICAL or Gravity.START
-            setPadding(
-                dp(activity, 34),
-                dp(activity, 12),
-                dp(activity, 28),
-                dp(activity, 12)
-            )
-        }
-
-        branding.addView(
-            TextView(activity).apply {
-                text = "ASTRAL FORGE"
-                setTextColor(Color.WHITE)
-                textSize = 34f
-                typeface =
-                    Typeface.create(Typeface.SERIF, Typeface.BOLD)
-                letterSpacing = 0.08f
-            }
-        )
-        branding.addView(
-            TextView(activity).apply {
-                text = "DEPTHBOUND"
-                setTextColor(Color.rgb(197, 153, 255))
-                textSize = 21f
-                typeface = Typeface.DEFAULT_BOLD
-                letterSpacing = 0.22f
-                setPadding(0, dp(activity, 2), 0, 0)
-            }
-        )
-        branding.addView(
-            TextView(activity).apply {
-                text =
-                    "Forge your hero. Descend into the Depths.\nRise beyond the limits of your class."
-                setTextColor(Color.rgb(220, 214, 238))
-                textSize = 14f
-                setLineSpacing(0f, 1.15f)
-                setPadding(
-                    0,
-                    dp(activity, 16),
-                    dp(activity, 30),
-                    0
-                )
-            }
-        )
-        branding.addView(
-            TextView(activity).apply {
-                text = "ENTER THE DEPTHS"
-                setTextColor(Color.rgb(232, 202, 128))
-                textSize = 12f
-                typeface = Typeface.DEFAULT_BOLD
-                letterSpacing = 0.18f
-                setPadding(0, dp(activity, 18), 0, 0)
-            }
-        )
+        val branding = FrameLayout(activity)
 
         safeHost.addView(
             branding,
             LinearLayout.LayoutParams(
                 0,
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                1.08f
+                1.10f
             )
         )
 
@@ -232,22 +177,30 @@ object AuthUi {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
             setPadding(
-                dp(activity, 24),
-                dp(activity, 18),
-                dp(activity, 24),
-                dp(activity, 18)
+                dp(activity, 22),
+                dp(activity, 12),
+                dp(activity, 22),
+                dp(activity, 12)
             )
         }
 
         content.addView(
-            heading(activity, panelTitle, 23f),
+            heading(activity, panelTitle, 21f),
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
         )
         content.addView(
-            subtitle(activity, panelSubtitle),
+            subtitle(activity, panelSubtitle).apply {
+                textSize = 14f
+                setPadding(
+                    0,
+                    dp(activity, 4),
+                    0,
+                    dp(activity, 4)
+                )
+            },
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -274,7 +227,7 @@ object AuthUi {
             LinearLayout.LayoutParams(
                 0,
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                0.92f
+                0.90f
             ).apply {
                 topMargin = dp(activity, 12)
                 bottomMargin = dp(activity, 12)
@@ -475,7 +428,7 @@ object AuthUi {
             field,
             LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(context, 60)
+                dp(context, 54)
             ).apply { topMargin = dp(context, topMarginDp) }
         )
     }
@@ -538,9 +491,9 @@ object AuthUi {
         text = "—   OR CONTINUE WITH   —"
         gravity = Gravity.CENTER
         setTextColor(LAVENDER)
-        textSize = 13f
-        letterSpacing = 0.17f
-        setPadding(0, dp(context, 6), 0, dp(context, 6))
+        textSize = 12f
+        letterSpacing = 0.15f
+        setPadding(0, dp(context, 2), 0, dp(context, 2))
     }
 
     fun heading(context: Context, text: String, size: Float): TextView = TextView(context).apply {

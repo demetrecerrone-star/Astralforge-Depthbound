@@ -72,7 +72,7 @@ class MainActivity : Activity() {
                 this,
                 R.drawable.file_00000000d90c81f590bfb22d91dd428d,
                 "Sign In",
-                92
+                72
             ) { signInWithEmail() }
         )
 
@@ -84,15 +84,15 @@ class MainActivity : Activity() {
                 this,
                 R.drawable.file_0000000004a881f6b93ff7dc066c5f95,
                 "Continue with Google",
-                64
+                56
             ) { startGoogleSignIn() },
             AuthUi.assetButton(
                 this,
                 R.drawable.file_000000000dd481f6a8aebb5476e7346d,
                 "Continue as Guest",
-                64
+                56
             ) { signInAsGuest() },
-            heightDp = 64,
+            heightDp = 56,
             topMarginDp = 2
         )
 
@@ -106,7 +106,7 @@ class MainActivity : Activity() {
         content.addView(
             link,
             LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                topMargin = AuthUi.dp(this@MainActivity, 12)
+                topMargin = AuthUi.dp(this@MainActivity, 6)
             }
         )
     }

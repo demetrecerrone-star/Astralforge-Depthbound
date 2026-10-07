@@ -56,25 +56,17 @@ class CreateAccountActivity : Activity() {
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         )
 
-        AuthUi.addFieldPair(
-            content,
-            usernameField,
-            emailField,
-            topMarginDp = 4
-        )
-        AuthUi.addFieldPair(
-            content,
-            passwordField,
-            confirmField,
-            topMarginDp = 8
-        )
+        AuthUi.addField(content, usernameField, 4)
+        AuthUi.addField(content, emailField, 6)
+        AuthUi.addField(content, passwordField, 6)
+        AuthUi.addField(content, confirmField, 6)
 
         content.addView(
             AuthUi.assetButton(
                 this,
                 R.drawable.file_00000000a694822fabb704680dcacbc2,
                 "Create Account",
-                92
+                68
             ) { createAccount() }
         )
 
@@ -85,7 +77,7 @@ class CreateAccountActivity : Activity() {
                 this,
                 R.drawable.file_0000000004a881f6b93ff7dc066c5f95,
                 "Continue with Google",
-                76
+                56
             ) { startGoogleSignIn() }
         )
 
@@ -96,7 +88,7 @@ class CreateAccountActivity : Activity() {
                 getString(R.string.sign_in_link)
             ) { finish() },
             LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                topMargin = AuthUi.dp(this@CreateAccountActivity, 14)
+                topMargin = AuthUi.dp(this@CreateAccountActivity, 6)
             }
         )
     }
