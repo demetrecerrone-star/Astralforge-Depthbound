@@ -22,7 +22,7 @@ class BattleV2Activity : Activity() {
     private val handler = Handler(Looper.getMainLooper())
 
     private lateinit var root: FrameLayout
-    private lateinit var renderer: BattleV2RenderView
+    private lateinit var renderer: BattleV2RendererHost
     private lateinit var controller: BattleV2Controller
     private lateinit var progress: PlayerProgress
     private lateinit var settings: GameSettings
@@ -72,7 +72,7 @@ class BattleV2Activity : Activity() {
         root = FrameLayout(this)
 
         renderer =
-            BattleV2RenderView(this).apply {
+            BattleV2RendererHost(this).apply {
                 setPreferredFps(
                     settings.fpsPreference,
                     settings.batterySaver
@@ -91,6 +91,12 @@ class BattleV2Activity : Activity() {
         addPlayerHudAndControls()
         addPreviewBadge()
         addBackButton()
+
+        renderer.onModeChanged = { mode ->
+            if (::statusText.isInitialized) {
+                statusText.text = mode
+            }
+        }
 
         setContentView(root)
     }
@@ -260,7 +266,7 @@ class BattleV2Activity : Activity() {
         val skillButton =
             makeAction("SKILL", false) {
                 statusText.text =
-                    "Skill timing slot ready for the 3D model."
+                    "Skill timing slot is ready for 3D animation events."
             }
         buttons.addView(
             skillButton,
@@ -301,7 +307,7 @@ class BattleV2Activity : Activity() {
     private fun addPreviewBadge() {
         root.addView(
             TextView(this).apply {
-                text = "SAFE PREVIEW • NO ENERGY OR REWARDS USED"
+                text = "3D V2 PREVIEW • NORMAL BATTLE REMAINS SAFE"
                 textSize = 9.5f
                 setTextColor(Color.rgb(218, 190, 255))
                 typeface = Typeface.DEFAULT_BOLD
@@ -369,7 +375,7 @@ class BattleV2Activity : Activity() {
                     enemySprites
                 )
                 actorsReady = true
-                statusText.text = "Renderer ready"
+                statusText.text = renderer.modeLabel
             }
         }.start()
     }
