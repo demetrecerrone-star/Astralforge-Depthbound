@@ -53,6 +53,38 @@ class PortraitArtView @JvmOverloads constructor(
             addCircle(cx, cy, r, Path.Direction.CW)
         }
 
+        PortraitAssetStore.load(context, portraitId)?.let { bitmap ->
+            canvas.save()
+            canvas.clipPath(clip)
+            paint.shader = null
+            paint.color = Color.WHITE
+            paint.isFilterBitmap = true
+            canvas.drawBitmap(
+                bitmap,
+                null,
+                RectF(
+                    cx - r,
+                    cy - r,
+                    cx + r,
+                    cy + r
+                ),
+                paint
+            )
+            canvas.restore()
+
+            if (highlighted) {
+                stroke.shader = null
+                stroke.strokeWidth = size * 0.045f
+                stroke.color = Color.rgb(255, 212, 112)
+                canvas.drawCircle(cx, cy, r, stroke)
+
+                stroke.strokeWidth = size * 0.012f
+                stroke.color = Color.rgb(255, 246, 205)
+                canvas.drawCircle(cx, cy, r * 0.92f, stroke)
+            }
+            return
+        }
+
         canvas.save()
         canvas.clipPath(clip)
         drawBackground(canvas, cx, cy, r)
