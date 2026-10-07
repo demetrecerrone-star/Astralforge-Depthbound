@@ -7,7 +7,6 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
-import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.MotionEvent
@@ -39,17 +38,14 @@ class HomeActivity : Activity() {
         val allowAmbientMotion =
             !gameSettings.reducedMotion && !gameSettings.batterySaver
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val preferredRate = when {
-                gameSettings.batterySaver -> 30f
-                gameSettings.fpsPreference == "30" -> 30f
-                gameSettings.fpsPreference == "60" -> 60f
-                else -> 0f
-            }
-            root.setFrameRate(
-                preferredRate,
-                View.FRAME_RATE_COMPATIBILITY_DEFAULT
-            )
+        val preferredRate = when {
+            gameSettings.batterySaver -> 30f
+            gameSettings.fpsPreference == "30" -> 30f
+            gameSettings.fpsPreference == "60" -> 60f
+            else -> 0f
+        }
+        window.attributes = window.attributes.apply {
+            preferredRefreshRate = preferredRate
         }
 
         val backgroundImage = ImageView(this).apply {
