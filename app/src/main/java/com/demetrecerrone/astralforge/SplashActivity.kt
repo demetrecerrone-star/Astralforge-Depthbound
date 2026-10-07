@@ -112,7 +112,7 @@ class SplashActivity : Activity() {
 
         val shimmer = View(this).apply {
             alpha = 0.0f
-            background = GradientDrawable(
+            this.background = GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
                 intArrayOf(
                     Color.TRANSPARENT,
@@ -138,7 +138,7 @@ class SplashActivity : Activity() {
         repeat(3) { index ->
             val line = View(this).apply {
                 alpha = 0.20f - index * 0.04f
-                background = GradientDrawable(
+                this.background = GradientDrawable(
                     GradientDrawable.Orientation.LEFT_RIGHT,
                     intArrayOf(
                         Color.TRANSPARENT,
