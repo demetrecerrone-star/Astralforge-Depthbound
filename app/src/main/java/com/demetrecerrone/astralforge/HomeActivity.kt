@@ -597,7 +597,6 @@ class HomeActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
             setPadding(gap, 0, gap, 0)
-            background = ColorDrawable(Color.TRANSPARENT)
         }
 
         actions.addView(
