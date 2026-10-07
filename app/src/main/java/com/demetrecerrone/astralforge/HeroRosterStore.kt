@@ -135,8 +135,7 @@ object HeroRosterStore {
         heroes.firstOrNull { it.id == id }
 
     fun activeHeroId(context: Context): String {
-        val saved = context
-            .let { AccountScopedStorage.preferences(it, PREFS) }
+        val saved = AccountScopedStorage.preferences(context, PREFS)
             .getString(KEY_ACTIVE, DEFAULT_HERO)
             ?: DEFAULT_HERO
         return if (hero(saved) != null) saved else DEFAULT_HERO
@@ -155,8 +154,7 @@ object HeroRosterStore {
     }
 
     fun favorites(context: Context): Set<String> {
-        return context
-            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return AccountScopedStorage.preferences(context, PREFS)
             .getStringSet(KEY_FAVORITES, emptySet())
             ?.toSet()
             ?: emptySet()
@@ -175,7 +173,7 @@ object HeroRosterStore {
             next.add(heroId)
             true
         }
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        AccountScopedStorage.preferences(context, PREFS)
             .edit()
             .putStringSet(KEY_FAVORITES, next)
             .apply()
