@@ -114,9 +114,11 @@ class MenuActivity : Activity() {
             "HELP & SUPPORT",
             "Gameplay help, controls, troubleshooting, and support."
         ) {
-            openSection(
-                "HELP & SUPPORT",
-                "Help topics and support options will live here."
+            startActivity(
+                Intent(
+                    this,
+                    HelpSupportActivity::class.java
+                )
             )
         })
 
