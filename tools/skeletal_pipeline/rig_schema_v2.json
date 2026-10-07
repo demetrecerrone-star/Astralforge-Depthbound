@@ -1,0 +1,67 @@
+{
+  "schema": 2,
+  "id": "knight",
+  "display_name": "Knight",
+  "kind": "biped",
+  "default_facing": "right",
+  "virtual_canvas": {
+    "width": 1000,
+    "height": 1000
+  },
+  "bones": [
+    {
+      "name": "root",
+      "parent": null,
+      "x": 0.50,
+      "y": 0.70
+    },
+    {
+      "name": "torso",
+      "parent": "root",
+      "x": 0.50,
+      "y": 0.42
+    },
+    {
+      "name": "head",
+      "parent": "torso",
+      "x": 0.50,
+      "y": 0.20
+    }
+  ],
+  "attachments": [
+    {
+      "role": "torso",
+      "bone": "torso",
+      "file": "parts/final/torso.png",
+      "pivot": [0.50, 0.45],
+      "rest": {
+        "x": 500,
+        "y": 405,
+        "rotation": 0,
+        "scale": 1.0
+      },
+      "max_size": {
+        "w": 300,
+        "h": 320
+      },
+      "z": 8
+    },
+    {
+      "role": "head",
+      "bone": "head",
+      "file": "parts/final/head.png",
+      "pivot": [0.50, 0.80],
+      "rest": {
+        "x": 500,
+        "y": 205,
+        "rotation": 0,
+        "scale": 1.0
+      },
+      "max_size": {
+        "w": 210,
+        "h": 210
+      },
+      "z": 14
+    }
+  ]
+}
