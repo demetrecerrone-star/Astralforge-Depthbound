@@ -811,24 +811,13 @@ class HomeActivity : Activity() {
             }
         }
 
-        val navFiles = listOf(
-            "home.png",
-            "battle.png",
-            "heroes.png",
-            "gear.png",
-            "menu.png"
-        )
-        val navLabels = listOf(
-            "Home",
-            "Battle",
-            "Heroes",
-            "Gear",
-            "Menu"
-        )
-        val itemWidth =
-            (screenW - AuthUi.dp(this, 8)) / navFiles.size
+        val itemWidth = (screenW - AuthUi.dp(this, 8)) / 5
 
-        navFiles.forEachIndexed { index, fileName ->
+        fun addImageItem(
+            fileName: String,
+            label: String,
+            onClick: () -> Unit
+        ) {
             val bitmap = ButtonAssetStore.load(
                 this,
                 bottomPack,
@@ -838,44 +827,112 @@ class HomeActivity : Activity() {
                 if (bitmap != null) setImageBitmap(bitmap)
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 adjustViewBounds = true
-                contentDescription = navLabels[index]
+                contentDescription = label
                 isClickable = true
                 isFocusable = true
                 installTouchFeedback()
-
-                setOnClickListener {
-                    when (index) {
-                        0 -> Unit
-                        1 -> startActivity(
-                            Intent(
-                                this@HomeActivity,
-                                BattleActivity::class.java
-                            )
-                        )
-                        2 -> startActivity(
-                            Intent(
-                                this@HomeActivity,
-                                HeroesActivity::class.java
-                            )
-                        )
-                        3 -> openSection(
-                            "GEAR",
-                            "Weapons, armor, accessories, loadouts, and equipment power."
-                        )
-                        4 -> startActivity(
-                            Intent(
-                                this@HomeActivity,
-                                MenuActivity::class.java
-                            )
-                        )
-                    }
-                }
+                setOnClickListener { onClick() }
             }
             nav.addView(
                 item,
                 LinearLayout.LayoutParams(
                     itemWidth,
                     LinearLayout.LayoutParams.MATCH_PARENT
+                )
+            )
+        }
+
+        addImageItem("home.png", "Home") {
+            Unit
+        }
+
+        addImageItem("battle.png", "Battle") {
+            startActivity(
+                Intent(
+                    this@HomeActivity,
+                    BattleActivity::class.java
+                )
+            )
+        }
+
+        val statsItem = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            contentDescription = "Stats"
+            isClickable = true
+            isFocusable = true
+            setPadding(
+                AuthUi.dp(this@HomeActivity, 3),
+                AuthUi.dp(this@HomeActivity, 3),
+                AuthUi.dp(this@HomeActivity, 3),
+                AuthUi.dp(this@HomeActivity, 2)
+            )
+            installTouchFeedback()
+            setOnClickListener {
+                startActivity(
+                    Intent(
+                        this@HomeActivity,
+                        StatsActivity::class.java
+                    )
+                )
+            }
+
+            addView(
+                TextView(this@HomeActivity).apply {
+                    text = "✦"
+                    textSize = 23f
+                    setTextColor(Color.rgb(203, 176, 255))
+                    typeface = Typeface.DEFAULT_BOLD
+                    gravity = Gravity.CENTER
+                    setShadowLayer(
+                        7f,
+                        0f,
+                        0f,
+                        Color.rgb(109, 74, 233)
+                    )
+                },
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    0,
+                    1f
+                )
+            )
+
+            addView(
+                TextView(this@HomeActivity).apply {
+                    text = "STATS"
+                    textSize = 8.5f
+                    setTextColor(Color.WHITE)
+                    typeface = Typeface.DEFAULT_BOLD
+                    gravity = Gravity.CENTER
+                    letterSpacing = 0.08f
+                },
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    AuthUi.dp(this@HomeActivity, 20)
+                )
+            )
+        }
+        nav.addView(
+            statsItem,
+            LinearLayout.LayoutParams(
+                itemWidth,
+                LinearLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+
+        addImageItem("gear.png", "Gear") {
+            openSection(
+                "GEAR",
+                "Weapons, armor, accessories, loadouts, and equipment power."
+            )
+        }
+
+        addImageItem("menu.png", "Menu") {
+            startActivity(
+                Intent(
+                    this@HomeActivity,
+                    MenuActivity::class.java
                 )
             )
         }
