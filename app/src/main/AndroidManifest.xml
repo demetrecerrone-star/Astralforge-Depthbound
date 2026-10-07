@@ -30,6 +30,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".HeroesActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".CharacterActivity"
             android:exported="false" />
 
