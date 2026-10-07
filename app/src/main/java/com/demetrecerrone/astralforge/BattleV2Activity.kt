@@ -8,10 +8,12 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.TextUtils
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -26,15 +28,22 @@ class BattleV2Activity : Activity() {
     private lateinit var controller: BattleV2Controller
     private lateinit var progress: PlayerProgress
     private lateinit var settings: GameSettings
+    private lateinit var activeHero: HeroDefinition
 
-    private lateinit var playerHpBar: ProgressBar
-    private lateinit var enemyHpBar: ProgressBar
+    private lateinit var playerHpFill: BattleV2HpFillView
+    private lateinit var enemyHpFill: BattleV2HpFillView
     private lateinit var playerHpText: TextView
     private lateinit var enemyHpText: TextView
+    private lateinit var playerNameText: TextView
+    private lateinit var enemyNameText: TextView
+    private lateinit var playerPortrait: ImageView
+    private lateinit var enemyPortrait: ImageView
     private lateinit var statusText: TextView
-    private lateinit var attackButton: TextView
-    private lateinit var autoButton: TextView
+    private lateinit var attackButton: FrameLayout
+    private lateinit var autoButton: FrameLayout
 
+    private var playerEntityId = "knight"
+    private var enemyEntityId = "blue_slime"
     private var busy = false
     private var autoBattle = false
     private var actorsReady = false
@@ -45,6 +54,9 @@ class BattleV2Activity : Activity() {
 
         progress = ProgressionStore.load(this)
         settings = GameSettingsStore.load(this)
+        activeHero = HeroRosterStore.activeHero(this)
+        playerEntityId = activeHero.id
+        enemyEntityId = BattleActorFactory.enemyRigId(progress.depth)
 
         controller =
             BattleV2Controller(
@@ -69,10 +81,43 @@ class BattleV2Activity : Activity() {
     }
 
     private fun buildScene() {
-        root = FrameLayout(this)
+        root = FrameLayout(this).apply {
+            setBackgroundColor(Color.rgb(3, 5, 18))
+        }
+
+        root.addView(
+            ImageView(this).apply {
+                setImageResource(R.drawable.battle_v2_bg)
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                contentDescription = null
+            },
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+
+        root.addView(
+            View(this).apply {
+                background = GradientDrawable(
+                    GradientDrawable.Orientation.TOP_BOTTOM,
+                    intArrayOf(
+                        Color.argb(58, 2, 3, 14),
+                        Color.argb(0, 2, 3, 14),
+                        Color.argb(28, 2, 3, 14),
+                        Color.argb(92, 2, 3, 14)
+                    )
+                )
+            },
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
 
         renderer =
             BattleV2RendererHost(this).apply {
+                configureActors(playerEntityId, enemyEntityId)
                 setPreferredFps(
                     settings.fpsPreference,
                     settings.batterySaver
@@ -101,245 +146,267 @@ class BattleV2Activity : Activity() {
         setContentView(root)
     }
 
+
     private fun addEnemyHud() {
-        val panel =
-            LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(
-                    AuthUi.dp(this@BattleV2Activity, 14),
-                    AuthUi.dp(this@BattleV2Activity, 8),
-                    AuthUi.dp(this@BattleV2Activity, 14),
-                    AuthUi.dp(this@BattleV2Activity, 8)
-                )
-                background = panelBackground(
-                    Color.rgb(175, 68, 101)
-                )
-            }
+        val screenW = resources.displayMetrics.widthPixels
+        val screenH = resources.displayMetrics.heightPixels
+        val hudW = (screenW * 0.56f).toInt()
+        val hudH = (screenH * 0.225f).toInt()
+        val hud = FrameLayout(this)
 
-        panel.addView(
-            TextView(this).apply {
-                text = "BLUE SLIME  •  V2 TEST TARGET"
-                textSize = 13f
-                setTextColor(Color.WHITE)
-                typeface = Typeface.DEFAULT_BOLD
-                gravity = Gravity.CENTER
-            }
+        hud.addView(
+            ImageView(this).apply {
+                setImageResource(R.drawable.battle_v2_enemy_hud)
+                scaleType = ImageView.ScaleType.FIT_XY
+                contentDescription = null
+            },
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
         )
 
-        enemyHpBar = createHpBar(Color.rgb(229, 68, 98))
-        panel.addView(
-            enemyHpBar,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                AuthUi.dp(this, 12)
-            ).apply {
-                topMargin = AuthUi.dp(this@BattleV2Activity, 5)
-            }
+        enemyPortrait = ImageView(this).apply {
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            contentDescription = "Enemy portrait"
+        }
+        hud.addView(
+            enemyPortrait,
+            rectParams(hudW, hudH, 0.060f, 0.185f, 0.165f, 0.55f)
         )
 
-        enemyHpText =
-            TextView(this).apply {
-                textSize = 10.5f
-                setTextColor(Color.rgb(231, 217, 240))
-                gravity = Gravity.END
-            }
-        panel.addView(enemyHpText)
+        enemyNameText = hudText(
+            "Lv." + progress.depth + "  •  " +
+                BattleActorFactory.enemyDisplayName(enemyEntityId),
+            13f,
+            Gravity.CENTER_VERTICAL
+        )
+        hud.addView(
+            enemyNameText,
+            rectParams(hudW, hudH, 0.255f, 0.18f, 0.60f, 0.24f)
+        )
+
+        enemyHpFill = BattleV2HpFillView(this).apply {
+            setPalette(
+                Color.rgb(139, 5, 43),
+                Color.rgb(255, 56, 99)
+            )
+        }
+        hud.addView(
+            enemyHpFill,
+            rectParams(hudW, hudH, 0.267f, 0.476f, 0.633f, 0.104f)
+        )
+
+        enemyHpText = hudText(
+            "",
+            11.5f,
+            Gravity.END or Gravity.CENTER_VERTICAL
+        ).apply {
+            setPadding(0, 0, AuthUi.dp(this@BattleV2Activity, 8), 0)
+        }
+        hud.addView(
+            enemyHpText,
+            rectParams(hudW, hudH, 0.267f, 0.438f, 0.633f, 0.18f)
+        )
 
         root.addView(
-            panel,
+            hud,
             FrameLayout.LayoutParams(
-                (resources.displayMetrics.widthPixels * 0.58f).toInt(),
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                Gravity.TOP or Gravity.CENTER_HORIZONTAL
+                hudW,
+                hudH,
+                Gravity.TOP or Gravity.END
             ).apply {
-                topMargin = AuthUi.dp(this@BattleV2Activity, 16)
+                topMargin = (screenH * 0.075f).toInt()
+                rightMargin = (screenW * 0.025f).toInt()
             }
         )
     }
 
     private fun addPlayerHudAndControls() {
-        val bottom =
-            LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(
-                    AuthUi.dp(this@BattleV2Activity, 14),
-                    AuthUi.dp(this@BattleV2Activity, 8),
-                    AuthUi.dp(this@BattleV2Activity, 14),
-                    AuthUi.dp(this@BattleV2Activity, 10)
-                )
-                background = panelBackground(
-                    Color.rgb(93, 76, 183)
-                )
-            }
+        val screenW = resources.displayMetrics.widthPixels
+        val screenH = resources.displayMetrics.heightPixels
+        val hudW = (screenW * 0.57f).toInt()
+        val hudH = (screenH * 0.245f).toInt()
+        val hud = FrameLayout(this)
 
-        val topRow =
-            LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-            }
-
-        topRow.addView(
-            TextView(this).apply {
-                text = "AUREN VALE  •  KNIGHT"
-                textSize = 12.5f
-                setTextColor(Color.WHITE)
-                typeface = Typeface.DEFAULT_BOLD
+        hud.addView(
+            ImageView(this).apply {
+                setImageResource(R.drawable.battle_v2_player_hud)
+                scaleType = ImageView.ScaleType.FIT_XY
+                contentDescription = null
             },
-            LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                1f
-            )
-        )
-
-        statusText =
-            TextView(this).apply {
-                text = "Loading preview actors..."
-                textSize = 10.5f
-                setTextColor(Color.rgb(185, 220, 255))
-                gravity = Gravity.END
-            }
-        topRow.addView(statusText)
-
-        bottom.addView(topRow)
-
-        playerHpBar = createHpBar(Color.rgb(69, 189, 255))
-        bottom.addView(
-            playerHpBar,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                AuthUi.dp(this, 12)
-            ).apply {
-                topMargin = AuthUi.dp(this@BattleV2Activity, 4)
-            }
-        )
-
-        playerHpText =
-            TextView(this).apply {
-                textSize = 10.5f
-                setTextColor(Color.rgb(225, 217, 242))
-                gravity = Gravity.END
-            }
-        bottom.addView(playerHpText)
-
-        val buttons =
-            LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER
-                setPadding(
-                    0,
-                    AuthUi.dp(this@BattleV2Activity, 7),
-                    0,
-                    0
-                )
-            }
-
-        autoButton =
-            makeAction("AUTO OFF", false) {
-                autoBattle = !autoBattle
-                autoButton.text =
-                    if (autoBattle) "AUTO ON" else "AUTO OFF"
-
-                if (
-                    autoBattle &&
-                    !busy &&
-                    actorsReady &&
-                    !controller.snapshot().finished
-                ) {
-                    handler.postDelayed(
-                        { performPlayerAttack() },
-                        250L
-                    )
-                }
-            }
-        buttons.addView(
-            autoButton,
-            LinearLayout.LayoutParams(
-                0,
-                AuthUi.dp(this, 48),
-                0.85f
-            ).apply {
-                marginEnd = AuthUi.dp(this@BattleV2Activity, 5)
-            }
-        )
-
-        val skillButton =
-            makeAction("SKILL", false) {
-                statusText.text =
-                    "Skill timing slot is ready for 3D animation events."
-            }
-        buttons.addView(
-            skillButton,
-            LinearLayout.LayoutParams(
-                0,
-                AuthUi.dp(this, 48),
-                0.85f
-            ).apply {
-                marginEnd = AuthUi.dp(this@BattleV2Activity, 5)
-            }
-        )
-
-        attackButton =
-            makeAction("ATTACK", true) {
-                performPlayerAttack()
-            }
-        buttons.addView(
-            attackButton,
-            LinearLayout.LayoutParams(
-                0,
-                AuthUi.dp(this, 50),
-                1.1f
-            )
-        )
-
-        bottom.addView(buttons)
-
-        root.addView(
-            bottom,
             FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                Gravity.BOTTOM
+                FrameLayout.LayoutParams.MATCH_PARENT
             )
+        )
+
+        playerPortrait = ImageView(this).apply {
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            contentDescription = "Player portrait"
+        }
+        hud.addView(
+            playerPortrait,
+            rectParams(hudW, hudH, 0.064f, 0.17f, 0.18f, 0.57f)
+        )
+
+        playerNameText = hudText(
+            "Lv." + progress.level + "  •  " + activeHero.displayName,
+            13f,
+            Gravity.CENTER_VERTICAL
+        )
+        hud.addView(
+            playerNameText,
+            rectParams(hudW, hudH, 0.278f, 0.17f, 0.50f, 0.23f)
+        )
+
+        playerHpFill = BattleV2HpFillView(this).apply {
+            setPalette(
+                Color.rgb(16, 80, 220),
+                Color.rgb(58, 206, 255)
+            )
+        }
+        hud.addView(
+            playerHpFill,
+            rectParams(hudW, hudH, 0.315f, 0.475f, 0.595f, 0.102f)
+        )
+
+        playerHpText = hudText(
+            "",
+            11.5f,
+            Gravity.END or Gravity.CENTER_VERTICAL
+        ).apply {
+            setPadding(0, 0, AuthUi.dp(this@BattleV2Activity, 8), 0)
+        }
+        hud.addView(
+            playerHpText,
+            rectParams(hudW, hudH, 0.315f, 0.438f, 0.595f, 0.18f)
+        )
+
+        root.addView(
+            hud,
+            FrameLayout.LayoutParams(
+                hudW,
+                hudH,
+                Gravity.BOTTOM or Gravity.START
+            ).apply {
+                leftMargin = (screenW * 0.018f).toInt()
+                bottomMargin = (screenH * 0.012f).toInt()
+            }
+        )
+
+        val size = (screenH * 0.155f).toInt()
+        val gap = (screenW * 0.008f).toInt()
+        val buttons = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+        }
+
+        autoButton = makeArtButton(
+            R.drawable.battle_v2_auto,
+            "Auto"
+        ) {
+            autoBattle = !autoBattle
+            autoButton.alpha = if (autoBattle) 1f else 0.72f
+            statusText.text =
+                if (autoBattle) "Auto battle ON" else "Auto battle OFF"
+            if (
+                autoBattle &&
+                !busy &&
+                actorsReady &&
+                !controller.snapshot().finished
+            ) {
+                handler.postDelayed(
+                    { performPlayerAttack() },
+                    220L
+                )
+            }
+        }
+        autoButton.alpha = 0.72f
+
+        val skillButton = makeArtButton(
+            R.drawable.battle_v2_skill,
+            "Skill"
+        ) {
+            statusText.text =
+                activeHero.skillName +
+                    " is ready for the next animation pass"
+        }
+
+        attackButton = makeArtButton(
+            R.drawable.battle_v2_attack,
+            "Attack"
+        ) {
+            performPlayerAttack()
+        }
+
+        buttons.addView(
+            autoButton,
+            LinearLayout.LayoutParams(size, size).apply {
+                marginEnd = gap
+            }
+        )
+        buttons.addView(
+            skillButton,
+            LinearLayout.LayoutParams(size, size).apply {
+                marginEnd = gap
+            }
+        )
+        buttons.addView(
+            attackButton,
+            LinearLayout.LayoutParams(size, size)
+        )
+
+        root.addView(
+            buttons,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                size,
+                Gravity.BOTTOM or Gravity.END
+            ).apply {
+                rightMargin = (screenW * 0.025f).toInt()
+                bottomMargin = (screenH * 0.035f).toInt()
+            }
+        )
+
+        statusText = TextView(this).apply {
+            text = "Loading battle renderer..."
+            textSize = 9.5f
+            setTextColor(Color.rgb(202, 215, 255))
+            gravity = Gravity.END or Gravity.CENTER_VERTICAL
+            setShadowLayer(4f, 0f, 0f, Color.BLACK)
+        }
+        root.addView(
+            statusText,
+            FrameLayout.LayoutParams(
+                (screenW * 0.29f).toInt(),
+                AuthUi.dp(this, 28),
+                Gravity.TOP or Gravity.END
+            ).apply {
+                topMargin = AuthUi.dp(this@BattleV2Activity, 4)
+                rightMargin = AuthUi.dp(this@BattleV2Activity, 96)
+            }
         )
     }
 
     private fun addPreviewBadge() {
+        val screenW = resources.displayMetrics.widthPixels
+        val screenH = resources.displayMetrics.heightPixels
         root.addView(
-            TextView(this).apply {
-                text = "3D V2 PREVIEW • NORMAL BATTLE REMAINS SAFE"
-                textSize = 9.5f
-                setTextColor(Color.rgb(218, 190, 255))
-                typeface = Typeface.DEFAULT_BOLD
-                gravity = Gravity.CENTER
-                background = GradientDrawable().apply {
-                    setColor(Color.argb(205, 8, 7, 26))
-                    cornerRadius =
-                        AuthUi.dp(this@BattleV2Activity, 10)
-                            .toFloat()
-                    setStroke(
-                        AuthUi.dp(this@BattleV2Activity, 1),
-                        Color.rgb(116, 84, 203)
-                    )
-                }
-                setPadding(
-                    AuthUi.dp(this@BattleV2Activity, 10),
-                    AuthUi.dp(this@BattleV2Activity, 5),
-                    AuthUi.dp(this@BattleV2Activity, 10),
-                    AuthUi.dp(this@BattleV2Activity, 5)
-                )
+            ImageView(this).apply {
+                setImageResource(R.drawable.battle_v2_header)
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                contentDescription = "Battle V2"
             },
             FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                Gravity.TOP or Gravity.START
+                (screenW * 0.31f).toInt(),
+                (screenH * 0.105f).toInt(),
+                Gravity.TOP or Gravity.CENTER_HORIZONTAL
             ).apply {
-                leftMargin = AuthUi.dp(this@BattleV2Activity, 12)
-                topMargin = AuthUi.dp(this@BattleV2Activity, 14)
+                topMargin = AuthUi.dp(this@BattleV2Activity, 2)
             }
         )
     }
-
     private fun addBackButton() {
         root.addView(
             makeAction("BACK", false) {
@@ -356,17 +423,18 @@ class BattleV2Activity : Activity() {
         )
     }
 
+
     private fun loadPreviewActors() {
         Thread {
             val playerSprites =
                 EntitySpriteStore.loadCharacter(
                     this,
-                    "knight"
+                    playerEntityId
                 )
             val enemySprites =
                 EntitySpriteStore.loadMonster(
                     this,
-                    "blue_slime"
+                    enemyEntityId
                 )
 
             runOnUiThread {
@@ -374,12 +442,23 @@ class BattleV2Activity : Activity() {
                     playerSprites,
                     enemySprites
                 )
+                playerSprites.idle?.let {
+                    playerPortrait.setImageBitmap(it)
+                }
+                enemySprites.idle?.let {
+                    enemyPortrait.setImageBitmap(it)
+                }
+                playerNameText.text =
+                    "Lv." + progress.level +
+                        "  •  " + activeHero.displayName
+                enemyNameText.text =
+                    "Lv." + progress.depth +
+                        "  •  " + enemySprites.displayName
                 actorsReady = true
                 statusText.text = renderer.modeLabel
             }
         }.start()
     }
-
     private fun performPlayerAttack() {
         if (
             busy ||
@@ -391,7 +470,7 @@ class BattleV2Activity : Activity() {
 
         busy = true
         attackButton.alpha = 0.6f
-        statusText.text = "Auren attacks"
+        statusText.text = activeHero.displayName + " attacks"
 
         renderer.playPlayer(BattleV2Animation.ATTACK)
         val attackSpec =
@@ -458,7 +537,7 @@ class BattleV2Activity : Activity() {
     }
 
     private fun performEnemyAttack() {
-        statusText.text = "Blue Slime attacks"
+        statusText.text = BattleActorFactory.enemyDisplayName(enemyEntityId) + " attacks"
         renderer.playEnemy(BattleV2Animation.ATTACK)
 
         val attackSpec =
@@ -485,7 +564,7 @@ class BattleV2Activity : Activity() {
                     renderer.playPlayer(
                         BattleV2Animation.DEATH
                     )
-                    statusText.text = "Auren defeated"
+                    statusText.text = activeHero.displayName + " defeated"
                     handler.postDelayed(
                         {
                             if (!isFinishing && !isDestroyed) {
@@ -528,24 +607,29 @@ class BattleV2Activity : Activity() {
         )
     }
 
-    private fun refreshHud() {
+
+    private fun refreshHud(animate: Boolean = true) {
         val state = controller.snapshot()
 
-        playerHpBar.max = state.playerMaxHp
-        playerHpBar.progress = state.playerHp
+        playerHpFill.setHealth(
+            state.playerHp,
+            state.playerMaxHp,
+            animate
+        )
+        enemyHpFill.setHealth(
+            state.enemyHp,
+            state.enemyMaxHp,
+            animate
+        )
         playerHpText.text =
             state.playerHp.toString() +
                 " / " +
                 state.playerMaxHp
-
-        enemyHpBar.max = state.enemyMaxHp
-        enemyHpBar.progress = state.enemyHp
         enemyHpText.text =
             state.enemyHp.toString() +
                 " / " +
                 state.enemyMaxHp
     }
-
     private fun showDamageNumber(
         amount: Int,
         critical: Boolean,
@@ -678,7 +762,7 @@ class BattleV2Activity : Activity() {
                 root.removeView(overlay)
                 controller.reset()
                 renderer.resetActors()
-                refreshHud()
+                refreshHud(animate = false)
                 busy = false
                 attackButton.alpha = 1f
                 statusText.text = "Ready"
@@ -724,6 +808,94 @@ class BattleV2Activity : Activity() {
             )
         )
     }
+
+
+    private fun hudText(
+        value: String,
+        size: Float,
+        gravityValue: Int
+    ): TextView =
+        TextView(this).apply {
+            text = value
+            textSize = size
+            setTextColor(Color.rgb(245, 237, 218))
+            typeface =
+                Typeface.create(
+                    Typeface.SERIF,
+                    Typeface.BOLD
+                )
+            gravity = gravityValue
+            maxLines = 1
+            ellipsize = TextUtils.TruncateAt.END
+            setShadowLayer(5f, 0f, 1f, Color.BLACK)
+        }
+
+    private fun rectParams(
+        parentW: Int,
+        parentH: Int,
+        left: Float,
+        top: Float,
+        width: Float,
+        height: Float
+    ): FrameLayout.LayoutParams =
+        FrameLayout.LayoutParams(
+            (parentW * width).toInt().coerceAtLeast(1),
+            (parentH * height).toInt().coerceAtLeast(1)
+        ).apply {
+            leftMargin = (parentW * left).toInt()
+            topMargin = (parentH * top).toInt()
+        }
+
+    private fun makeArtButton(
+        imageRes: Int,
+        description: String,
+        onClick: () -> Unit
+    ): FrameLayout =
+        FrameLayout(this).apply {
+            isClickable = true
+            isFocusable = true
+            contentDescription = description
+
+            addView(
+                ImageView(this@BattleV2Activity).apply {
+                    setImageResource(imageRes)
+                    scaleType = ImageView.ScaleType.FIT_CENTER
+                    contentDescription = null
+                },
+                FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+                )
+            )
+
+            setOnClickListener {
+                AppHaptics.tap(this@BattleV2Activity)
+                onClick()
+            }
+
+            setOnTouchListener { view, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        view.animate()
+                            .scaleX(0.94f)
+                            .scaleY(0.94f)
+                            .alpha(0.86f)
+                            .setDuration(55L)
+                            .start()
+                    }
+                    MotionEvent.ACTION_UP,
+                    MotionEvent.ACTION_CANCEL -> {
+                        view.animate()
+                            .scaleX(1f)
+                            .scaleY(1f)
+                            .alpha(1f)
+                            .setDuration(90L)
+                            .start()
+                    }
+                }
+                false
+            }
+        }
 
     private fun createHpBar(color: Int): ProgressBar {
         return ProgressBar(
