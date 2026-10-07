@@ -17,6 +17,8 @@ class BattleV2RendererHost @JvmOverloads constructor(
         EntitySpriteStore.EntitySpriteSet? = null
     private var enemySprites:
         EntitySpriteStore.EntitySpriteSet? = null
+    private var playerEntityId = "knight"
+    private var enemyEntityId = "blue_slime"
 
     private var fpsPreference = "SYSTEM"
     private var batterySaver = false
@@ -35,6 +37,14 @@ class BattleV2RendererHost @JvmOverloads constructor(
         clipChildren = false
         clipToPadding = false
         showThreeDRenderer()
+    }
+
+    fun configureActors(playerId: String, enemyId: String) {
+        playerEntityId = playerId
+        enemyEntityId = enemyId
+        if (!supportsPrototypePair()) {
+            activateFallback()
+        }
     }
 
     fun setPreferredFps(
@@ -84,6 +94,10 @@ class BattleV2RendererHost @JvmOverloads constructor(
         fallbackView?.release()
     }
 
+    private fun supportsPrototypePair(): Boolean =
+        playerEntityId == "knight" &&
+            enemyEntityId == "blue_slime"
+
     private fun showThreeDRenderer() {
         val view =
             BattleV2ThreeDSceneView(context).apply {
@@ -95,9 +109,8 @@ class BattleV2RendererHost @JvmOverloads constructor(
                     post {
                         if (released) return@post
 
-                        if (ready) {
-                            modeLabel =
-                                "3D renderer ready • one engine"
+                        if (ready && supportsPrototypePair()) {
+                            modeLabel = "3D renderer ready"
                             onModeChanged?.invoke(modeLabel)
                         } else {
                             activateFallback()
@@ -117,6 +130,8 @@ class BattleV2RendererHost @JvmOverloads constructor(
     }
 
     private fun activateFallback() {
+        if (fallbackView != null) return
+
         val old3d = threeDView
         old3d?.release()
         if (old3d != null) {
@@ -148,7 +163,7 @@ class BattleV2RendererHost @JvmOverloads constructor(
         }
 
         modeLabel =
-            "3D unavailable • sprite fallback active"
+            "Dynamic actor renderer ready"
         onModeChanged?.invoke(modeLabel)
     }
 }
