@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "id": "entity_id",
+  "display_name": "Display Name",
+  "kind": "biped | quadruped | slime",
+  "status": "draft-auto | reviewed | production",
+  "virtual_canvas": {"width": 1000, "height": 1000},
+  "source": {"sheet": "source_sheet.png", "width": 0, "height": 0},
+  "bones": [
+    {"name": "root", "parent": null, "x": 0.5, "y": 0.68}
+  ],
+  "attachments": [
+    {
+      "role": "torso",
+      "bone": "torso",
+      "file": "parts/semantic/torso.png",
+      "pivot": [0.5, 0.45],
+      "z": 5
+    }
+  ]
+}
