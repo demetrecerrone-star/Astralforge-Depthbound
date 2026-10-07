@@ -565,7 +565,7 @@ class HomeActivity : Activity() {
 
             val art = PortraitArtView(this).apply {
                 portraitId = option.id
-                selected = selectedNow
+                highlighted = selectedNow
                 isClickable = false
                 isFocusable = false
             }
