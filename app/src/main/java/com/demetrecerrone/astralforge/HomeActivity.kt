@@ -71,6 +71,7 @@ class HomeActivity : Activity() {
             !user?.displayName.isNullOrBlank() -> user?.displayName ?: "Delver"
             else -> "Delver"
         }
+        val progress = ProgressionStore.load(this)
 
         content.addView(TextView(this).apply {
             text = "ASTRAL FORGE: DEPTHBOUND"
@@ -106,14 +107,14 @@ class HomeActivity : Activity() {
             }
         }
         status.addView(TextView(this).apply {
-            text = "LEVEL 1   •   DEPTH 1"
+            text = "LEVEL ${progress.level}   •   DEPTH ${progress.depth}   •   RANK ${progress.rank}"
             textSize = 15f
             setTextColor(Color.WHITE)
             typeface = Typeface.DEFAULT_BOLD
             gravity = Gravity.CENTER
         })
         status.addView(TextView(this).apply {
-            text = "0 / 100 XP     ✦ 0 Astral Shards     ⬡ 0 Gold"
+            text = "${progress.xp} / ${progress.xpToNext} XP     ✦ ${progress.astralShards} Astral Shards     ⬡ ${progress.gold} Gold"
             textSize = 12f
             setTextColor(Color.rgb(194, 185, 230))
             gravity = Gravity.CENTER
@@ -134,7 +135,7 @@ class HomeActivity : Activity() {
             openSection("CONTINUE ADVENTURE", "Your next descent into the Depthbound awaits.")
         }
         addHubButton(content, "character.png", "Character") {
-            openSection("CHARACTER", "Attributes, level progression, identity, and combat statistics.")
+            startActivity(Intent(this, CharacterActivity::class.java))
         }
         addHubButton(content, "equipment.png", "Equipment") {
             openSection("EQUIPMENT", "Weapons, armor, accessories, loadouts, and item power.")
@@ -172,9 +173,9 @@ class HomeActivity : Activity() {
 
         scroll.addView(
             content,
-            ScrollView.LayoutParams(
-                ScrollView.LayoutParams.MATCH_PARENT,
-                ScrollView.LayoutParams.WRAP_CONTENT
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
             )
         )
         root.addView(
