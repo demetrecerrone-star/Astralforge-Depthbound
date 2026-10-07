@@ -651,12 +651,12 @@ class FullBodyMeshActorView @JvmOverloads constructor(
         // sword illustration intentionally gets a narrower X scale so
         // its oversized generated crossguard does not cover the torso.
         canvas.save()
-        canvas.translate(1035f, 535f)
-        canvas.rotate(-18f + actionRotation)
-        canvas.scale(0.22f, 0.34f)
+        canvas.translate(1115f, 655f)
+        canvas.rotate(-33f + actionRotation)
+        canvas.scale(0.19f, 0.30f)
         canvas.translate(
             -bitmap.width * 0.50f,
-            -bitmap.height * 0.18f
+            -bitmap.height * 0.12f
         )
         canvas.drawBitmap(bitmap, 0f, 0f, paint)
         canvas.restore()
@@ -683,9 +683,9 @@ class FullBodyMeshActorView @JvmOverloads constructor(
         // Keep the shield as a rigid front layer and attach it to the
         // left forearm instead of rendering it at full actor size.
         canvas.save()
-        canvas.translate(425f, 515f)
-        canvas.rotate(-8f + rotation)
-        canvas.scale(0.24f, 0.24f)
+        canvas.translate(382f, 608f)
+        canvas.rotate(-12f + rotation)
+        canvas.scale(0.38f, 0.38f)
         canvas.translate(
             -bitmap.width * 0.50f,
             -bitmap.height * 0.50f
