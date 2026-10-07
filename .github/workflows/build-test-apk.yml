@@ -2,7 +2,7 @@ name: Build Test APK
 
 on:
   push:
-    branches: [ main, hub-polish, "feature/real-3d-actors" ]
+    branches: [ main, hub-polish ]
     paths:
       - "app/**"
       - "tools/**"
