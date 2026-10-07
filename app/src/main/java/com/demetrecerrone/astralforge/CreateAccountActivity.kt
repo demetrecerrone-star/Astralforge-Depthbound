@@ -12,29 +12,28 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 
-class MainActivity : Activity() {
+class CreateAccountActivity : Activity() {
     private lateinit var auth: FirebaseAuth
+    private lateinit var usernameField: android.widget.EditText
     private lateinit var emailField: android.widget.EditText
     private lateinit var passwordField: android.widget.EditText
-    private lateinit var remember: android.widget.CheckBox
+    private lateinit var confirmField: android.widget.EditText
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AuthUi.setupWindow(this)
         auth = FirebaseAuth.getInstance()
 
-        val prefs = getSharedPreferences("auth_prefs", MODE_PRIVATE)
-        val shouldRemember = prefs.getBoolean("remember_me", false)
-        if (auth.currentUser != null && shouldRemember) {
-            openHome()
-            return
-        } else if (auth.currentUser != null && !auth.currentUser!!.isAnonymous) {
-            auth.signOut()
-        }
+        val content = AuthUi.createScreen(this, 0.35f)
 
-        val content = AuthUi.createScreen(this, 0.43f)
+        content.addView(AuthUi.heading(this, getString(R.string.create_account_heading), 24f))
+        content.addView(AuthUi.subtitle(this, getString(R.string.create_account_subtitle)))
 
+        usernameField = AuthUi.field(this, getString(R.string.username), R.drawable.ic_user)
         emailField = AuthUi.field(
             this,
             getString(R.string.email),
@@ -48,28 +47,26 @@ class MainActivity : Activity() {
             isPassword = true,
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         )
-        AuthUi.addField(content, emailField, 0)
-        AuthUi.addField(content, passwordField)
-
-        val options = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = android.view.Gravity.CENTER_VERTICAL
-        }
-        remember = AuthUi.rememberBox(this).apply { isChecked = shouldRemember }
-        options.addView(remember, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-        options.addView(
-            AuthUi.smallLink(this@MainActivity, getString(R.string.forgot_password)) { sendPasswordReset() },
-            LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        confirmField = AuthUi.field(
+            this,
+            getString(R.string.confirm_password),
+            R.drawable.ic_lock,
+            isPassword = true,
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         )
-        content.addView(options, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+
+        AuthUi.addField(content, usernameField, 8)
+        AuthUi.addField(content, emailField)
+        AuthUi.addField(content, passwordField)
+        AuthUi.addField(content, confirmField)
 
         content.addView(
             AuthUi.assetButton(
                 this,
-                R.drawable.file_00000000d90c81f590bfb22d91dd428d,
-                "Sign In",
+                R.drawable.file_00000000a694822fabb704680dcacbc2,
+                "Create Account",
                 92
-            ) { signInWithEmail() }
+            ) { createAccount() }
         )
 
         content.addView(AuthUi.divider(this))
@@ -84,65 +81,54 @@ class MainActivity : Activity() {
         )
 
         content.addView(
-            AuthUi.assetButton(
+            AuthUi.linkRow(
                 this,
-                R.drawable.file_000000000dd481f6a8aebb5476e7346d,
-                "Continue as Guest",
-                76
-            ) { signInAsGuest() }
-        )
-
-        val link = AuthUi.linkRow(
-            this,
-            getString(R.string.no_account),
-            getString(R.string.create_account_link)
-        ) {
-            startActivity(Intent(this, CreateAccountActivity::class.java))
-        }
-        content.addView(
-            link,
+                getString(R.string.already_account),
+                getString(R.string.sign_in_link)
+            ) { finish() },
             LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                topMargin = AuthUi.dp(this@MainActivity, 12)
+                topMargin = AuthUi.dp(this@CreateAccountActivity, 14)
             }
         )
     }
 
-    private fun signInWithEmail() {
+    private fun createAccount() {
+        val username = usernameField.text.toString().trim()
         val email = emailField.text.toString().trim()
         val password = passwordField.text.toString()
-        if (email.isBlank() || password.isBlank()) {
-            toast("Enter your email and password.")
-            return
-        }
+        val confirm = confirmField.text.toString()
 
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnSuccessListener {
-                getSharedPreferences("auth_prefs", MODE_PRIVATE)
-                    .edit().putBoolean("remember_me", remember.isChecked).apply()
-                openHome()
+        when {
+            username.length < 3 -> toast("Username must be at least 3 characters.")
+            email.isBlank() -> toast("Enter your email.")
+            password.length < 6 -> toast("Password must be at least 6 characters.")
+            password != confirm -> toast("Passwords do not match.")
+            else -> {
+                auth.createUserWithEmailAndPassword(email, password)
+                    .addOnSuccessListener {
+                        val user = auth.currentUser ?: return@addOnSuccessListener
+                        val update = UserProfileChangeRequest.Builder()
+                            .setDisplayName(username)
+                            .build()
+                        user.updateProfile(update)
+
+                        FirebaseFirestore.getInstance()
+                            .collection("users")
+                            .document(user.uid)
+                            .set(
+                                mapOf(
+                                    "username" to username,
+                                    "email" to email,
+                                    "createdAt" to FieldValue.serverTimestamp()
+                                )
+                            )
+                        getSharedPreferences("auth_prefs", MODE_PRIVATE)
+                            .edit().putBoolean("remember_me", true).apply()
+                        openHome()
+                    }
+                    .addOnFailureListener { toast(it.localizedMessage ?: "Account creation failed.") }
             }
-            .addOnFailureListener { toast(it.localizedMessage ?: "Sign in failed.") }
-    }
-
-    private fun sendPasswordReset() {
-        val email = emailField.text.toString().trim()
-        if (email.isBlank()) {
-            toast("Enter your email first.")
-            return
         }
-        auth.sendPasswordResetEmail(email)
-            .addOnSuccessListener { toast("Password reset email sent.") }
-            .addOnFailureListener { toast(it.localizedMessage ?: "Could not send reset email.") }
-    }
-
-    private fun signInAsGuest() {
-        auth.signInAnonymously()
-            .addOnSuccessListener {
-                getSharedPreferences("auth_prefs", MODE_PRIVATE)
-                    .edit().putBoolean("remember_me", false).apply()
-                openHome()
-            }
-            .addOnFailureListener { toast(it.localizedMessage ?: "Guest sign in failed.") }
     }
 
     private fun startGoogleSignIn() {
@@ -177,11 +163,10 @@ class MainActivity : Activity() {
             toast("Google sign in did not return an ID token.")
             return
         }
-        val credential = GoogleAuthProvider.getCredential(token, null)
-        auth.signInWithCredential(credential)
+        auth.signInWithCredential(GoogleAuthProvider.getCredential(token, null))
             .addOnSuccessListener {
                 getSharedPreferences("auth_prefs", MODE_PRIVATE)
-                    .edit().putBoolean("remember_me", remember.isChecked).apply()
+                    .edit().putBoolean("remember_me", true).apply()
                 openHome()
             }
             .addOnFailureListener { toast(it.localizedMessage ?: "Google authentication failed.") }
@@ -189,13 +174,13 @@ class MainActivity : Activity() {
 
     private fun openHome() {
         startActivity(Intent(this, HomeActivity::class.java))
-        finish()
+        finishAffinity()
     }
 
     private fun toast(message: String) =
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
 
     companion object {
-        private const val GOOGLE_SIGN_IN = 9001
+        private const val GOOGLE_SIGN_IN = 9002
     }
 }

@@ -1,4 +1,16 @@
 <resources>
-    <string name="app_name">Astralforge: Depthbound</string>
-    <string name="clean_foundation">Clean source foundation • v0.0.0.1</string>
+    <string name="app_name">Astral Forge: Depthbound</string>
+    <string name="email">Email</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="remember_me">Remember Me</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="create_account_heading">CREATE ACCOUNT</string>
+    <string name="create_account_subtitle">Join the adventure and forge your legacy.</string>
+    <string name="or_continue_with">OR CONTINUE WITH</string>
+    <string name="no_account">Don’t have an account?</string>
+    <string name="create_account_link">Create Account</string>
+    <string name="already_account">Already have an account?</string>
+    <string name="sign_in_link">Sign In</string>
 </resources>
