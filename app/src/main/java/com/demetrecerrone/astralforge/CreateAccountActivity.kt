@@ -28,9 +28,9 @@ class CreateAccountActivity : Activity() {
         AuthUi.setupWindow(this)
         auth = FirebaseAuth.getInstance()
 
-        val content = AuthUi.createScreen(this, 0.395f)
+        val content = AuthUi.createScreen(this, 0.455f)
 
-        content.addView(AuthUi.heading(this, getString(R.string.create_account_heading), 17f))
+        content.addView(AuthUi.heading(this, getString(R.string.create_account_heading), 15f))
         content.addView(AuthUi.subtitle(this, getString(R.string.create_account_subtitle)))
 
         usernameField = AuthUi.field(this, getString(R.string.username), R.drawable.ic_user)

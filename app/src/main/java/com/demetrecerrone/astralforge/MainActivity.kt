@@ -33,7 +33,7 @@ class MainActivity : Activity() {
             auth.signOut()
         }
 
-        val content = AuthUi.createScreen(this, 0.43f)
+        val content = AuthUi.createScreen(this, 0.445f)
 
         emailField = AuthUi.field(
             this,
@@ -102,9 +102,11 @@ class MainActivity : Activity() {
         content.addView(
             link,
             LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                topMargin = AuthUi.dp(this@MainActivity, 8)
+                topMargin = AuthUi.dp(this@MainActivity, 5)
             }
         )
+
+        DabskyIntroOverlay.show(this)
     }
 
     private fun signInWithEmail() {

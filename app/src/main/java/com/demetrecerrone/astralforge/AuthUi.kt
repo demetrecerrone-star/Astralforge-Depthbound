@@ -34,10 +34,10 @@ object AuthUi {
         context.resources.displayMetrics.heightPixels
 
     private fun fieldHeight(context: Context): Int =
-        (screenHeight(context) * 0.078f).toInt().coerceAtLeast(48)
+        (screenHeight(context) * 0.067f).toInt().coerceAtLeast(42)
 
     private fun controlGap(context: Context): Int =
-        (screenHeight(context) * 0.010f).toInt().coerceAtLeast(5)
+        (screenHeight(context) * 0.008f).toInt().coerceAtLeast(4)
 
     fun setupWindow(activity: Activity) {
         activity.window.setSoftInputMode(
@@ -72,9 +72,9 @@ object AuthUi {
 
         // The artwork already contains a centered dark auth panel.
         // Keep every interactive control centered inside that panel.
-        val formWidth = (screenWidth * 0.48f).toInt()
-            .coerceAtMost((screenWidth * 0.52f).toInt())
-            .coerceAtLeast((screenWidth * 0.42f).toInt())
+        val formWidth = (screenWidth * 0.44f).toInt()
+            .coerceAtMost((screenWidth * 0.47f).toInt())
+            .coerceAtLeast((screenWidth * 0.40f).toInt())
 
         val formHeight = (screenHeight - top - bottomInset)
             .coerceAtLeast((screenHeight * 0.42f).toInt())
@@ -90,10 +90,10 @@ object AuthUi {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
             setPadding(
-                (screenWidth * 0.008f).toInt(),
-                (screenHeight * 0.004f).toInt(),
-                (screenWidth * 0.008f).toInt(),
-                (screenHeight * 0.012f).toInt()
+                (screenWidth * 0.006f).toInt(),
+                (screenHeight * 0.006f).toInt(),
+                (screenWidth * 0.006f).toInt(),
+                (screenHeight * 0.008f).toInt()
             )
         }
 
@@ -133,7 +133,7 @@ object AuthUi {
             this.hint = hint
             setHintTextColor(Color.rgb(160, 151, 199))
             setTextColor(Color.WHITE)
-            textSize = 14f
+            textSize = 13f
             setSingleLine(true)
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(context, 14), 0, dp(context, 14), 0)
@@ -268,7 +268,7 @@ object AuthUi {
         }
 
         val requested = dp(context, heightDp)
-        val cap = (screenHeight(context) * 0.105f).toInt()
+        val cap = (screenHeight(context) * 0.082f).toInt()
         layoutParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             min(requested, cap)
