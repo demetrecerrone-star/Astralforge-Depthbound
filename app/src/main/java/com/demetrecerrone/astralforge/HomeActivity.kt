@@ -25,6 +25,7 @@ class HomeActivity : Activity() {
     private val hubPack = "astral_hub_buttons_individual.zip"
     private val bottomPack = "bottomnav.zip"
     private val avatarPack = "avatarcorner.zip"
+    private var reducedMotionAtCreate: Boolean? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,6 +34,7 @@ class HomeActivity : Activity() {
         val screenW = resources.displayMetrics.widthPixels
         val root = FrameLayout(this)
         val gameSettings = GameSettingsStore.load(this)
+        reducedMotionAtCreate = gameSettings.reducedMotion
 
         val backgroundImage = ImageView(this).apply {
             setImageResource(R.drawable.file_00000000a45881f5ad657cc79abf1338)
@@ -282,6 +284,15 @@ class HomeActivity : Activity() {
         root.requestApplyInsets()
 
         setContentView(root)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val previous = reducedMotionAtCreate ?: return
+        val current = GameSettingsStore.load(this).reducedMotion
+        if (previous != current) {
+            recreate()
+        }
     }
 
     private fun createPlayerCorner(
