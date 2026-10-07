@@ -27,7 +27,11 @@ class SplashActivity : Activity() {
         super.onCreate(savedInstanceState)
         AuthUi.setupWindow(this)
 
-        val settings = GameSettingsStore.load(this)
+        val settings = runCatching {
+            GameSettingsStore.load(this)
+        }.getOrElse {
+            GameSettingsStore.defaults()
+        }
         val motionEnabled = !settings.reducedMotion && !settings.batterySaver
 
         val root = FrameLayout(this).apply {
@@ -48,16 +52,18 @@ class SplashActivity : Activity() {
             )
         )
 
-        root.addView(
-            SplashMotionView(
-                context = this,
-                motionEnabled = motionEnabled
-            ),
-            FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
+        runCatching {
+            root.addView(
+                SplashMotionView(
+                    context = this,
+                    motionEnabled = motionEnabled
+                ),
+                FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+                )
             )
-        )
+        }
 
         root.setOnClickListener {
             leaveSplash(root, motionEnabled)
