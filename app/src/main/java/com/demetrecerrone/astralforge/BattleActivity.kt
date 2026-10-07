@@ -35,6 +35,8 @@ class BattleActivity : Activity() {
     private lateinit var enemyStage: FrameLayout
     private lateinit var playerActor: SkeletalActorView
     private lateinit var enemyActor: SkeletalActorView
+    private lateinit var playerMeshActor: FullBodyMeshActorView
+    private lateinit var enemyMeshActor: FullBodyMeshActorView
     private lateinit var playerSprite: ImageView
     private lateinit var enemySprite: ImageView
     private lateinit var effectLayer: FrameLayout
@@ -72,6 +74,8 @@ class BattleActivity : Activity() {
     private var combatStarted = false
     private var playerUsesSkeletalRig = false
     private var enemyUsesSkeletalRig = false
+    private var playerUsesFullBodyMesh = false
+    private var enemyUsesFullBodyMesh = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -190,6 +194,11 @@ class BattleActivity : Activity() {
             alpha = 0f
             contentDescription = "Player battle actor"
         }
+        playerMeshActor = FullBodyMeshActorView(this).apply {
+            visibility = View.GONE
+            motionEnabled = !settings.reducedMotion
+            setFacing(BattleActorFactory.playerFacing())
+        }
         playerActor = SkeletalActorView(this).apply {
             visibility = View.GONE
             motionEnabled = !settings.reducedMotion
@@ -199,6 +208,13 @@ class BattleActivity : Activity() {
             scaleType = ImageView.ScaleType.FIT_CENTER
             contentDescription = "Player"
         }
+        playerStage.addView(
+            playerMeshActor,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
         playerStage.addView(
             playerActor,
             FrameLayout.LayoutParams(
@@ -229,6 +245,11 @@ class BattleActivity : Activity() {
             alpha = 0f
             contentDescription = "Enemy battle actor"
         }
+        enemyMeshActor = FullBodyMeshActorView(this).apply {
+            visibility = View.GONE
+            motionEnabled = !settings.reducedMotion
+            setFacing(BattleActorFactory.enemyFacing())
+        }
         enemyActor = SkeletalActorView(this).apply {
             visibility = View.GONE
             motionEnabled = !settings.reducedMotion
@@ -238,6 +259,13 @@ class BattleActivity : Activity() {
             scaleType = ImageView.ScaleType.FIT_CENTER
             contentDescription = "Enemy"
         }
+        enemyStage.addView(
+            enemyMeshActor,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
         enemyStage.addView(
             enemyActor,
             FrameLayout.LayoutParams(
@@ -672,8 +700,41 @@ class BattleActivity : Activity() {
             enemyEntityId =
                 BattleActorFactory.enemyRigId(depth)
 
+            val meshPlayer =
+                if (
+                    FullBodyMeshAssetStore.supports(
+                        playerId
+                    )
+                ) {
+                    runCatching {
+                        FullBodyMeshAssetStore.load(
+                            this,
+                            playerId
+                        )
+                    }.getOrNull()
+                } else {
+                    null
+                }
+
+            val meshEnemy =
+                if (
+                    FullBodyMeshAssetStore.supports(
+                        enemyEntityId
+                    )
+                ) {
+                    runCatching {
+                        FullBodyMeshAssetStore.load(
+                            this,
+                            enemyEntityId
+                        )
+                    }.getOrNull()
+                } else {
+                    null
+                }
+
             val skeletalPlayer =
                 if (
+                    meshPlayer == null &&
                     BattleActorFactory.skeletalRigEnabled(
                         playerId
                     )
@@ -684,21 +745,29 @@ class BattleActivity : Activity() {
                 } else {
                     null
                 }
+
             val skeletalEnemy =
                 if (
+                    meshEnemy == null &&
                     BattleActorFactory.skeletalRigEnabled(
                         enemyEntityId
                     )
                 ) {
                     runCatching {
-                        RigLoader.load(this, enemyEntityId)
+                        RigLoader.load(
+                            this,
+                            enemyEntityId
+                        )
                     }.getOrNull()
                 } else {
                     null
                 }
 
             val fallbackPlayer =
-                if (skeletalPlayer == null) {
+                if (
+                    meshPlayer == null &&
+                    skeletalPlayer == null
+                ) {
                     EntitySpriteStore.loadCharacter(
                         this,
                         playerId
@@ -708,78 +777,146 @@ class BattleActivity : Activity() {
                 }
 
             val fallbackEnemy =
-                if (skeletalEnemy == null) {
+                if (
+                    meshEnemy == null &&
+                    skeletalEnemy == null
+                ) {
                     EntitySpriteStore.loadMonster(
                         this,
-                        EntitySpriteStore.monsterIdForDepth(depth)
+                        EntitySpriteStore.monsterIdForDepth(
+                            depth
+                        )
                     )
                 } else {
                     null
                 }
 
             runOnUiThread {
-                if (skeletalPlayer != null) {
-                    playerUsesSkeletalRig = true
-                    playerActor.setRig(skeletalPlayer)
-                    playerActor.setFacing(
-                        BattleActorFactory.playerFacing()
-                    )
-                    playerActor.motionEnabled =
-                        !settings.reducedMotion
-                    playerActor.visibility = View.VISIBLE
-                    playerSprite.visibility = View.GONE
-                } else if (fallbackPlayer != null) {
-                    playerUsesSkeletalRig = false
-                    playerIdle = fallbackPlayer.idle
-                    playerAttackFrames =
-                        fallbackPlayer.attackFrames
-                    playerHitFrames =
-                        fallbackPlayer.hitFrames
-                    playerDeathFrames =
-                        fallbackPlayer.deathFrames
-                    playerIdle?.let {
-                        playerSprite.setImageBitmap(it)
-                    }
-                    playerSprite.visibility = View.VISIBLE
-                    playerActor.visibility = View.GONE
-                }
-
-                if (skeletalEnemy != null) {
-                    enemyUsesSkeletalRig = true
-                    enemyActor.setRig(skeletalEnemy)
-                    enemyActor.setFacing(
-                        BattleActorFactory.enemyFacing()
-                    )
-                    enemyActor.motionEnabled =
-                        !settings.reducedMotion
-                    enemyActor.visibility = View.VISIBLE
-                    enemySprite.visibility = View.GONE
-                    enemyNameText.text =
-                        skeletalEnemy.definition.displayName
-                } else if (fallbackEnemy != null) {
-                    enemyUsesSkeletalRig = false
-                    enemyIdle = fallbackEnemy.idle
-                    enemyAttackFrames =
-                        fallbackEnemy.attackFrames
-                    enemyHitFrames =
-                        fallbackEnemy.hitFrames
-                    enemyDeathFrames =
-                        fallbackEnemy.deathFrames
-                    enemyIdle?.let {
-                        enemySprite.setImageBitmap(it)
-                    }
-                    enemySprite.visibility = View.VISIBLE
-                    enemyActor.visibility = View.GONE
-                    enemyNameText.text =
-                        fallbackEnemy.displayName
-                } else {
-                    enemyNameText.text =
-                        BattleActorFactory.enemyDisplayName(
-                            enemyEntityId
+                when {
+                    meshPlayer != null -> {
+                        playerUsesFullBodyMesh = true
+                        playerUsesSkeletalRig = false
+                        playerMeshActor.setActor(meshPlayer)
+                        playerMeshActor.setFacing(
+                            BattleActorFactory.playerFacing()
                         )
+                        playerMeshActor.motionEnabled =
+                            !settings.reducedMotion
+                        playerMeshActor.visibility =
+                            View.VISIBLE
+                        playerActor.visibility = View.GONE
+                        playerSprite.visibility = View.GONE
+                    }
+
+                    skeletalPlayer != null -> {
+                        playerUsesFullBodyMesh = false
+                        playerUsesSkeletalRig = true
+                        playerActor.setRig(skeletalPlayer)
+                        playerActor.setFacing(
+                            BattleActorFactory.playerFacing()
+                        )
+                        playerActor.motionEnabled =
+                            !settings.reducedMotion
+                        playerMeshActor.visibility =
+                            View.GONE
+                        playerActor.visibility = View.VISIBLE
+                        playerSprite.visibility = View.GONE
+                    }
+
+                    fallbackPlayer != null -> {
+                        playerUsesFullBodyMesh = false
+                        playerUsesSkeletalRig = false
+                        playerIdle = fallbackPlayer.idle
+                        playerAttackFrames =
+                            fallbackPlayer.attackFrames
+                        playerHitFrames =
+                            fallbackPlayer.hitFrames
+                        playerDeathFrames =
+                            fallbackPlayer.deathFrames
+                        playerIdle?.let {
+                            playerSprite.setImageBitmap(it)
+                        }
+                        playerMeshActor.visibility =
+                            View.GONE
+                        playerActor.visibility = View.GONE
+                        playerSprite.visibility =
+                            View.VISIBLE
+                    }
                 }
 
-                if (EntitySpriteStore.isBossDepth(depth)) {
+                when {
+                    meshEnemy != null -> {
+                        enemyUsesFullBodyMesh = true
+                        enemyUsesSkeletalRig = false
+                        enemyMeshActor.setActor(meshEnemy)
+                        enemyMeshActor.setFacing(
+                            BattleActorFactory.enemyFacing()
+                        )
+                        enemyMeshActor.motionEnabled =
+                            !settings.reducedMotion
+                        enemyMeshActor.visibility =
+                            View.VISIBLE
+                        enemyActor.visibility = View.GONE
+                        enemySprite.visibility = View.GONE
+                        enemyNameText.text =
+                            BattleActorFactory
+                                .enemyDisplayName(
+                                    enemyEntityId
+                                )
+                    }
+
+                    skeletalEnemy != null -> {
+                        enemyUsesFullBodyMesh = false
+                        enemyUsesSkeletalRig = true
+                        enemyActor.setRig(skeletalEnemy)
+                        enemyActor.setFacing(
+                            BattleActorFactory.enemyFacing()
+                        )
+                        enemyActor.motionEnabled =
+                            !settings.reducedMotion
+                        enemyMeshActor.visibility =
+                            View.GONE
+                        enemyActor.visibility = View.VISIBLE
+                        enemySprite.visibility = View.GONE
+                        enemyNameText.text =
+                            skeletalEnemy.definition
+                                .displayName
+                    }
+
+                    fallbackEnemy != null -> {
+                        enemyUsesFullBodyMesh = false
+                        enemyUsesSkeletalRig = false
+                        enemyIdle = fallbackEnemy.idle
+                        enemyAttackFrames =
+                            fallbackEnemy.attackFrames
+                        enemyHitFrames =
+                            fallbackEnemy.hitFrames
+                        enemyDeathFrames =
+                            fallbackEnemy.deathFrames
+                        enemyIdle?.let {
+                            enemySprite.setImageBitmap(it)
+                        }
+                        enemyMeshActor.visibility =
+                            View.GONE
+                        enemyActor.visibility = View.GONE
+                        enemySprite.visibility =
+                            View.VISIBLE
+                        enemyNameText.text =
+                            fallbackEnemy.displayName
+                    }
+
+                    else -> {
+                        enemyNameText.text =
+                            BattleActorFactory
+                                .enemyDisplayName(
+                                    enemyEntityId
+                                )
+                    }
+                }
+
+                if (
+                    EntitySpriteStore.isBossDepth(depth)
+                ) {
                     enemyStage.scaleX = 1.12f
                     enemyStage.scaleY = 1.12f
                 }
@@ -820,10 +957,14 @@ class BattleActivity : Activity() {
             )
             .withEndAction {
                 combatStarted = true
-                if (playerUsesSkeletalRig) {
+                if (playerUsesFullBodyMesh) {
+                    playerMeshActor.playIdle()
+                } else if (playerUsesSkeletalRig) {
                     playerActor.playIdle()
                 }
-                if (enemyUsesSkeletalRig) {
+                if (enemyUsesFullBodyMesh) {
+                    enemyMeshActor.playIdle()
+                } else if (enemyUsesSkeletalRig) {
                     enemyActor.playIdle()
                 }
                 if (autoBattle) {
@@ -846,7 +987,11 @@ class BattleActivity : Activity() {
         val damage =
             if (crit) (baseDamage * 1.75f).roundToInt() else baseDamage
 
-        if (!settings.reducedMotion && !playerUsesSkeletalRig) {
+        if (
+            !settings.reducedMotion &&
+            !playerUsesSkeletalRig &&
+            !playerUsesFullBodyMesh
+        ) {
             playerStage.animate()
                 .translationX(AuthUi.dp(this, 26).toFloat())
                 .setDuration(120L)
@@ -914,7 +1059,11 @@ class BattleActivity : Activity() {
             enemyAttack + Random.nextInt(0, 6) - progress.defense / 2
         )
 
-        if (!settings.reducedMotion && !enemyUsesSkeletalRig) {
+        if (
+            !settings.reducedMotion &&
+            !enemyUsesSkeletalRig &&
+            !enemyUsesFullBodyMesh
+        ) {
             enemyStage.animate()
                 .translationX(-AuthUi.dp(this, 24).toFloat())
                 .setDuration(120L)
@@ -1072,7 +1221,13 @@ class BattleActivity : Activity() {
         returnToIdleAfter: Boolean = true,
         onEnd: (() -> Unit)? = null
     ) {
-        if (playerUsesSkeletalRig) {
+        if (playerUsesFullBodyMesh) {
+            playerMeshActor.play(
+                animationName,
+                returnToIdleAfter,
+                onEnd
+            )
+        } else if (playerUsesSkeletalRig) {
             playerActor.play(
                 animationName,
                 returnToIdleAfter,
@@ -1097,7 +1252,13 @@ class BattleActivity : Activity() {
         returnToIdleAfter: Boolean = true,
         onEnd: (() -> Unit)? = null
     ) {
-        if (enemyUsesSkeletalRig) {
+        if (enemyUsesFullBodyMesh) {
+            enemyMeshActor.play(
+                animationName,
+                returnToIdleAfter,
+                onEnd
+            )
+        } else if (enemyUsesSkeletalRig) {
             enemyActor.play(
                 animationName,
                 returnToIdleAfter,
