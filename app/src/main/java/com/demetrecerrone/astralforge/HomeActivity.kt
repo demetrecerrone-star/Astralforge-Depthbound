@@ -49,10 +49,10 @@ class HomeActivity : Activity() {
         }
 
         val backgroundImage = ImageView(this).apply {
-            setImageResource(R.drawable.file_00000000a45881f5ad657cc79abf1338)
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            scaleX = 1.055f
-            scaleY = 1.055f
+            setImageResource(R.drawable.hub_background_rebuild)
+            scaleType = ImageView.ScaleType.FIT_XY
+            scaleX = 1f
+            scaleY = 1f
             contentDescription = null
         }
         root.addView(
@@ -62,10 +62,6 @@ class HomeActivity : Activity() {
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
         )
-        if (allowAmbientMotion) {
-            animateBackground(backgroundImage)
-        }
-
         root.addView(
             View(this).apply {
                 background = GradientDrawable(
@@ -99,207 +95,11 @@ class HomeActivity : Activity() {
             )
         )
 
-        val progress = ProgressionStore.load(this)
-        val displayName = PlayerIdentityStore.getName(this)
-        playerNameAtCreate = displayName
-
-        val playerCardWidth = min(screenW * 44 / 100, AuthUi.dp(this, 260))
-        val playerCardHeight = AuthUi.dp(this, 84)
-        val playerCard = createPlayerCorner(
-            displayName,
-            progress,
-            playerCardWidth,
-            playerCardHeight
-        )
-        val playerCardParams = FrameLayout.LayoutParams(
-            playerCardWidth,
-            playerCardHeight,
-            Gravity.TOP or Gravity.START
-        ).apply {
-            topMargin = AuthUi.dp(this@HomeActivity, 4)
-            marginStart = AuthUi.dp(this@HomeActivity, 1)
-        }
-        root.addView(playerCard, playerCardParams)
-
-        val statusPanel = createStatusPanel(progress)
-        val statusParams = FrameLayout.LayoutParams(
-            min(screenW * 31 / 100, AuthUi.dp(this, 154)),
-            FrameLayout.LayoutParams.WRAP_CONTENT,
-            Gravity.TOP or Gravity.END
-        ).apply {
-            topMargin = AuthUi.dp(this@HomeActivity, 8)
-            marginEnd = AuthUi.dp(this@HomeActivity, 4)
-        }
-        root.addView(statusPanel, statusParams)
-
-        val dungeons = addHubButton(
-            root,
-            "dungeons.png",
-            "Dungeons",
-            screenW * 48 / 100,
-            0.26f,
-            0.235f
-        ) {
-            openSection(
-                "DUNGEONS",
-                "Choose a depth, enter a dungeon, and claim its rewards."
-            )
-        }
-        if (allowAmbientMotion) {
-            pulse(dungeons, 1.0f, 1.022f, 1850L)
-        }
-
-        addHubButton(
-            root,
-            "shop.png",
-            "Shop",
-            screenW * 35 / 100,
-            0.025f,
-            0.352f
-        ) {
-            openSection(
-                "SHOP",
-                "Spend gold and Astral Shards on supplies and upgrades."
-            )
-        }
-
-        addHubButton(
-            root,
-            "forge.png",
-            "Forge",
-            screenW * 35 / 100,
-            0.625f,
-            0.395f
-        ) {
-            openSection(
-                "FORGE",
-                "Enhance weapons, armor, and relics at the Astral Forge."
-            )
-        }
-
-        val summon = addHubButton(
-            root,
-            "summon.png",
-            "Summon",
-            screenW * 37 / 100,
-            0.315f,
-            0.505f
-        ) {
-            openSection(
-                "SUMMON",
-                "Call heroes, relics, and rare astral powers from beyond the veil."
-            )
-        }
-        if (allowAmbientMotion) {
-            pulse(summon, 1.0f, 1.018f, 2100L)
-        }
-
-        addHubButton(
-            root,
-            "heroes.png",
-            "Heroes",
-            screenW * 34 / 100,
-            0.03f,
-            0.595f
-        ) {
-            startActivity(Intent(this, HeroesActivity::class.java))
-        }
-
-        addHubButton(
-            root,
-            "guild.png",
-            "Guild",
-            screenW * 34 / 100,
-            0.63f,
-            0.595f
-        ) {
-            openSection(
-                "GUILD",
-                "Guild progression, members, raids, contributions, and rewards."
-            )
-        }
-
-        addHubButton(
-            root,
-            "quests.png",
-            "Quests",
-            screenW * 29 / 100,
-            0.67f,
-            0.69f
-        ) {
-            openSection(
-                "QUESTS",
-                "Main quests, side missions, dailies, and milestone rewards."
-            )
-        }
-
-        val battleWidth = screenW * 42 / 100
-        val battleHeight = battleWidth * 34 / 100
-
-        val battleButton = FrameLayout(this).apply {
-            contentDescription = "Battle"
-            isClickable = true
-            isFocusable = true
-            setOnClickListener {
-                startActivity(
-                    Intent(
-                        this@HomeActivity,
-                        BattleActivity::class.java
-                    )
-                )
-            }
-            installTouchFeedback()
-        }
-
-        battleButton.addView(
-            android.view.View(this).apply {
-                background = GradientDrawable().apply {
-                    setColor(Color.argb(222, 0, 0, 0))
-                    cornerRadius =
-                        AuthUi.dp(this@HomeActivity, 12).toFloat()
-                }
-            },
-            FrameLayout.LayoutParams(
-                battleWidth * 67 / 100,
-                battleHeight * 42 / 100,
-                Gravity.END or Gravity.CENTER_VERTICAL
-            ).apply {
-                marginEnd = battleWidth * 6 / 100
-            }
-        )
-
-        battleButton.addView(
-            ImageView(this).apply {
-                setImageResource(
-                    R.drawable.file_00000000b44481f6b8c3df3c70bf55e3
-                )
-                scaleType = ImageView.ScaleType.FIT_CENTER
-                adjustViewBounds = true
-                contentDescription = null
-                setPadding(
-                    AuthUi.dp(this@HomeActivity, 2),
-                    0,
-                    AuthUi.dp(this@HomeActivity, 2),
-                    0
-                )
-            },
-            FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-        )
-
-        val battleParams = FrameLayout.LayoutParams(
-            battleWidth,
-            battleHeight,
-            Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-        ).apply {
-            bottomMargin = AuthUi.dp(this@HomeActivity, 118)
-        }
-        root.addView(battleButton, battleParams)
-        if (allowAmbientMotion) {
-            pulse(battleButton, 1.0f, 1.026f, 1600L)
-        }
+        // Rebuilt hub baseline: the new artwork contains the six location
+        // environments, their labels, the blank avatar frame, the lower
+        // player frame, and the top-right resource frame. Old hub overlays
+        // are intentionally not drawn over it.
+        playerNameAtCreate = PlayerIdentityStore.getName(this)
 
         val bottomNav = createBottomNav(screenW)
         val bottomNavParams = FrameLayout.LayoutParams(
@@ -312,25 +112,10 @@ class HomeActivity : Activity() {
         root.addView(bottomNav, bottomNavParams)
 
         root.setOnApplyWindowInsetsListener { _, insets: WindowInsets ->
-            val systemTop = insets.systemWindowInsetTop
             val systemBottom = insets.systemWindowInsetBottom
-            val safeGap = AuthUi.dp(this@HomeActivity, 8)
-
-            playerCardParams.topMargin =
-                systemTop + AuthUi.dp(this@HomeActivity, 2)
-            playerCard.layoutParams = playerCardParams
-
-            statusParams.topMargin =
-                systemTop + AuthUi.dp(this@HomeActivity, 6)
-            statusPanel.layoutParams = statusParams
-
-            bottomNavParams.bottomMargin = systemBottom + safeGap
+            bottomNavParams.bottomMargin =
+                systemBottom + AuthUi.dp(this@HomeActivity, 8)
             bottomNav.layoutParams = bottomNavParams
-
-            battleParams.bottomMargin =
-                systemBottom + safeGap + AuthUi.dp(this@HomeActivity, 112)
-            battleButton.layoutParams = battleParams
-
             insets
         }
         root.requestApplyInsets()
