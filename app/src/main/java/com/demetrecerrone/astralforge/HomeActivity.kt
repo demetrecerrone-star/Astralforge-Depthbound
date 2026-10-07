@@ -3,8 +3,10 @@ package com.demetrecerrone.astralforge
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.app.Activity
+import android.app.Dialog
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -14,8 +16,10 @@ import android.view.View
 import android.view.WindowInsets
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.FrameLayout
+import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import kotlin.math.min
 
@@ -364,30 +368,19 @@ class HomeActivity : Activity() {
         }
 
         val avatarPlaceholderSize = cardHeight * 58 / 100
-        val avatarPlaceholder = TextView(this).apply {
-            text = displayName.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "D"
-            gravity = Gravity.CENTER
-            textSize = 20f
-            setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
-            background = GradientDrawable(
-                GradientDrawable.Orientation.TL_BR,
-                intArrayOf(
-                    Color.rgb(44, 24, 92),
-                    Color.rgb(83, 52, 170),
-                    Color.rgb(18, 35, 95)
-                )
-            ).apply {
-                shape = GradientDrawable.OVAL
-                setStroke(
-                    AuthUi.dp(this@HomeActivity, 1),
-                    Color.rgb(137, 102, 255)
-                )
+        val portrait = PortraitArtView(this).apply {
+            portraitId = PortraitStore.selectedId(this@HomeActivity)
+            circularHitTest = true
+            isClickable = true
+            isFocusable = true
+            contentDescription = "Change player portrait"
+            setOnClickListener {
+                AppHaptics.tap(this@HomeActivity)
+                showPortraitPicker(this)
             }
-            setShadowLayer(6f, 0f, 0f, Color.rgb(113, 82, 255))
         }
         card.addView(
-            avatarPlaceholder,
+            portrait,
             FrameLayout.LayoutParams(
                 avatarPlaceholderSize,
                 avatarPlaceholderSize,
@@ -470,6 +463,210 @@ class HomeActivity : Activity() {
         )
 
         return card
+    }
+
+    private fun showPortraitPicker(target: PortraitArtView) {
+        val dialog = Dialog(this)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        val outer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(
+                AuthUi.dp(this@HomeActivity, 16),
+                AuthUi.dp(this@HomeActivity, 16),
+                AuthUi.dp(this@HomeActivity, 16),
+                AuthUi.dp(this@HomeActivity, 14)
+            )
+            background = GradientDrawable().apply {
+                setColor(Color.argb(248, 5, 8, 25))
+                cornerRadius = AuthUi.dp(this@HomeActivity, 20).toFloat()
+                setStroke(
+                    AuthUi.dp(this@HomeActivity, 1),
+                    Color.rgb(121, 86, 207)
+                )
+            }
+        }
+
+        outer.addView(
+            TextView(this).apply {
+                text = "CHOOSE PORTRAIT"
+                textSize = 20f
+                setTextColor(Color.WHITE)
+                typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+                gravity = Gravity.CENTER
+                letterSpacing = 0.07f
+                setShadowLayer(7f, 0f, 0f, Color.rgb(109, 74, 233))
+            }
+        )
+
+        outer.addView(
+            TextView(this).apply {
+                text = "Tap a head to use it on your hub profile."
+                textSize = 11f
+                setTextColor(Color.rgb(174, 161, 207))
+                gravity = Gravity.CENTER
+                setPadding(
+                    0,
+                    AuthUi.dp(this@HomeActivity, 3),
+                    0,
+                    AuthUi.dp(this@HomeActivity, 10)
+                )
+            }
+        )
+
+        val scroll = ScrollView(this).apply {
+            overScrollMode = View.OVER_SCROLL_NEVER
+        }
+
+        val grid = GridLayout(this).apply {
+            columnCount = 3
+            alignmentMode = GridLayout.ALIGN_BOUNDS
+            useDefaultMargins = false
+            setPadding(0, AuthUi.dp(this@HomeActivity, 2), 0, AuthUi.dp(this@HomeActivity, 6))
+        }
+
+        val currentId = PortraitStore.selectedId(this)
+        val cardWidth =
+            (resources.displayMetrics.widthPixels - AuthUi.dp(this, 72)) / 3
+
+        PortraitStore.all().forEachIndexed { index, option ->
+            val selectedNow = option.id == currentId
+
+            val cell = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER_HORIZONTAL
+                setPadding(
+                    AuthUi.dp(this@HomeActivity, 4),
+                    AuthUi.dp(this@HomeActivity, 6),
+                    AuthUi.dp(this@HomeActivity, 4),
+                    AuthUi.dp(this@HomeActivity, 7)
+                )
+                background = GradientDrawable().apply {
+                    setColor(
+                        if (selectedNow) {
+                            Color.argb(224, 44, 31, 91)
+                        } else {
+                            Color.argb(185, 10, 12, 32)
+                        }
+                    )
+                    cornerRadius = AuthUi.dp(this@HomeActivity, 13).toFloat()
+                    setStroke(
+                        AuthUi.dp(this@HomeActivity, 1),
+                        if (selectedNow) {
+                            Color.rgb(234, 192, 92)
+                        } else {
+                            Color.rgb(79, 62, 129)
+                        }
+                    )
+                }
+                isClickable = true
+                isFocusable = true
+            }
+
+            val art = PortraitArtView(this).apply {
+                portraitId = option.id
+                selected = selectedNow
+                isClickable = false
+                isFocusable = false
+            }
+            cell.addView(
+                art,
+                LinearLayout.LayoutParams(
+                    AuthUi.dp(this, 72),
+                    AuthUi.dp(this, 72)
+                )
+            )
+
+            cell.addView(
+                TextView(this).apply {
+                    text = option.label
+                    textSize = 10.5f
+                    setTextColor(
+                        if (selectedNow) {
+                            Color.rgb(255, 222, 137)
+                        } else {
+                            Color.WHITE
+                        }
+                    )
+                    typeface = Typeface.DEFAULT_BOLD
+                    gravity = Gravity.CENTER
+                    maxLines = 1
+                    setPadding(0, AuthUi.dp(this@HomeActivity, 3), 0, 0)
+                },
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            )
+
+            cell.setOnClickListener {
+                AppHaptics.tap(this@HomeActivity)
+                if (PortraitStore.select(this@HomeActivity, option.id)) {
+                    target.portraitId = option.id
+                    dialog.dismiss()
+                }
+            }
+
+            val params = GridLayout.LayoutParams().apply {
+                width = cardWidth
+                height = AuthUi.dp(this@HomeActivity, 108)
+                rowSpec = GridLayout.spec(index / 3)
+                columnSpec = GridLayout.spec(index % 3)
+                setMargins(
+                    AuthUi.dp(this@HomeActivity, 3),
+                    AuthUi.dp(this@HomeActivity, 3),
+                    AuthUi.dp(this@HomeActivity, 3),
+                    AuthUi.dp(this@HomeActivity, 3)
+                )
+            }
+            grid.addView(cell, params)
+        }
+
+        scroll.addView(
+            grid,
+            ScrollView.LayoutParams(
+                ScrollView.LayoutParams.MATCH_PARENT,
+                ScrollView.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        outer.addView(
+            scroll,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                0,
+                1f
+            )
+        )
+
+        outer.addView(
+            TextView(this).apply {
+                text = "CANCEL"
+                textSize = 12f
+                setTextColor(Color.rgb(202, 186, 235))
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = Gravity.CENTER
+                isClickable = true
+                isFocusable = true
+                setPadding(
+                    AuthUi.dp(this@HomeActivity, 8),
+                    AuthUi.dp(this@HomeActivity, 11),
+                    AuthUi.dp(this@HomeActivity, 8),
+                    AuthUi.dp(this@HomeActivity, 6)
+                )
+                setOnClickListener { dialog.dismiss() }
+            }
+        )
+
+        dialog.setContentView(outer)
+        dialog.setCanceledOnTouchOutside(true)
+        dialog.show()
+
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.92f).toInt(),
+            (resources.displayMetrics.heightPixels * 0.78f).toInt()
+        )
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
     }
 
     private fun addLevelBadge(
