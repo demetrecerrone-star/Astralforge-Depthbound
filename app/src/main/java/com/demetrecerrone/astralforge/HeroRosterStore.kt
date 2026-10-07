@@ -136,7 +136,7 @@ object HeroRosterStore {
 
     fun activeHeroId(context: Context): String {
         val saved = context
-            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .let { AccountScopedStorage.preferences(it, PREFS) }
             .getString(KEY_ACTIVE, DEFAULT_HERO)
             ?: DEFAULT_HERO
         return if (hero(saved) != null) saved else DEFAULT_HERO
@@ -147,7 +147,7 @@ object HeroRosterStore {
 
     fun setActiveHero(context: Context, heroId: String): Boolean {
         if (hero(heroId) == null) return false
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        AccountScopedStorage.preferences(context, PREFS)
             .edit()
             .putString(KEY_ACTIVE, heroId)
             .apply()
