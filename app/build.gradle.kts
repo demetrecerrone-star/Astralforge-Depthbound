@@ -14,17 +14,6 @@ val generatedAstralSpritesDir =
 val generatedThreeDModelsDir =
     layout.buildDirectory.dir("generated/threeDModelAssets")
 
-val generateBrandAssets =
-    tasks.register<org.gradle.api.tasks.Exec>("generateBrandAssets") {
-        workingDir(rootProject.projectDir)
-        commandLine("python3", "tools/generate_brand_assets.py")
-        inputs.file(rootProject.file("tools/generate_brand_assets.py"))
-        outputs.files(
-            file("src/main/res/drawable-nodpi/astralforge_auth_landscape.png"),
-            file("src/main/res/raw/dabsky_intro.mp4")
-        )
-    }
-
 val generateThreeDPrototypeModels =
     tasks.register<org.gradle.api.tasks.Exec>("generateThreeDPrototypeModels") {
         workingDir(rootProject.projectDir)
@@ -288,7 +277,7 @@ android {
         applicationId = "com.demetrecerrone.astralforge"
         minSdk = 26
         targetSdk = 35
-        versionCode = 18
+        versionCode = 19
         versionName = "0.0.1.0"
     }
 
@@ -325,7 +314,6 @@ android {
 tasks.matching { it.name == "preBuild" }.configureEach {
     dependsOn(
         splitAstralSpriteSheets,
-        generateBrandAssets,
         generateThreeDPrototypeModels
     )
 }

@@ -3,6 +3,7 @@ package com.demetrecerrone.astralforge
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
+import android.media.AudioTrack
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
@@ -14,6 +15,7 @@ class SplashActivity : Activity() {
 
     private var leaving = false
     private var videoView: VideoView? = null
+    private var introSound: AudioTrack? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,43 +49,7 @@ class SplashActivity : Activity() {
         )
 
         if (motionEnabled) {
-            val video = VideoView(this).apply {
-                setBackgroundColor(Color.TRANSPARENT)
-                setVideoURI(
-                    Uri.parse(
-                        "android.resource://" +
-                            packageName +
-                            "/" +
-                            R.raw.dabsky_intro
-                    )
-                )
-                setOnPreparedListener { mediaPlayer ->
-                    mediaPlayer.isLooping = false
-                    mediaPlayer.setVolume(0.86f, 0.86f)
-                    poster.visibility = View.GONE
-                    start()
-                }
-                setOnCompletionListener {
-                    leaveSplash(root, true)
-                }
-                setOnErrorListener { _, _, _ ->
-                    visibility = View.GONE
-                    poster.visibility = View.VISIBLE
-                    root.postDelayed(
-                        { leaveSplash(root, true) },
-                        1100L
-                    )
-                    true
-                }
-            }
-            videoView = video
-            root.addView(
-                video,
-                FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.MATCH_PARENT
-                )
-            )
+            startCinematicIntro(root, poster)
         } else {
             root.postDelayed(
                 { leaveSplash(root, false) },
@@ -99,12 +65,66 @@ class SplashActivity : Activity() {
         FullscreenUi.apply(this)
     }
 
+    private fun startCinematicIntro(
+        root: FrameLayout,
+        poster: ImageView
+    ) {
+        val videoFile = runCatching {
+            EmbeddedDabskyVideo.materialize(this)
+        }.getOrNull()
+
+        if (videoFile == null) {
+            root.postDelayed(
+                { leaveSplash(root, true) },
+                1200L
+            )
+            return
+        }
+
+        val video = VideoView(this).apply {
+            setBackgroundColor(Color.BLACK)
+            setVideoURI(Uri.fromFile(videoFile))
+            setOnPreparedListener { mediaPlayer ->
+                mediaPlayer.isLooping = false
+                mediaPlayer.setVolume(0f, 0f)
+                poster.visibility = View.GONE
+                introSound = DabskyIntroSound.play()
+                start()
+            }
+            setOnCompletionListener {
+                leaveSplash(root, true)
+            }
+            setOnErrorListener { _, _, _ ->
+                visibility = View.GONE
+                poster.visibility = View.VISIBLE
+                stopIntroSound()
+                root.postDelayed(
+                    { leaveSplash(root, true) },
+                    1000L
+                )
+                true
+            }
+        }
+
+        videoView = video
+        root.addView(
+            video,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+    }
+
     private fun leaveSplash(
         root: View,
         animate: Boolean
     ) {
         if (leaving) return
         leaving = true
+
+        videoView?.stopPlayback()
+        stopIntroSound()
 
         fun openLogin() {
             startActivity(
@@ -128,6 +148,13 @@ class SplashActivity : Activity() {
             .start()
     }
 
+    private fun stopIntroSound() {
+        val sound = introSound ?: return
+        introSound = null
+        runCatching { sound.stop() }
+        runCatching { sound.release() }
+    }
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
@@ -138,6 +165,7 @@ class SplashActivity : Activity() {
     override fun onDestroy() {
         videoView?.stopPlayback()
         videoView = null
+        stopIntroSound()
         super.onDestroy()
     }
 }

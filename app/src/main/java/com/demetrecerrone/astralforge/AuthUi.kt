@@ -51,13 +51,8 @@ object AuthUi {
             setBackgroundColor(Color.rgb(3, 5, 14))
         }
 
-        val bgImage = ImageView(activity).apply {
-            setImageResource(R.drawable.astralforge_auth_landscape)
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            contentDescription = null
-        }
         root.addView(
-            bgImage,
+            AuthLandscapeBackgroundView(activity),
             FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
