@@ -3,10 +3,10 @@ package com.demetrecerrone.astralforge
 object ThreeDModelStore {
 
     private const val PROTOTYPE_HERO =
-        "models/prototype_knight.glb.b64"
+        "models/prototype_knight.glb"
 
     private const val PROTOTYPE_ENEMY =
-        "models/prototype_goblin.glb.b64"
+        "models/prototype_goblin.glb"
 
     private val heroIds = setOf(
         "knight",
