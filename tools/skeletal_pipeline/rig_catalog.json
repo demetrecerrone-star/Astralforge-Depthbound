@@ -1,0 +1,94 @@
+{
+  "schema": 1,
+  "status": "draft-auto-rig-v1",
+  "characters": [
+    {
+      "id": "knight",
+      "class": "Knight",
+      "gender": "male",
+      "source": "anime_knight_cutout_asset_sheet.png",
+      "rig": "biped"
+    },
+    {
+      "id": "barbarian",
+      "class": "Barbarian",
+      "gender": "male",
+      "source": "red_haired_barbarian_rigging_sheet.png",
+      "rig": "biped"
+    },
+    {
+      "id": "rogue",
+      "class": "Rogue",
+      "gender": "female",
+      "source": "silver_haired_assassin_asset_sheet.png",
+      "rig": "biped"
+    },
+    {
+      "id": "mage",
+      "class": "Mage",
+      "gender": "female",
+      "source": "arcane_mage_rigging_asset_sheet.png",
+      "rig": "biped"
+    },
+    {
+      "id": "ranger",
+      "class": "Ranger",
+      "gender": "female",
+      "source": "forest_ranger_archer_sprite_sheet.png",
+      "rig": "biped"
+    },
+    {
+      "id": "paladin",
+      "class": "Paladin",
+      "gender": "female",
+      "source": "holy_knight_character_asset_sheet.png",
+      "rig": "biped"
+    },
+    {
+      "id": "necromancer",
+      "class": "Necromancer",
+      "gender": "male",
+      "source": "necromancer_rigging_asset_sheet.png",
+      "rig": "biped"
+    },
+    {
+      "id": "dark_knight",
+      "class": "Dark Knight",
+      "gender": "male",
+      "source": "dark_knight_sprite_assembly_sheet.png",
+      "rig": "biped"
+    }
+  ],
+  "monsters": [
+    {
+      "id": "blue_slime",
+      "name": "Blue Slime",
+      "source": "cute_blue_slime_sprite_sheet.png",
+      "rig": "slime"
+    },
+    {
+      "id": "goblin_raider",
+      "name": "Goblin Raider",
+      "source": "goblin_raider_sprite_rigging_sheet.png",
+      "rig": "biped"
+    },
+    {
+      "id": "skeleton_warrior",
+      "name": "Skeleton Warrior",
+      "source": "undead_knight_rigging_asset_sheet.png",
+      "rig": "biped"
+    },
+    {
+      "id": "dire_wolf",
+      "name": "Dire Wolf",
+      "source": "dire_wolf_rigging_sprite_sheet.png",
+      "rig": "quadruped"
+    },
+    {
+      "id": "dungeon_boss",
+      "name": "Astral Warden",
+      "source": "astral_warden_rigging_asset_sheet.png",
+      "rig": "biped"
+    }
+  ]
+}

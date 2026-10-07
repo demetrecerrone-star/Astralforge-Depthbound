@@ -17,7 +17,6 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.google.firebase.auth.FirebaseAuth
 import kotlin.math.min
 
 class HomeActivity : Activity() {
@@ -26,6 +25,7 @@ class HomeActivity : Activity() {
     private val bottomPack = "bottomnav.zip"
     private val avatarPack = "avatarcorner.zip"
     private var performanceSignatureAtCreate: String? = null
+    private var playerNameAtCreate: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,12 +100,8 @@ class HomeActivity : Activity() {
         )
 
         val progress = ProgressionStore.load(this)
-        val user = FirebaseAuth.getInstance().currentUser
-        val displayName = when {
-            user?.isAnonymous == true -> "Guest Delver"
-            !user?.displayName.isNullOrBlank() -> user?.displayName ?: "Delver"
-            else -> "Delver"
-        }
+        val displayName = PlayerIdentityStore.getName(this)
+        playerNameAtCreate = displayName
 
         val playerCardWidth = min(screenW * 44 / 100, AuthUi.dp(this, 260))
         val playerCardHeight = AuthUi.dp(this, 84)
@@ -159,7 +155,7 @@ class HomeActivity : Activity() {
             "Shop",
             screenW * 35 / 100,
             0.025f,
-            0.395f
+            0.352f
         ) {
             openSection(
                 "SHOP",
@@ -244,6 +240,20 @@ class HomeActivity : Activity() {
             contentDescription = "Battle"
             isClickable = true
             isFocusable = true
+            background = GradientDrawable().apply {
+                setColor(Color.argb(225, 0, 0, 0))
+                cornerRadius = AuthUi.dp(this@HomeActivity, 18).toFloat()
+                setStroke(
+                    AuthUi.dp(this@HomeActivity, 1),
+                    Color.argb(200, 130, 92, 225)
+                )
+            }
+            setPadding(
+                AuthUi.dp(this@HomeActivity, 5),
+                AuthUi.dp(this@HomeActivity, 2),
+                AuthUi.dp(this@HomeActivity, 5),
+                AuthUi.dp(this@HomeActivity, 2)
+            )
             setOnClickListener {
                 startActivity(
                     Intent(
@@ -308,7 +318,11 @@ class HomeActivity : Activity() {
         super.onResume()
         val previous = performanceSignatureAtCreate ?: return
         val currentSettings = GameSettingsStore.load(this)
-        if (previous != performanceSignature(currentSettings)) {
+        val currentName = PlayerIdentityStore.getName(this)
+        if (
+            previous != performanceSignature(currentSettings) ||
+            currentName != playerNameAtCreate
+        ) {
             recreate()
         }
     }
@@ -413,7 +427,7 @@ class HomeActivity : Activity() {
                 cardHeight * 29 / 100
             ).apply {
                 leftMargin = cardWidth * 29 / 100
-                topMargin = cardHeight * 13 / 100
+                topMargin = cardHeight * 22 / 100
             }
         )
 
@@ -680,7 +694,7 @@ class HomeActivity : Activity() {
         leftFraction: Float,
         topFraction: Float,
         onClick: () -> Unit
-    ): ImageView {
+    ): FrameLayout {
         val bitmap = ButtonAssetStore.load(
             this,
             hubPack,
@@ -692,29 +706,56 @@ class HomeActivity : Activity() {
             0.42f
         }
 
-        val button = ImageView(this).apply {
-            if (bitmap != null) setImageBitmap(bitmap)
-            scaleType = ImageView.ScaleType.FIT_CENTER
-            adjustViewBounds = true
+        val heightPx = (widthPx * ratio)
+            .toInt()
+            .coerceAtLeast(AuthUi.dp(this, 44))
+
+        val holder = FrameLayout(this).apply {
             contentDescription = description
             isClickable = true
             isFocusable = true
+            background = GradientDrawable().apply {
+                setColor(Color.argb(220, 0, 0, 0))
+                cornerRadius =
+                    AuthUi.dp(this@HomeActivity, 15).toFloat()
+                setStroke(
+                    AuthUi.dp(this@HomeActivity, 1),
+                    Color.argb(185, 113, 82, 205)
+                )
+            }
+            setPadding(
+                AuthUi.dp(this@HomeActivity, 4),
+                AuthUi.dp(this@HomeActivity, 2),
+                AuthUi.dp(this@HomeActivity, 4),
+                AuthUi.dp(this@HomeActivity, 2)
+            )
             setOnClickListener { onClick() }
             installTouchFeedback()
         }
 
+        holder.addView(
+            ImageView(this).apply {
+                if (bitmap != null) setImageBitmap(bitmap)
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                adjustViewBounds = true
+                contentDescription = null
+            },
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+
         val params = FrameLayout.LayoutParams(
             widthPx,
-            (widthPx * ratio)
-                .toInt()
-                .coerceAtLeast(AuthUi.dp(this, 44))
+            heightPx
         )
         params.leftMargin =
             (resources.displayMetrics.widthPixels * leftFraction).toInt()
         params.topMargin =
             (resources.displayMetrics.heightPixels * topFraction).toInt()
-        root.addView(button, params)
-        return button
+        root.addView(holder, params)
+        return holder
     }
 
     private fun createBottomNav(screenW: Int): LinearLayout {

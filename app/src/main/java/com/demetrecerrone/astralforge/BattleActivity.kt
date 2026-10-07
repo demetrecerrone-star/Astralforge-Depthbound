@@ -20,7 +20,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
-import com.google.firebase.auth.FirebaseAuth
+import android.widget.Toast
 import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.random.Random
@@ -31,6 +31,10 @@ class BattleActivity : Activity() {
     private val battlePack = "astral_battle_sprite_assets_split.zip"
 
     private lateinit var root: FrameLayout
+    private lateinit var playerStage: FrameLayout
+    private lateinit var enemyStage: FrameLayout
+    private lateinit var playerActor: SkeletalActorView
+    private lateinit var enemyActor: SkeletalActorView
     private lateinit var playerSprite: ImageView
     private lateinit var enemySprite: ImageView
     private lateinit var effectLayer: FrameLayout
@@ -66,6 +70,8 @@ class BattleActivity : Activity() {
     private var busy = false
     private var battleOver = false
     private var combatStarted = false
+    private var playerUsesSkeletalRig = false
+    private var enemyUsesSkeletalRig = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,7 +98,6 @@ class BattleActivity : Activity() {
         setupBattleStats()
         refreshHud()
         loadSpritesAsync()
-        startEntrance()
     }
 
     override fun onDestroy() {
@@ -181,13 +186,35 @@ class BattleActivity : Activity() {
         val screenW = resources.displayMetrics.widthPixels
         val screenH = resources.displayMetrics.heightPixels
 
+        playerStage = FrameLayout(this).apply {
+            alpha = 0f
+            contentDescription = "Player battle actor"
+        }
+        playerActor = SkeletalActorView(this).apply {
+            visibility = View.GONE
+            motionEnabled = !settings.reducedMotion
+            setFacing(BattleActorFactory.playerFacing())
+        }
         playerSprite = ImageView(this).apply {
             scaleType = ImageView.ScaleType.FIT_CENTER
             contentDescription = "Player"
-            alpha = 0f
         }
-        root.addView(
+        playerStage.addView(
+            playerActor,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+        playerStage.addView(
             playerSprite,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+        root.addView(
+            playerStage,
             FrameLayout.LayoutParams(
                 (screenW * 0.40f).toInt(),
                 (screenH * 0.34f).toInt(),
@@ -198,13 +225,35 @@ class BattleActivity : Activity() {
             }
         )
 
+        enemyStage = FrameLayout(this).apply {
+            alpha = 0f
+            contentDescription = "Enemy battle actor"
+        }
+        enemyActor = SkeletalActorView(this).apply {
+            visibility = View.GONE
+            motionEnabled = !settings.reducedMotion
+            setFacing(BattleActorFactory.enemyFacing())
+        }
         enemySprite = ImageView(this).apply {
             scaleType = ImageView.ScaleType.FIT_CENTER
             contentDescription = "Enemy"
-            alpha = 0f
         }
-        root.addView(
+        enemyStage.addView(
+            enemyActor,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+        enemyStage.addView(
             enemySprite,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+        root.addView(
+            enemyStage,
             FrameLayout.LayoutParams(
                 (screenW * 0.42f).toInt(),
                 (screenH * 0.35f).toInt(),
@@ -281,12 +330,7 @@ class BattleActivity : Activity() {
             }
         }
 
-        val user = FirebaseAuth.getInstance().currentUser
-        val playerName = when {
-            user?.isAnonymous == true -> "Guest Delver"
-            !user?.displayName.isNullOrBlank() -> user?.displayName ?: "Delver"
-            else -> "Delver"
-        }
+        val playerName = PlayerIdentityStore.getName(this)
 
         val playerHud = createHpHud(
             playerName,
@@ -304,10 +348,9 @@ class BattleActivity : Activity() {
             )
         )
 
-        val actionRow = LinearLayout(this).apply {
+        val topControls = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-            setPadding(0, AuthUi.dp(this@BattleActivity, 8), 0, 0)
+            gravity = Gravity.CENTER_VERTICAL
         }
 
         autoText = makeSmallAction("AUTO ON") {
@@ -321,20 +364,100 @@ class BattleActivity : Activity() {
                 handler.postDelayed({ performPlayerAttack() }, 350L)
             }
         }
-        actionRow.addView(
+        topControls.addView(
             autoText,
             LinearLayout.LayoutParams(
-                0,
-                AuthUi.dp(this, 54),
-                1f
+                AuthUi.dp(this, 88),
+                AuthUi.dp(this, 38)
             ).apply {
                 marginEnd = AuthUi.dp(this@BattleActivity, 6)
             }
         )
 
-        attackButton = createAssetActionButton(
-            "attack_button.png",
-            "ATTACK"
+        val settingsQuickButton = makeSmallAction("⚙") {
+            startActivity(
+                Intent(
+                    this@BattleActivity,
+                    SettingsActivity::class.java
+                )
+            )
+        }
+        settingsQuickButton.textSize = 18f
+        topControls.addView(
+            settingsQuickButton,
+            LinearLayout.LayoutParams(
+                AuthUi.dp(this, 42),
+                AuthUi.dp(this, 38)
+            )
+        )
+
+        val topControlParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            Gravity.TOP or Gravity.END
+        ).apply {
+            topMargin = AuthUi.dp(this@BattleActivity, 132)
+            marginEnd = AuthUi.dp(this@BattleActivity, 12)
+        }
+        root.addView(topControls, topControlParams)
+
+        val actionRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(
+                0,
+                AuthUi.dp(this@BattleActivity, 8),
+                0,
+                0
+            )
+        }
+
+        val skillsButton = makeCombatAction(
+            "SKILLS",
+            emphasized = false
+        ) {
+            Toast.makeText(
+                this@BattleActivity,
+                "Skills panel is coming next.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        actionRow.addView(
+            skillsButton,
+            LinearLayout.LayoutParams(
+                0,
+                AuthUi.dp(this, 58),
+                1f
+            ).apply {
+                marginEnd = AuthUi.dp(this@BattleActivity, 5)
+            }
+        )
+
+        val itemsButton = makeCombatAction(
+            "ITEMS",
+            emphasized = false
+        ) {
+            Toast.makeText(
+                this@BattleActivity,
+                "Items panel is coming next.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        actionRow.addView(
+            itemsButton,
+            LinearLayout.LayoutParams(
+                0,
+                AuthUi.dp(this, 58),
+                1f
+            ).apply {
+                marginStart = AuthUi.dp(this@BattleActivity, 3)
+                marginEnd = AuthUi.dp(this@BattleActivity, 3)
+            }
+        )
+
+        attackButton = makeCombatAction(
+            "ATTACK",
+            emphasized = true
         ) {
             performPlayerAttack()
         }
@@ -342,28 +465,10 @@ class BattleActivity : Activity() {
             attackButton,
             LinearLayout.LayoutParams(
                 0,
-                AuthUi.dp(this, 66),
-                1.25f
+                AuthUi.dp(this, 62),
+                1.08f
             ).apply {
-                marginStart = AuthUi.dp(this@BattleActivity, 4)
-                marginEnd = AuthUi.dp(this@BattleActivity, 4)
-            }
-        )
-
-        val settingsButton = createAssetActionButton(
-            "settings_button.png",
-            "SETTINGS"
-        ) {
-            startActivity(Intent(this@BattleActivity, SettingsActivity::class.java))
-        }
-        actionRow.addView(
-            settingsButton,
-            LinearLayout.LayoutParams(
-                0,
-                AuthUi.dp(this, 54),
-                1f
-            ).apply {
-                marginStart = AuthUi.dp(this@BattleActivity, 6)
+                marginStart = AuthUi.dp(this@BattleActivity, 5)
             }
         )
 
@@ -386,6 +491,11 @@ class BattleActivity : Activity() {
             enemyHudParams.topMargin =
                 insets.systemWindowInsetTop + AuthUi.dp(this@BattleActivity, 10)
             enemyHud.root.layoutParams = enemyHudParams
+
+            topControlParams.topMargin =
+                insets.systemWindowInsetTop +
+                    AuthUi.dp(this@BattleActivity, 116)
+            topControls.layoutParams = topControlParams
 
             bottomParams.bottomMargin = insets.systemWindowInsetBottom
             bottomPanel.layoutParams = bottomParams
@@ -558,52 +668,111 @@ class BattleActivity : Activity() {
     private fun loadSpritesAsync() {
         Thread {
             val playerId =
-                EntitySpriteStore.characterIdForClass(
+                BattleActorFactory.playerRigId(
                     progress.playerClass
                 )
             enemyEntityId =
-                EntitySpriteStore.monsterIdForDepth(depth)
+                BattleActorFactory.enemyRigId(depth)
 
-            val playerSet =
-                EntitySpriteStore.loadCharacter(this, playerId)
-            val enemySet =
-                EntitySpriteStore.loadMonster(
-                    this,
-                    enemyEntityId
-                )
+            val skeletalPlayer =
+                runCatching {
+                    RigLoader.load(this, playerId)
+                }.getOrNull()
+            val skeletalEnemy =
+                runCatching {
+                    RigLoader.load(this, enemyEntityId)
+                }.getOrNull()
+
+            val fallbackPlayer =
+                if (skeletalPlayer == null) {
+                    EntitySpriteStore.loadCharacter(
+                        this,
+                        EntitySpriteStore.characterIdForClass(
+                            progress.playerClass
+                        )
+                    )
+                } else {
+                    null
+                }
+
+            val fallbackEnemy =
+                if (skeletalEnemy == null) {
+                    EntitySpriteStore.loadMonster(
+                        this,
+                        EntitySpriteStore.monsterIdForDepth(depth)
+                    )
+                } else {
+                    null
+                }
 
             runOnUiThread {
-                playerIdle = playerSet.idle
-                enemyIdle = enemySet.idle
-
-                playerAttackFrames =
-                    playerSet.attackFrames
-                playerHitFrames =
-                    playerSet.hitFrames
-                playerDeathFrames =
-                    playerSet.deathFrames
-
-                enemyAttackFrames =
-                    enemySet.attackFrames
-                enemyHitFrames =
-                    enemySet.hitFrames
-                enemyDeathFrames =
-                    enemySet.deathFrames
-
-                playerIdle?.let {
-                    playerSprite.setImageBitmap(it)
+                if (skeletalPlayer != null) {
+                    playerUsesSkeletalRig = true
+                    playerActor.setRig(skeletalPlayer)
+                    playerActor.setFacing(
+                        BattleActorFactory.playerFacing()
+                    )
+                    playerActor.motionEnabled =
+                        !settings.reducedMotion
+                    playerActor.visibility = View.VISIBLE
+                    playerSprite.visibility = View.GONE
+                } else if (fallbackPlayer != null) {
+                    playerUsesSkeletalRig = false
+                    playerIdle = fallbackPlayer.idle
+                    playerAttackFrames =
+                        fallbackPlayer.attackFrames
+                    playerHitFrames =
+                        fallbackPlayer.hitFrames
+                    playerDeathFrames =
+                        fallbackPlayer.deathFrames
+                    playerIdle?.let {
+                        playerSprite.setImageBitmap(it)
+                    }
+                    playerSprite.visibility = View.VISIBLE
+                    playerActor.visibility = View.GONE
                 }
-                enemyIdle?.let {
-                    enemySprite.setImageBitmap(it)
-                }
 
-                enemyNameText.text =
-                    enemySet.displayName
+                if (skeletalEnemy != null) {
+                    enemyUsesSkeletalRig = true
+                    enemyActor.setRig(skeletalEnemy)
+                    enemyActor.setFacing(
+                        BattleActorFactory.enemyFacing()
+                    )
+                    enemyActor.motionEnabled =
+                        !settings.reducedMotion
+                    enemyActor.visibility = View.VISIBLE
+                    enemySprite.visibility = View.GONE
+                    enemyNameText.text =
+                        skeletalEnemy.definition.displayName
+                } else if (fallbackEnemy != null) {
+                    enemyUsesSkeletalRig = false
+                    enemyIdle = fallbackEnemy.idle
+                    enemyAttackFrames =
+                        fallbackEnemy.attackFrames
+                    enemyHitFrames =
+                        fallbackEnemy.hitFrames
+                    enemyDeathFrames =
+                        fallbackEnemy.deathFrames
+                    enemyIdle?.let {
+                        enemySprite.setImageBitmap(it)
+                    }
+                    enemySprite.visibility = View.VISIBLE
+                    enemyActor.visibility = View.GONE
+                    enemyNameText.text =
+                        fallbackEnemy.displayName
+                } else {
+                    enemyNameText.text =
+                        BattleActorFactory.enemyDisplayName(
+                            enemyEntityId
+                        )
+                }
 
                 if (EntitySpriteStore.isBossDepth(depth)) {
-                    enemySprite.scaleX = 1.12f
-                    enemySprite.scaleY = 1.12f
+                    enemyStage.scaleX = 1.12f
+                    enemyStage.scaleY = 1.12f
                 }
+
+                startEntrance()
             }
         }.start()
     }
@@ -612,25 +781,44 @@ class BattleActivity : Activity() {
         showEffect("spawn_burst.png", 0.22f, 0.49f, 0.32f)
         showEffect("portal_arrival.png", 0.70f, 0.46f, 0.34f)
 
-        playerSprite.translationX = -AuthUi.dp(this, 38).toFloat()
-        enemySprite.translationX = AuthUi.dp(this, 38).toFloat()
+        playerStage.translationX =
+            -AuthUi.dp(this, 38).toFloat()
+        enemyStage.translationX =
+            AuthUi.dp(this, 38).toFloat()
 
-        playerSprite.animate()
+        playerStage.animate()
             .alpha(1f)
             .translationX(0f)
-            .setDuration(if (settings.reducedMotion) 120L else 460L)
-            .setInterpolator(AccelerateDecelerateInterpolator())
+            .setDuration(
+                if (settings.reducedMotion) 120L else 460L
+            )
+            .setInterpolator(
+                AccelerateDecelerateInterpolator()
+            )
             .start()
 
-        enemySprite.animate()
+        enemyStage.animate()
             .alpha(1f)
             .translationX(0f)
-            .setDuration(if (settings.reducedMotion) 120L else 520L)
-            .setInterpolator(AccelerateDecelerateInterpolator())
+            .setDuration(
+                if (settings.reducedMotion) 120L else 520L
+            )
+            .setInterpolator(
+                AccelerateDecelerateInterpolator()
+            )
             .withEndAction {
                 combatStarted = true
+                if (playerUsesSkeletalRig) {
+                    playerActor.playIdle()
+                }
+                if (enemyUsesSkeletalRig) {
+                    enemyActor.playIdle()
+                }
                 if (autoBattle) {
-                    handler.postDelayed({ performPlayerAttack() }, 550L)
+                    handler.postDelayed(
+                        { performPlayerAttack() },
+                        550L
+                    )
                 }
             }
             .start()
@@ -646,12 +834,12 @@ class BattleActivity : Activity() {
         val damage =
             if (crit) (baseDamage * 1.75f).roundToInt() else baseDamage
 
-        if (!settings.reducedMotion) {
-            playerSprite.animate()
+        if (!settings.reducedMotion && !playerUsesSkeletalRig) {
+            playerStage.animate()
                 .translationX(AuthUi.dp(this, 26).toFloat())
                 .setDuration(120L)
                 .withEndAction {
-                    playerSprite.animate()
+                    playerStage.animate()
                         .translationX(0f)
                         .setDuration(150L)
                         .start()
@@ -659,8 +847,8 @@ class BattleActivity : Activity() {
                 .start()
         }
 
-        playSequence(
-            playerSprite,
+        playPlayerAnimation(
+            "attack",
             playerAttackFrames,
             playerIdle,
             if (settings.reducedMotion) 55L else 85L
@@ -686,8 +874,8 @@ class BattleActivity : Activity() {
 
                 if (crit) AppHaptics.tap(this)
 
-                playSequence(
-                    enemySprite,
+                playEnemyAnimation(
+                    "hit",
                     enemyHitFrames,
                     enemyIdle,
                     70L
@@ -714,12 +902,12 @@ class BattleActivity : Activity() {
             enemyAttack + Random.nextInt(0, 6) - progress.defense / 2
         )
 
-        if (!settings.reducedMotion) {
-            enemySprite.animate()
+        if (!settings.reducedMotion && !enemyUsesSkeletalRig) {
+            enemyStage.animate()
                 .translationX(-AuthUi.dp(this, 24).toFloat())
                 .setDuration(120L)
                 .withEndAction {
-                    enemySprite.animate()
+                    enemyStage.animate()
                         .translationX(0f)
                         .setDuration(150L)
                         .start()
@@ -727,8 +915,8 @@ class BattleActivity : Activity() {
                 .start()
         }
 
-        playSequence(
-            enemySprite,
+        playEnemyAnimation(
+            "attack",
             enemyAttackFrames,
             enemyIdle,
             if (settings.reducedMotion) 55L else 85L
@@ -747,8 +935,8 @@ class BattleActivity : Activity() {
                     showDamageSplat(damage, false, 0.27f, 0.40f)
                 }
 
-                playSequence(
-                    playerSprite,
+                playPlayerAnimation(
+                    "hit",
                     playerHitFrames,
                     playerIdle,
                     70L
@@ -775,15 +963,18 @@ class BattleActivity : Activity() {
         busy = true
         attackButton.isEnabled = false
 
-        playSequence(
-            enemySprite,
+        playEnemyAnimation(
+            "death",
             enemyDeathFrames,
             null,
-            if (settings.reducedMotion) 55L else 95L
+            if (settings.reducedMotion) 55L else 95L,
+            returnToIdleAfter = false
         ) {
-            enemySprite.animate()
+            enemyStage.animate()
                 .alpha(0f)
-                .setDuration(if (settings.reducedMotion) 100L else 360L)
+                .setDuration(
+                    if (settings.reducedMotion) 100L else 360L
+                )
                 .start()
         }
 
@@ -833,15 +1024,18 @@ class BattleActivity : Activity() {
         busy = true
         attackButton.isEnabled = false
 
-        playSequence(
-            playerSprite,
+        playPlayerAnimation(
+            "death",
             playerDeathFrames,
             null,
-            if (settings.reducedMotion) 55L else 95L
+            if (settings.reducedMotion) 55L else 95L,
+            returnToIdleAfter = false
         ) {
-            playerSprite.animate()
+            playerStage.animate()
                 .alpha(0.18f)
-                .setDuration(if (settings.reducedMotion) 100L else 300L)
+                .setDuration(
+                    if (settings.reducedMotion) 100L else 300L
+                )
                 .start()
         }
 
@@ -856,6 +1050,56 @@ class BattleActivity : Activity() {
             },
             if (settings.reducedMotion) 150L else 500L
         )
+    }
+
+    private fun playPlayerAnimation(
+        animationName: String,
+        fallbackFrames: List<Bitmap>,
+        restore: Bitmap?,
+        frameMs: Long,
+        returnToIdleAfter: Boolean = true,
+        onEnd: (() -> Unit)? = null
+    ) {
+        if (playerUsesSkeletalRig) {
+            playerActor.play(
+                animationName,
+                returnToIdleAfter,
+                onEnd
+            )
+        } else {
+            playSequence(
+                playerSprite,
+                fallbackFrames,
+                restore,
+                frameMs,
+                onEnd
+            )
+        }
+    }
+
+    private fun playEnemyAnimation(
+        animationName: String,
+        fallbackFrames: List<Bitmap>,
+        restore: Bitmap?,
+        frameMs: Long,
+        returnToIdleAfter: Boolean = true,
+        onEnd: (() -> Unit)? = null
+    ) {
+        if (enemyUsesSkeletalRig) {
+            enemyActor.play(
+                animationName,
+                returnToIdleAfter,
+                onEnd
+            )
+        } else {
+            playSequence(
+                enemySprite,
+                fallbackFrames,
+                restore,
+                frameMs,
+                onEnd
+            )
+        }
     }
 
     private fun playSequence(
@@ -1087,6 +1331,44 @@ class BattleActivity : Activity() {
             )
         }
         return holder
+    }
+
+    private fun makeCombatAction(
+        textValue: String,
+        emphasized: Boolean,
+        onClick: () -> Unit
+    ): TextView {
+        return TextView(this).apply {
+            text = textValue
+            gravity = Gravity.CENTER
+            textSize = if (emphasized) 14f else 12.5f
+            setTextColor(
+                if (emphasized) Color.rgb(255, 233, 178)
+                else Color.WHITE
+            )
+            typeface = Typeface.DEFAULT_BOLD
+            letterSpacing = 0.06f
+            background = GradientDrawable().apply {
+                setColor(
+                    if (emphasized) Color.argb(245, 8, 7, 16)
+                    else Color.argb(235, 0, 0, 0)
+                )
+                cornerRadius =
+                    AuthUi.dp(this@BattleActivity, 13).toFloat()
+                setStroke(
+                    AuthUi.dp(this@BattleActivity, if (emphasized) 2 else 1),
+                    if (emphasized) Color.rgb(211, 166, 74)
+                    else Color.rgb(126, 91, 207)
+                )
+            }
+            isClickable = true
+            isFocusable = true
+            setOnClickListener {
+                AppHaptics.tap(this@BattleActivity)
+                onClick()
+            }
+            installPressFeedback()
+        }
     }
 
     private fun makeSmallAction(
