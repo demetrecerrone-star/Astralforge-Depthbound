@@ -30,13 +30,10 @@ jobs:
         with:
           gradle-version: "8.9"
 
-      - name: Install brand asset generator dependencies
+      - name: Verify brand asset generator tools
         run: |
-          python3 -m pip install --disable-pip-version-check Pillow
-          if ! command -v ffmpeg >/dev/null 2>&1; then
-            sudo apt-get update
-            sudo apt-get install -y ffmpeg
-          fi
+          python3 --version
+          ffmpeg -version | head -n 1
 
       - name: Build debug APK
         run: gradle :app:assembleDebug --stacktrace
