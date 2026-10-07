@@ -1137,7 +1137,9 @@ class HomeActivity : Activity() {
                     "CANCEL",
                     Color.rgb(119, 93, 181)
                 ) {
-                    root.removeView(this@apply)
+                    root.findViewWithTag<View>("hub_signout_confirm")?.let {
+                        root.removeView(it)
+                    }
                 },
                 LinearLayout.LayoutParams(
                     0,
