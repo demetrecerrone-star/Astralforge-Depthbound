@@ -675,13 +675,29 @@ class BattleActivity : Activity() {
                 BattleActorFactory.enemyRigId(depth)
 
             val skeletalPlayer =
-                runCatching {
-                    RigLoader.load(this, playerId)
-                }.getOrNull()
+                if (
+                    BattleActorFactory.skeletalRigEnabled(
+                        playerId
+                    )
+                ) {
+                    runCatching {
+                        RigLoader.load(this, playerId)
+                    }.getOrNull()
+                } else {
+                    null
+                }
             val skeletalEnemy =
-                runCatching {
-                    RigLoader.load(this, enemyEntityId)
-                }.getOrNull()
+                if (
+                    BattleActorFactory.skeletalRigEnabled(
+                        enemyEntityId
+                    )
+                ) {
+                    runCatching {
+                        RigLoader.load(this, enemyEntityId)
+                    }.getOrNull()
+                } else {
+                    null
+                }
 
             val fallbackPlayer =
                 if (skeletalPlayer == null) {

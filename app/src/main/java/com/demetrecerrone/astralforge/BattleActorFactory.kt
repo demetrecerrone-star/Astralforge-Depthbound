@@ -28,6 +28,13 @@ object BattleActorFactory {
         }
     }
 
+    fun skeletalRigEnabled(entityId: String): Boolean {
+        return entityId !in setOf(
+            "mage",
+            "ranger"
+        )
+    }
+
     fun enemyDisplayName(entityId: String): String {
         return when (entityId) {
             "blue_slime" -> "Blue Slime"
