@@ -9,7 +9,7 @@ object PlayerIdentityStore {
     private const val KEY_NAME = "player_name"
 
     fun getName(context: Context): String {
-        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val prefs = AccountScopedStorage.preferences(context, PREFS)
         val saved = prefs.getString(KEY_NAME, null)?.trim()
         if (!saved.isNullOrBlank()) return saved
 
@@ -28,7 +28,7 @@ object PlayerIdentityStore {
             return
         }
 
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        AccountScopedStorage.preferences(context, PREFS)
             .edit()
             .putString(KEY_NAME, name)
             .apply()
