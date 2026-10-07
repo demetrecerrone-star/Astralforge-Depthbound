@@ -227,6 +227,7 @@ class MenuActivity : Activity() {
             setOnTouchListener { view, event ->
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> {
+                        AppHaptics.tap(this@MenuActivity)
                         view.animate()
                             .scaleX(0.985f)
                             .scaleY(0.985f)

@@ -9,8 +9,8 @@ object AppMusicManager {
 
     @Synchronized
     fun sync(context: Context) {
-        val enabled = GameSettingsStore.load(context).music
-        if (!enabled) {
+        val settings = GameSettingsStore.load(context)
+        if (!settings.music) {
             pause()
             return
         }
@@ -21,15 +21,26 @@ object AppMusicManager {
                 R.raw.hub_theme
             )?.apply {
                 isLooping = true
-                setVolume(0.45f, 0.45f)
             }
         }
+
+        applyVolume(settings.musicVolume)
 
         player?.let {
             if (!it.isPlaying) {
                 it.start()
             }
         }
+    }
+
+    @Synchronized
+    fun setVolume(percent: Int) {
+        applyVolume(percent)
+    }
+
+    private fun applyVolume(percent: Int) {
+        val value = percent.coerceIn(0, 100) / 100f
+        player?.setVolume(value, value)
     }
 
     @Synchronized

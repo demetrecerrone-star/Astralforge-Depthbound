@@ -791,6 +791,7 @@ class HomeActivity : Activity() {
         setOnTouchListener { view, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
+                    AppHaptics.tap(this@HomeActivity)
                     view.animate()
                         .scaleX(0.965f)
                         .scaleY(0.965f)
