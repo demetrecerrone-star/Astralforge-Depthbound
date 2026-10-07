@@ -2,6 +2,7 @@ package com.demetrecerrone.astralforge
 
 import android.Manifest
 import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -239,6 +240,21 @@ class SettingsActivity : Activity() {
                 settings = settings.copy(notifications = enabled)
                 save()
             }
+        })
+
+        content.addView(sectionTitle("BATTLE V2 PREVIEW"))
+
+        content.addView(actionRow(
+            "OPEN BATTLE V2 TEST",
+            "Launch the isolated Battle V2 renderer. The normal Battle button remains unchanged.",
+            danger = false
+        ) {
+            startActivity(
+                Intent(
+                    this@SettingsActivity,
+                    BattleV2Activity::class.java
+                )
+            )
         })
 
         content.addView(sectionTitle("RESET"))
