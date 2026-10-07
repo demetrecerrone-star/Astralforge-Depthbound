@@ -126,9 +126,11 @@ class MenuActivity : Activity() {
             "ABOUT",
             "Version information, credits, and game details."
         ) {
-            openSection(
-                "ABOUT",
-                "Astral Forge: Depthbound • current development build."
+            startActivity(
+                Intent(
+                    this,
+                    AboutActivity::class.java
+                )
             )
         })
 
