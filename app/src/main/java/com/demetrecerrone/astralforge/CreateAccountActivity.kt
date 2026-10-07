@@ -28,9 +28,9 @@ class CreateAccountActivity : Activity() {
         AuthUi.setupWindow(this)
         auth = FirebaseAuth.getInstance()
 
-        val content = AuthUi.createScreen(this, 0.35f)
+        val content = AuthUi.createScreen(this, 0.38f)
 
-        content.addView(AuthUi.heading(this, getString(R.string.create_account_heading), 20f))
+        content.addView(AuthUi.heading(this, getString(R.string.create_account_heading), 17f))
         content.addView(AuthUi.subtitle(this, getString(R.string.create_account_subtitle)))
 
         usernameField = AuthUi.field(this, getString(R.string.username), R.drawable.ic_user)
@@ -55,17 +55,15 @@ class CreateAccountActivity : Activity() {
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         )
 
-        AuthUi.addField(content, usernameField, 8)
-        AuthUi.addField(content, emailField)
-        AuthUi.addField(content, passwordField)
-        AuthUi.addField(content, confirmField)
+        AuthUi.twoFieldRow(content, usernameField, emailField, topMargin = true)
+        AuthUi.twoFieldRow(content, passwordField, confirmField, topMargin = true)
 
         content.addView(
             AuthUi.assetButton(
                 this,
                 R.drawable.file_00000000a694822fabb704680dcacbc2,
                 "Create Account",
-                92
+                58
             ) { createAccount() }
         )
 
@@ -76,7 +74,7 @@ class CreateAccountActivity : Activity() {
                 this,
                 R.drawable.file_0000000004a881f6b93ff7dc066c5f95,
                 "Continue with Google",
-                76
+                46
             ) { startGoogleSignIn() }
         )
 
