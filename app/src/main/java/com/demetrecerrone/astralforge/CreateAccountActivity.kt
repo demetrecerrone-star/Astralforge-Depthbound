@@ -30,7 +30,7 @@ class CreateAccountActivity : Activity() {
 
         val content = AuthUi.createScreen(this, 0.35f)
 
-        content.addView(AuthUi.heading(this, getString(R.string.create_account_heading), 24f))
+        content.addView(AuthUi.heading(this, getString(R.string.create_account_heading), 20f))
         content.addView(AuthUi.subtitle(this, getString(R.string.create_account_subtitle)))
 
         usernameField = AuthUi.field(this, getString(R.string.username), R.drawable.ic_user)
@@ -87,7 +87,7 @@ class CreateAccountActivity : Activity() {
                 getString(R.string.sign_in_link)
             ) { finish() },
             LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                topMargin = AuthUi.dp(this@CreateAccountActivity, 14)
+                topMargin = AuthUi.dp(this@CreateAccountActivity, 8)
             }
         )
     }
