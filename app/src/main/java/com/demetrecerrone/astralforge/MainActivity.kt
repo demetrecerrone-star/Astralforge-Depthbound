@@ -33,7 +33,11 @@ class MainActivity : Activity() {
             auth.signOut()
         }
 
-        val content = AuthUi.createScreen(this, 0.43f)
+        val content = AuthUi.createLandscapeScreen(
+            this,
+            "WELCOME BACK",
+            "Sign in to continue your descent."
+        )
 
         emailField = AuthUi.field(
             this,
@@ -48,8 +52,8 @@ class MainActivity : Activity() {
             isPassword = true,
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         )
-        AuthUi.addField(content, emailField, 0)
-        AuthUi.addField(content, passwordField)
+        AuthUi.addField(content, emailField, 4)
+        AuthUi.addField(content, passwordField, 8)
 
         val options = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -74,22 +78,22 @@ class MainActivity : Activity() {
 
         content.addView(AuthUi.divider(this))
 
-        content.addView(
+        AuthUi.addButtonPair(
+            content,
             AuthUi.assetButton(
                 this,
                 R.drawable.file_0000000004a881f6b93ff7dc066c5f95,
                 "Continue with Google",
-                76
-            ) { startGoogleSignIn() }
-        )
-
-        content.addView(
+                64
+            ) { startGoogleSignIn() },
             AuthUi.assetButton(
                 this,
                 R.drawable.file_000000000dd481f6a8aebb5476e7346d,
                 "Continue as Guest",
-                76
-            ) { signInAsGuest() }
+                64
+            ) { signInAsGuest() },
+            heightDp = 64,
+            topMarginDp = 2
         )
 
         val link = AuthUi.linkRow(

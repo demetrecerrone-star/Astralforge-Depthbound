@@ -28,10 +28,11 @@ class CreateAccountActivity : Activity() {
         AuthUi.setupWindow(this)
         auth = FirebaseAuth.getInstance()
 
-        val content = AuthUi.createScreen(this, 0.35f)
-
-        content.addView(AuthUi.heading(this, getString(R.string.create_account_heading), 24f))
-        content.addView(AuthUi.subtitle(this, getString(R.string.create_account_subtitle)))
+        val content = AuthUi.createLandscapeScreen(
+            this,
+            getString(R.string.create_account_heading),
+            getString(R.string.create_account_subtitle)
+        )
 
         usernameField = AuthUi.field(this, getString(R.string.username), R.drawable.ic_user)
         emailField = AuthUi.field(
@@ -55,10 +56,18 @@ class CreateAccountActivity : Activity() {
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         )
 
-        AuthUi.addField(content, usernameField, 8)
-        AuthUi.addField(content, emailField)
-        AuthUi.addField(content, passwordField)
-        AuthUi.addField(content, confirmField)
+        AuthUi.addFieldPair(
+            content,
+            usernameField,
+            emailField,
+            topMarginDp = 4
+        )
+        AuthUi.addFieldPair(
+            content,
+            passwordField,
+            confirmField,
+            topMarginDp = 8
+        )
 
         content.addView(
             AuthUi.assetButton(

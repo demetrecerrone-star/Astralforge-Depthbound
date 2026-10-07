@@ -6,6 +6,7 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.text.InputType
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
@@ -100,6 +101,321 @@ object AuthUi {
         )
         activity.setContentView(root)
         return content
+    }
+
+    fun createLandscapeScreen(
+        activity: Activity,
+        panelTitle: String,
+        panelSubtitle: String
+    ): LinearLayout {
+        val root = FrameLayout(activity)
+
+        val bgImage = ImageView(activity).apply {
+            setImageResource(
+                R.drawable.file_00000000bfc081f5b0a1931c13d627e8
+            )
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            contentDescription = null
+        }
+        root.addView(
+            bgImage,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+
+        root.addView(
+            View(activity).apply {
+                background = GradientDrawable(
+                    GradientDrawable.Orientation.LEFT_RIGHT,
+                    intArrayOf(
+                        Color.argb(58, 2, 4, 16),
+                        Color.argb(105, 2, 4, 16),
+                        Color.argb(222, 2, 4, 16)
+                    )
+                )
+            },
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+
+        val safeHost = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        val branding = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_VERTICAL or Gravity.START
+            setPadding(
+                dp(activity, 34),
+                dp(activity, 12),
+                dp(activity, 28),
+                dp(activity, 12)
+            )
+        }
+
+        branding.addView(
+            TextView(activity).apply {
+                text = "ASTRAL FORGE"
+                setTextColor(Color.WHITE)
+                textSize = 34f
+                typeface =
+                    Typeface.create(Typeface.SERIF, Typeface.BOLD)
+                letterSpacing = 0.08f
+            }
+        )
+        branding.addView(
+            TextView(activity).apply {
+                text = "DEPTHBOUND"
+                setTextColor(Color.rgb(197, 153, 255))
+                textSize = 21f
+                typeface = Typeface.DEFAULT_BOLD
+                letterSpacing = 0.22f
+                setPadding(0, dp(activity, 2), 0, 0)
+            }
+        )
+        branding.addView(
+            TextView(activity).apply {
+                text =
+                    "Forge your hero. Descend into the Depths.\nRise beyond the limits of your class."
+                setTextColor(Color.rgb(220, 214, 238))
+                textSize = 14f
+                setLineSpacing(0f, 1.15f)
+                setPadding(
+                    0,
+                    dp(activity, 16),
+                    dp(activity, 30),
+                    0
+                )
+            }
+        )
+        branding.addView(
+            TextView(activity).apply {
+                text = "ENTER THE DEPTHS"
+                setTextColor(Color.rgb(232, 202, 128))
+                textSize = 12f
+                typeface = Typeface.DEFAULT_BOLD
+                letterSpacing = 0.18f
+                setPadding(0, dp(activity, 18), 0, 0)
+            }
+        )
+
+        safeHost.addView(
+            branding,
+            LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                1.08f
+            )
+        )
+
+        val panel = FrameLayout(activity).apply {
+            background = GradientDrawable().apply {
+                setColor(Color.argb(222, 5, 8, 25))
+                cornerRadius = dp(activity, 22).toFloat()
+                setStroke(
+                    dp(activity, 1),
+                    Color.rgb(132, 100, 205)
+                )
+            }
+        }
+
+        val scroll = ScrollView(activity).apply {
+            isFillViewport = true
+            overScrollMode = View.OVER_SCROLL_NEVER
+        }
+        val content = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(
+                dp(activity, 24),
+                dp(activity, 18),
+                dp(activity, 24),
+                dp(activity, 18)
+            )
+        }
+
+        content.addView(
+            heading(activity, panelTitle, 23f),
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+        content.addView(
+            subtitle(activity, panelSubtitle),
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        scroll.addView(
+            content,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+        panel.addView(
+            scroll,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+
+        safeHost.addView(
+            panel,
+            LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                0.92f
+            ).apply {
+                topMargin = dp(activity, 12)
+                bottomMargin = dp(activity, 12)
+                marginEnd = dp(activity, 16)
+            }
+        )
+
+        root.addView(
+            safeHost,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+
+        root.setOnApplyWindowInsetsListener { _, insets ->
+            val cutout =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    insets.displayCutout
+                } else {
+                    null
+                }
+
+            val safeLeft = maxOf(
+                insets.systemWindowInsetLeft,
+                cutout?.safeInsetLeft ?: 0
+            )
+            val safeTop = maxOf(
+                insets.systemWindowInsetTop,
+                cutout?.safeInsetTop ?: 0
+            )
+            val safeRight = maxOf(
+                insets.systemWindowInsetRight,
+                cutout?.safeInsetRight ?: 0
+            )
+            val safeBottom = maxOf(
+                insets.systemWindowInsetBottom,
+                cutout?.safeInsetBottom ?: 0
+            )
+
+            safeHost.setPadding(
+                safeLeft + dp(activity, 10),
+                safeTop + dp(activity, 6),
+                safeRight + dp(activity, 10),
+                safeBottom + dp(activity, 6)
+            )
+            insets
+        }
+        root.requestApplyInsets()
+
+        activity.setContentView(root)
+        return content
+    }
+
+    fun addFieldPair(
+        parent: LinearLayout,
+        left: EditText,
+        right: EditText,
+        topMarginDp: Int = 10
+    ) {
+        val context = parent.context
+        val row = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        row.addView(
+            left,
+            LinearLayout.LayoutParams(
+                0,
+                dp(context, 54),
+                1f
+            ).apply {
+                marginEnd = dp(context, 6)
+            }
+        )
+        row.addView(
+            right,
+            LinearLayout.LayoutParams(
+                0,
+                dp(context, 54),
+                1f
+            ).apply {
+                marginStart = dp(context, 6)
+            }
+        )
+
+        parent.addView(
+            row,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dp(context, topMarginDp)
+            }
+        )
+    }
+
+    fun addButtonPair(
+        parent: LinearLayout,
+        left: View,
+        right: View,
+        heightDp: Int = 66,
+        topMarginDp: Int = 6
+    ) {
+        val context = parent.context
+        val row = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+        }
+
+        row.addView(
+            left,
+            LinearLayout.LayoutParams(
+                0,
+                dp(context, heightDp),
+                1f
+            ).apply {
+                marginEnd = dp(context, 6)
+            }
+        )
+        row.addView(
+            right,
+            LinearLayout.LayoutParams(
+                0,
+                dp(context, heightDp),
+                1f
+            ).apply {
+                marginStart = dp(context, 6)
+            }
+        )
+
+        parent.addView(
+            row,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dp(context, topMarginDp)
+            }
+        )
     }
 
     fun field(
