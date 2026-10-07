@@ -14,7 +14,7 @@ import java.security.MessageDigest
  */
 object AccountScopedStorage {
     private const val MIGRATION_PREFS = "astralforge_account_scope_migration"
-    private const val LEGACY_OWNER_PREFIX = "legacy_owner_"
+    private const val LEGACY_OWNER_KEY = "legacy_owner_uid"
 
     fun preferences(context: Context, baseName: String): SharedPreferences {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: "signed_out"
@@ -44,13 +44,12 @@ object AccountScopedStorage {
             MIGRATION_PREFS,
             Context.MODE_PRIVATE
         )
-        val ownerKey = LEGACY_OWNER_PREFIX + baseName
-        val existingOwner = migration.getString(ownerKey, null)
+        val existingOwner = migration.getString(LEGACY_OWNER_KEY, null)
 
         if (existingOwner != null && existingOwner != uid) return
         if (scoped.all.isNotEmpty()) {
             if (existingOwner == null) {
-                migration.edit().putString(ownerKey, uid).apply()
+                migration.edit().putString(LEGACY_OWNER_KEY, uid).apply()
             }
             return
         }
@@ -74,7 +73,7 @@ object AccountScopedStorage {
             editor.apply()
         }
 
-        migration.edit().putString(ownerKey, uid).apply()
+        migration.edit().putString(LEGACY_OWNER_KEY, uid).apply()
     }
 
     private fun stableAccountKey(uid: String): String {
