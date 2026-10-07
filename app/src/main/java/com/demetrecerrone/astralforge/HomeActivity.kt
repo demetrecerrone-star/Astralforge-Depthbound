@@ -169,7 +169,7 @@ class HomeActivity : Activity() {
             }
             installTouchFeedback()
         }
-        val battleWidth = screenW * 60 / 100
+        val battleWidth = screenW * 48 / 100
         val battleParams = FrameLayout.LayoutParams(
             battleWidth,
             battleWidth * 34 / 100,
@@ -225,12 +225,8 @@ class HomeActivity : Activity() {
     ): FrameLayout {
         val card = FrameLayout(this).apply {
             contentDescription = "Player profile"
-            isClickable = true
-            isFocusable = true
-            setOnClickListener {
-                startActivity(Intent(this@HomeActivity, CharacterActivity::class.java))
-            }
-            installTouchFeedback()
+            isClickable = false
+            isFocusable = false
         }
 
         val cardWidth = min(screenW * 58 / 100, AuthUi.dp(this, 340))
