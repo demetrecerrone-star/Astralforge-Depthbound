@@ -902,9 +902,11 @@ class HomeActivity : Activity() {
             subtitle = "Version information, credits, and game details.",
             accent = Color.rgb(197, 145, 255)
         ) {
-            openSection(
-                "ABOUT",
-                "Astral Forge: Depthbound • current development build."
+            startActivity(
+                Intent(
+                    this@HomeActivity,
+                    AboutActivity::class.java
+                )
             )
         }
 
