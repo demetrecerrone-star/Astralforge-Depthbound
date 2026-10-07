@@ -2,6 +2,7 @@ package com.demetrecerrone.astralforge
 
 import android.content.Context
 import android.graphics.Color
+import android.graphics.PixelFormat
 import android.util.AttributeSet
 import android.view.Choreographer
 import android.view.SurfaceView
@@ -36,7 +37,8 @@ class BattleV2ThreeDSceneView @JvmOverloads constructor(
 
     private val surfaceView =
         SurfaceView(context).apply {
-            setBackgroundColor(Color.rgb(6, 7, 20))
+            setBackgroundColor(Color.TRANSPARENT)
+            holder.setFormat(PixelFormat.TRANSLUCENT)
             isClickable = false
             isFocusable = false
         }
@@ -60,7 +62,7 @@ class BattleV2ThreeDSceneView @JvmOverloads constructor(
         get() = initialized && modelViewer?.asset != null
 
     init {
-        setBackgroundColor(Color.rgb(6, 7, 20))
+        setBackgroundColor(Color.TRANSPARENT)
         addView(
             surfaceView,
             LayoutParams(
@@ -102,7 +104,7 @@ class BattleV2ThreeDSceneView @JvmOverloads constructor(
                     UiHelper(
                         UiHelper.ContextErrorPolicy.DONT_CHECK
                     ).apply {
-                        isOpaque = true
+                        isOpaque = false
                     }
 
                 val viewer =
@@ -116,16 +118,18 @@ class BattleV2ThreeDSceneView @JvmOverloads constructor(
                 viewer.scene.skybox = null
                 viewer.view.antiAliasing =
                     FilamentView.AntiAliasing.FXAA
+                viewer.view.blendMode =
+                    FilamentView.BlendMode.TRANSLUCENT
 
                 viewer.renderer.clearOptions =
                     viewer.renderer.clearOptions.apply {
                         clear = true
                         clearColor =
                             doubleArrayOf(
-                                0.018,
-                                0.022,
-                                0.07,
-                                1.0
+                                0.0,
+                                0.0,
+                                0.0,
+                                0.0
                             )
                     }
 
