@@ -27,7 +27,7 @@ class PortraitArtView @JvmOverloads constructor(
         }
 
     var circularHitTest: Boolean = false
-    var selected: Boolean = false
+    var highlighted: Boolean = false
         set(value) {
             field = value
             invalidate()
@@ -78,7 +78,7 @@ class PortraitArtView @JvmOverloads constructor(
 
         stroke.shader = null
         stroke.strokeWidth = size * 0.035f
-        stroke.color = if (selected) {
+        stroke.color = if (highlighted) {
             Color.rgb(255, 212, 112)
         } else {
             Color.rgb(138, 102, 255)
@@ -86,7 +86,7 @@ class PortraitArtView @JvmOverloads constructor(
         canvas.drawCircle(cx, cy, r, stroke)
 
         stroke.strokeWidth = size * 0.012f
-        stroke.color = if (selected) {
+        stroke.color = if (highlighted) {
             Color.rgb(255, 246, 205)
         } else {
             Color.argb(190, 207, 188, 255)
