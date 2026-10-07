@@ -1,5 +1,7 @@
 # Astralforge: Depthbound
 
-Source-first Android game project for Astralforge: Depthbound.
+Fresh Android source foundation for Astralforge: Depthbound.
 
-Current development focus: core app structure, approved login/account creation flow, main hub, dungeon navigation, battle system foundation, shared stat model, playable Bound, and monster scaling.
+Current baseline: **v0.0.0.1**
+
+The repository retains the project build workflow and stable test signing key while the application source is rebuilt cleanly from the ground up.
