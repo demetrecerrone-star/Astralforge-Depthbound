@@ -155,7 +155,7 @@ class HomeActivity : Activity() {
             "Shop",
             screenW * 35 / 100,
             0.025f,
-            0.395f
+            0.352f
         ) {
             openSection(
                 "SHOP",
