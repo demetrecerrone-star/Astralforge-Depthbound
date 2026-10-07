@@ -4,9 +4,12 @@ import android.app.Activity
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
+import android.util.Base64
 import android.text.InputType
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
@@ -26,6 +29,7 @@ object AuthUi {
     private const val PURPLE = 0xFFB34DFF.toInt()
     private const val LAVENDER = 0xFFC8B9FF.toInt()
     private const val MUTED = 0xFFD2CBEA.toInt()
+    private var cachedAuthBackground: Bitmap? = null
 
     fun dp(context: Context, value: Int): Int =
         (value * context.resources.displayMetrics.density).toInt()
@@ -103,6 +107,36 @@ object AuthUi {
         return content
     }
 
+    private fun loadLandscapeAuthBackground(
+        context: Context
+    ): Bitmap? {
+        cachedAuthBackground?.let { return it }
+
+        return runCatching {
+            val encoded = buildString {
+                for (index in 0..7) {
+                    val name =
+                        "auth_background/part_%02d.b64"
+                            .format(index)
+                    context.assets.open(name)
+                        .bufferedReader()
+                        .use { append(it.readText()) }
+                }
+            }
+            val bytes = Base64.decode(
+                encoded,
+                Base64.DEFAULT
+            )
+            BitmapFactory.decodeByteArray(
+                bytes,
+                0,
+                bytes.size
+            )
+        }.getOrNull()?.also {
+            cachedAuthBackground = it
+        }
+    }
+
     fun createLandscapeScreen(
         activity: Activity,
         panelTitle: String,
@@ -111,9 +145,9 @@ object AuthUi {
         val root = FrameLayout(activity)
 
         val bgImage = ImageView(activity).apply {
-            setImageResource(
-                R.drawable.auth_landscape_scene
-            )
+            loadLandscapeAuthBackground(activity)?.let {
+                setImageBitmap(it)
+            }
             scaleType = ImageView.ScaleType.CENTER_CROP
             contentDescription = null
         }
