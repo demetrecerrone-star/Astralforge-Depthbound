@@ -83,6 +83,7 @@ class SettingsActivity : Activity() {
         ) {
             settings = settings.copy(music = it)
             save()
+            AppMusicManager.sync(this)
         })
         content.addView(toggleRow(
             "Sound Effects",
