@@ -202,7 +202,7 @@ class HomeActivity : Activity() {
             0.03f,
             0.595f
         ) {
-            startActivity(Intent(this, CharacterActivity::class.java))
+            startActivity(Intent(this, HeroesActivity::class.java))
         }
 
         addHubButton(
@@ -855,7 +855,7 @@ class HomeActivity : Activity() {
                         2 -> startActivity(
                             Intent(
                                 this@HomeActivity,
-                                CharacterActivity::class.java
+                                HeroesActivity::class.java
                             )
                         )
                         3 -> openSection(
