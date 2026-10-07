@@ -51,8 +51,13 @@ object AuthUi {
             setBackgroundColor(Color.rgb(3, 5, 14))
         }
 
+        val bgImage = ImageView(activity).apply {
+            setImageResource(R.drawable.auth_background_landscape_clean)
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            contentDescription = null
+        }
         root.addView(
-            AuthLandscapeBackgroundView(activity),
+            bgImage,
             FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
