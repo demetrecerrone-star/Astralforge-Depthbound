@@ -5,6 +5,7 @@ on:
     branches: [ main, hub-polish ]
     paths:
       - "app/**"
+      - "tools/**"
       - "build.gradle.kts"
       - "settings.gradle.kts"
       - "gradle.properties"
@@ -28,6 +29,14 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
+
+      - name: Install brand asset generator dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check Pillow
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg
+          fi
 
       - name: Build debug APK
         run: gradle :app:assembleDebug --stacktrace
