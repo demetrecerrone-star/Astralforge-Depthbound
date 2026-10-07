@@ -202,7 +202,7 @@ class HomeActivity : Activity() {
             0.03f,
             0.595f
         ) {
-            startActivity(Intent(this, CharacterActivity::class.java))
+            startActivity(Intent(this, HeroesActivity::class.java))
         }
 
         addHubButton(
@@ -233,27 +233,13 @@ class HomeActivity : Activity() {
             )
         }
 
-        val battleButton = ImageView(this).apply {
-            setImageResource(R.drawable.file_00000000b44481f6b8c3df3c70bf55e3)
-            scaleType = ImageView.ScaleType.FIT_CENTER
-            adjustViewBounds = true
+        val battleWidth = screenW * 42 / 100
+        val battleHeight = battleWidth * 34 / 100
+
+        val battleButton = FrameLayout(this).apply {
             contentDescription = "Battle"
             isClickable = true
             isFocusable = true
-            background = GradientDrawable().apply {
-                setColor(Color.argb(225, 0, 0, 0))
-                cornerRadius = AuthUi.dp(this@HomeActivity, 18).toFloat()
-                setStroke(
-                    AuthUi.dp(this@HomeActivity, 1),
-                    Color.argb(200, 130, 92, 225)
-                )
-            }
-            setPadding(
-                AuthUi.dp(this@HomeActivity, 5),
-                AuthUi.dp(this@HomeActivity, 2),
-                AuthUi.dp(this@HomeActivity, 5),
-                AuthUi.dp(this@HomeActivity, 2)
-            )
             setOnClickListener {
                 startActivity(
                     Intent(
@@ -264,10 +250,48 @@ class HomeActivity : Activity() {
             }
             installTouchFeedback()
         }
-        val battleWidth = screenW * 42 / 100
+
+        battleButton.addView(
+            android.view.View(this).apply {
+                background = GradientDrawable().apply {
+                    setColor(Color.argb(222, 0, 0, 0))
+                    cornerRadius =
+                        AuthUi.dp(this@HomeActivity, 12).toFloat()
+                }
+            },
+            FrameLayout.LayoutParams(
+                battleWidth * 67 / 100,
+                battleHeight * 42 / 100,
+                Gravity.END or Gravity.CENTER_VERTICAL
+            ).apply {
+                marginEnd = battleWidth * 6 / 100
+            }
+        )
+
+        battleButton.addView(
+            ImageView(this).apply {
+                setImageResource(
+                    R.drawable.file_00000000b44481f6b8c3df3c70bf55e3
+                )
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                adjustViewBounds = true
+                contentDescription = null
+                setPadding(
+                    AuthUi.dp(this@HomeActivity, 2),
+                    0,
+                    AuthUi.dp(this@HomeActivity, 2),
+                    0
+                )
+            },
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+
         val battleParams = FrameLayout.LayoutParams(
             battleWidth,
-            battleWidth * 34 / 100,
+            battleHeight,
             Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
         ).apply {
             bottomMargin = AuthUi.dp(this@HomeActivity, 118)
@@ -714,24 +738,28 @@ class HomeActivity : Activity() {
             contentDescription = description
             isClickable = true
             isFocusable = true
-            background = GradientDrawable().apply {
-                setColor(Color.argb(220, 0, 0, 0))
-                cornerRadius =
-                    AuthUi.dp(this@HomeActivity, 15).toFloat()
-                setStroke(
-                    AuthUi.dp(this@HomeActivity, 1),
-                    Color.argb(185, 113, 82, 205)
-                )
-            }
-            setPadding(
-                AuthUi.dp(this@HomeActivity, 4),
-                AuthUi.dp(this@HomeActivity, 2),
-                AuthUi.dp(this@HomeActivity, 4),
-                AuthUi.dp(this@HomeActivity, 2)
-            )
             setOnClickListener { onClick() }
             installTouchFeedback()
         }
+
+        // Only darken the actual word/nameplate area. The emblem side of
+        // the button stays transparent so the hub artwork remains visible.
+        holder.addView(
+            android.view.View(this).apply {
+                background = GradientDrawable().apply {
+                    setColor(Color.argb(218, 0, 0, 0))
+                    cornerRadius =
+                        AuthUi.dp(this@HomeActivity, 10).toFloat()
+                }
+            },
+            FrameLayout.LayoutParams(
+                (widthPx * 55 / 100),
+                (heightPx * 28 / 100),
+                Gravity.END or Gravity.CENTER_VERTICAL
+            ).apply {
+                marginEnd = widthPx * 5 / 100
+            }
+        )
 
         holder.addView(
             ImageView(this).apply {
@@ -739,6 +767,12 @@ class HomeActivity : Activity() {
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 adjustViewBounds = true
                 contentDescription = null
+                setPadding(
+                    AuthUi.dp(this@HomeActivity, 2),
+                    0,
+                    AuthUi.dp(this@HomeActivity, 2),
+                    0
+                )
             },
             FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
@@ -777,24 +811,13 @@ class HomeActivity : Activity() {
             }
         }
 
-        val navFiles = listOf(
-            "home.png",
-            "battle.png",
-            "heroes.png",
-            "gear.png",
-            "menu.png"
-        )
-        val navLabels = listOf(
-            "Home",
-            "Battle",
-            "Heroes",
-            "Gear",
-            "Menu"
-        )
-        val itemWidth =
-            (screenW - AuthUi.dp(this, 8)) / navFiles.size
+        val itemWidth = (screenW - AuthUi.dp(this, 8)) / 5
 
-        navFiles.forEachIndexed { index, fileName ->
+        fun addImageItem(
+            fileName: String,
+            label: String,
+            onClick: () -> Unit
+        ) {
             val bitmap = ButtonAssetStore.load(
                 this,
                 bottomPack,
@@ -804,44 +827,112 @@ class HomeActivity : Activity() {
                 if (bitmap != null) setImageBitmap(bitmap)
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 adjustViewBounds = true
-                contentDescription = navLabels[index]
+                contentDescription = label
                 isClickable = true
                 isFocusable = true
                 installTouchFeedback()
-
-                setOnClickListener {
-                    when (index) {
-                        0 -> Unit
-                        1 -> startActivity(
-                            Intent(
-                                this@HomeActivity,
-                                BattleActivity::class.java
-                            )
-                        )
-                        2 -> startActivity(
-                            Intent(
-                                this@HomeActivity,
-                                CharacterActivity::class.java
-                            )
-                        )
-                        3 -> openSection(
-                            "GEAR",
-                            "Weapons, armor, accessories, loadouts, and equipment power."
-                        )
-                        4 -> startActivity(
-                            Intent(
-                                this@HomeActivity,
-                                MenuActivity::class.java
-                            )
-                        )
-                    }
-                }
+                setOnClickListener { onClick() }
             }
             nav.addView(
                 item,
                 LinearLayout.LayoutParams(
                     itemWidth,
                     LinearLayout.LayoutParams.MATCH_PARENT
+                )
+            )
+        }
+
+        addImageItem("home.png", "Home") {
+            Unit
+        }
+
+        addImageItem("battle.png", "Battle") {
+            startActivity(
+                Intent(
+                    this@HomeActivity,
+                    BattleActivity::class.java
+                )
+            )
+        }
+
+        val statsItem = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            contentDescription = "Stats"
+            isClickable = true
+            isFocusable = true
+            setPadding(
+                AuthUi.dp(this@HomeActivity, 3),
+                AuthUi.dp(this@HomeActivity, 3),
+                AuthUi.dp(this@HomeActivity, 3),
+                AuthUi.dp(this@HomeActivity, 2)
+            )
+            installTouchFeedback()
+            setOnClickListener {
+                startActivity(
+                    Intent(
+                        this@HomeActivity,
+                        StatsActivity::class.java
+                    )
+                )
+            }
+
+            addView(
+                TextView(this@HomeActivity).apply {
+                    text = "✦"
+                    textSize = 23f
+                    setTextColor(Color.rgb(203, 176, 255))
+                    typeface = Typeface.DEFAULT_BOLD
+                    gravity = Gravity.CENTER
+                    setShadowLayer(
+                        7f,
+                        0f,
+                        0f,
+                        Color.rgb(109, 74, 233)
+                    )
+                },
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    0,
+                    1f
+                )
+            )
+
+            addView(
+                TextView(this@HomeActivity).apply {
+                    text = "STATS"
+                    textSize = 8.5f
+                    setTextColor(Color.WHITE)
+                    typeface = Typeface.DEFAULT_BOLD
+                    gravity = Gravity.CENTER
+                    letterSpacing = 0.08f
+                },
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    AuthUi.dp(this@HomeActivity, 20)
+                )
+            )
+        }
+        nav.addView(
+            statsItem,
+            LinearLayout.LayoutParams(
+                itemWidth,
+                LinearLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+
+        addImageItem("gear.png", "Gear") {
+            openSection(
+                "GEAR",
+                "Weapons, armor, accessories, loadouts, and equipment power."
+            )
+        }
+
+        addImageItem("menu.png", "Menu") {
+            startActivity(
+                Intent(
+                    this@HomeActivity,
+                    MenuActivity::class.java
                 )
             )
         }

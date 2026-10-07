@@ -108,6 +108,9 @@ object RigLoader {
             }
         }
 
+        val tunedAttachments =
+            tuneAttachments(entityId, attachments)
+
         val animations = linkedMapOf<String, RigAnimationClip>()
         listOf("idle", "attack", "hit", "death").forEach { name ->
             val bytes =
@@ -131,7 +134,7 @@ object RigLoader {
         }
 
         val bitmaps = linkedMapOf<String, Bitmap>()
-        attachments.forEach { attachment ->
+        tunedAttachments.forEach { attachment ->
             val relative = entityId + "/" + attachment.file
             val bytes =
                 readAssetBytes(
@@ -155,7 +158,14 @@ object RigLoader {
             }
         }
 
-        if (bones.isEmpty() || attachments.isEmpty() || bitmaps.isEmpty()) {
+        if (
+            !validateRig(
+                bones,
+                tunedAttachments,
+                animations,
+                bitmaps
+            )
+        ) {
             return null
         }
 
@@ -169,7 +179,7 @@ object RigLoader {
                 canvasWidth = canvasWidth,
                 canvasHeight = canvasHeight,
                 bones = bones,
-                attachments = attachments,
+                attachments = tunedAttachments,
                 animations = animations
             ),
             bitmaps = bitmaps
@@ -177,6 +187,171 @@ object RigLoader {
 
         rigCache[entityId] = loaded
         return loaded
+    }
+
+    private fun tuneAttachments(
+        entityId: String,
+        source: List<RigAttachmentDefinition>
+    ): List<RigAttachmentDefinition> {
+        return source
+            .filterNot { attachment ->
+                entityId == "knight" &&
+                    attachment.role == "hand_right"
+            }
+            .map { attachment ->
+                when (entityId) {
+                    "knight" -> {
+                        if (attachment.role == "weapon") {
+                            attachment.copy(
+                                restX = 710f,
+                                restY = 535f
+                            )
+                        } else {
+                            attachment
+                        }
+                    }
+
+                    "paladin" -> {
+                        when (attachment.role) {
+                            "lower_leg_left" ->
+                                attachment.copy(
+                                    restX = 445f,
+                                    restY = 720f
+                                )
+
+                            "lower_leg_right" ->
+                                attachment.copy(
+                                    restX = 555f,
+                                    restY = 720f
+                                )
+
+                            "weapon" ->
+                                attachment.copy(
+                                    restX = 705f,
+                                    restY = 545f
+                                )
+
+                            "shield" ->
+                                attachment.copy(
+                                    restX = 300f,
+                                    restY = 510f
+                                )
+
+                            else -> attachment
+                        }
+                    }
+
+                    "dire_wolf" -> {
+                        when (attachment.role) {
+                            "front_upper_left",
+                            "front_upper_right" ->
+                                attachment.copy(
+                                    restY =
+                                        attachment.restY - 55f
+                                )
+
+                            "front_lower_left",
+                            "front_lower_right" ->
+                                attachment.copy(
+                                    restY =
+                                        attachment.restY - 80f
+                                )
+
+                            "front_paw_left",
+                            "front_paw_right" ->
+                                attachment.copy(
+                                    restY =
+                                        attachment.restY - 95f
+                                )
+
+                            else -> attachment
+                        }
+                    }
+
+                    else -> attachment
+                }
+            }
+    }
+
+    private fun validateRig(
+        bones: List<RigBoneDefinition>,
+        attachments: List<RigAttachmentDefinition>,
+        animations: Map<String, RigAnimationClip>,
+        bitmaps: Map<String, Bitmap>
+    ): Boolean {
+        if (bones.isEmpty() || attachments.isEmpty()) {
+            return false
+        }
+
+        val boneNames = bones.map { it.name }
+        val boneNameSet = boneNames.toSet()
+
+        if (
+            "root" !in boneNameSet ||
+            boneNames.size != boneNameSet.size
+        ) {
+            return false
+        }
+
+        if (
+            bones.any { bone ->
+                bone.parent != null &&
+                    bone.parent !in boneNameSet
+            }
+        ) {
+            return false
+        }
+
+        val attachmentRoles =
+            attachments.map { it.role }
+
+        if (
+            attachmentRoles.size !=
+            attachmentRoles.toSet().size
+        ) {
+            return false
+        }
+
+        if (
+            attachments.any { attachment ->
+                attachment.bone !in boneNameSet ||
+                    attachment.restScale <= 0f ||
+                    attachment.maxWidth <= 0f ||
+                    attachment.maxHeight <= 0f
+            }
+        ) {
+            return false
+        }
+
+        if (
+            attachments.any { attachment ->
+                bitmaps[attachment.role] == null
+            }
+        ) {
+            return false
+        }
+
+        val requiredAnimations =
+            setOf("idle", "attack", "hit", "death")
+
+        if (!animations.keys.containsAll(requiredAnimations)) {
+            return false
+        }
+
+        return animations.values.all { clip ->
+            clip.durationMs > 0L &&
+                clip.keys.isNotEmpty() &&
+                clip.keys.zipWithNext().all {
+                    (first, second) ->
+                    first.timeMs <= second.timeMs
+                } &&
+                clip.keys.all { key ->
+                    key.timeMs in 0L..clip.durationMs &&
+                        key.transforms.keys.all {
+                            it in boneNameSet
+                        }
+                }
+        }
     }
 
     fun clear() {

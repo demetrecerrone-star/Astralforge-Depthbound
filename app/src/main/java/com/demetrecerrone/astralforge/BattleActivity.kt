@@ -668,28 +668,40 @@ class BattleActivity : Activity() {
     private fun loadSpritesAsync() {
         Thread {
             val playerId =
-                BattleActorFactory.playerRigId(
-                    progress.playerClass
-                )
+                HeroRosterStore.activeHero(this).id
             enemyEntityId =
                 BattleActorFactory.enemyRigId(depth)
 
             val skeletalPlayer =
-                runCatching {
-                    RigLoader.load(this, playerId)
-                }.getOrNull()
+                if (
+                    BattleActorFactory.skeletalRigEnabled(
+                        playerId
+                    )
+                ) {
+                    runCatching {
+                        RigLoader.load(this, playerId)
+                    }.getOrNull()
+                } else {
+                    null
+                }
             val skeletalEnemy =
-                runCatching {
-                    RigLoader.load(this, enemyEntityId)
-                }.getOrNull()
+                if (
+                    BattleActorFactory.skeletalRigEnabled(
+                        enemyEntityId
+                    )
+                ) {
+                    runCatching {
+                        RigLoader.load(this, enemyEntityId)
+                    }.getOrNull()
+                } else {
+                    null
+                }
 
             val fallbackPlayer =
                 if (skeletalPlayer == null) {
                     EntitySpriteStore.loadCharacter(
                         this,
-                        EntitySpriteStore.characterIdForClass(
-                            progress.playerClass
-                        )
+                        playerId
                     )
                 } else {
                     null
