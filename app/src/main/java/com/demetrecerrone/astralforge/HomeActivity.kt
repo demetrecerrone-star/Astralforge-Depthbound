@@ -32,6 +32,7 @@ class HomeActivity : Activity() {
 
         val screenW = resources.displayMetrics.widthPixels
         val root = FrameLayout(this)
+        val gameSettings = GameSettingsStore.load(this)
 
         val backgroundImage = ImageView(this).apply {
             setImageResource(R.drawable.file_00000000a45881f5ad657cc79abf1338)
@@ -47,7 +48,9 @@ class HomeActivity : Activity() {
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
         )
-        animateBackground(backgroundImage)
+        if (!gameSettings.reducedMotion) {
+            animateBackground(backgroundImage)
+        }
 
         root.addView(
             View(this).apply {
@@ -67,8 +70,11 @@ class HomeActivity : Activity() {
             )
         )
 
+        val hubEffects = HubEffectView(this).apply {
+            reducedMotion = gameSettings.reducedMotion
+        }
         root.addView(
-            HubEffectView(this),
+            hubEffects,
             FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
@@ -125,7 +131,9 @@ class HomeActivity : Activity() {
                 "Choose a depth, enter a dungeon, and claim its rewards."
             )
         }
-        pulse(dungeons, 1.0f, 1.022f, 1850L)
+        if (!gameSettings.reducedMotion) {
+            pulse(dungeons, 1.0f, 1.022f, 1850L)
+        }
 
         addHubButton(
             root,
@@ -168,7 +176,9 @@ class HomeActivity : Activity() {
                 "Call heroes, relics, and rare astral powers from beyond the veil."
             )
         }
-        pulse(summon, 1.0f, 1.018f, 2100L)
+        if (!gameSettings.reducedMotion) {
+            pulse(summon, 1.0f, 1.018f, 2100L)
+        }
 
         addHubButton(
             root,
@@ -233,7 +243,9 @@ class HomeActivity : Activity() {
             bottomMargin = AuthUi.dp(this@HomeActivity, 118)
         }
         root.addView(battleButton, battleParams)
-        pulse(battleButton, 1.0f, 1.026f, 1600L)
+        if (!gameSettings.reducedMotion) {
+            pulse(battleButton, 1.0f, 1.026f, 1600L)
+        }
 
         val bottomNav = createBottomNav(screenW)
         val bottomNavParams = FrameLayout.LayoutParams(
@@ -561,7 +573,9 @@ class HomeActivity : Activity() {
                 topMargin = cardHeight * 67 / 100
             }
         )
-        pulse(holder, 1f, 1.045f, 1900L)
+        if (!GameSettingsStore.load(this).reducedMotion) {
+            pulse(holder, 1f, 1.045f, 1900L)
+        }
     }
 
     private fun createStatusPanel(progress: PlayerProgress): LinearLayout {
@@ -741,9 +755,11 @@ class HomeActivity : Activity() {
                             "GEAR",
                             "Weapons, armor, accessories, loadouts, and equipment power."
                         )
-                        4 -> openSection(
-                            "MENU",
-                            "Settings, account options, achievements, and additional systems."
+                        4 -> startActivity(
+                            Intent(
+                                this@HomeActivity,
+                                MenuActivity::class.java
+                            )
                         )
                     }
                 }

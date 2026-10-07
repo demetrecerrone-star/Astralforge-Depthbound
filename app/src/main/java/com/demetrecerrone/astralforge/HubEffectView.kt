@@ -31,6 +31,13 @@ class HubEffectView @JvmOverloads constructor(
     private val random = Random(74031)
     private var lastFrame = System.nanoTime()
 
+    var reducedMotion: Boolean = false
+        set(value) {
+            field = value
+            lastFrame = System.nanoTime()
+            invalidate()
+        }
+
     init {
         isClickable = false
         isFocusable = false
@@ -56,15 +63,24 @@ class HubEffectView @JvmOverloads constructor(
         if (width <= 0 || height <= 0) return
 
         val now = System.nanoTime()
-        val seconds = now / 1_000_000_000.0
-        val dt = ((now - lastFrame) / 1_000_000_000.0).toFloat().coerceAtMost(0.05f)
+        val seconds = if (reducedMotion) 0.0 else now / 1_000_000_000.0
+        val dt = if (reducedMotion) {
+            0f
+        } else {
+            ((now - lastFrame) / 1_000_000_000.0)
+                .toFloat()
+                .coerceAtMost(0.05f)
+        }
         lastFrame = now
+
+        val portalPulse = if (reducedMotion) 0f else sin(seconds * 1.5).toFloat()
+        val crystalPulse = if (reducedMotion) 0f else sin(seconds * 1.9 + 0.7).toFloat()
 
         drawGlow(
             canvas,
             width * 0.50f,
             height * 0.285f,
-            width * (0.15f + 0.013f * sin(seconds * 1.5).toFloat()),
+            width * (0.15f + 0.013f * portalPulse),
             Color.rgb(75, 90, 255),
             95
         )
@@ -72,29 +88,39 @@ class HubEffectView @JvmOverloads constructor(
             canvas,
             width * 0.50f,
             height * 0.46f,
-            width * (0.095f + 0.009f * sin(seconds * 1.9 + 0.7).toFloat()),
+            width * (0.095f + 0.009f * crystalPulse),
             Color.rgb(124, 69, 255),
             78
         )
 
         particles.forEachIndexed { index, particle ->
-            particle.y -= particle.speed * dt
-            particle.x += particle.drift * dt
+            if (!reducedMotion) {
+                particle.y -= particle.speed * dt
+                particle.x += particle.drift * dt
 
-            if (particle.y < -10f) {
-                particle.y = height + 10f
-                particle.x = random.nextFloat() * width
+                if (particle.y < -10f) {
+                    particle.y = height + 10f
+                    particle.x = random.nextFloat() * width
+                }
+                if (particle.x < -10f) particle.x = width + 10f
+                if (particle.x > width + 10f) particle.x = -10f
             }
-            if (particle.x < -10f) particle.x = width + 10f
-            if (particle.x > width + 10f) particle.x = -10f
 
-            val twinkle = ((sin(seconds * (1.0 + (index % 6) * 0.13) + particle.phase) + 1.0) * 0.5)
+            val twinkle = if (reducedMotion) {
+                0.55
+            } else {
+                ((sin(
+                    seconds * (1.0 + (index % 6) * 0.13) + particle.phase
+                ) + 1.0) * 0.5)
+            }
+
             particlePaint.color = Color.argb(
                 (55 + twinkle * 150).toInt(),
                 195,
                 210,
                 255
             )
+
             canvas.drawCircle(
                 particle.x,
                 particle.y,
@@ -103,7 +129,9 @@ class HubEffectView @JvmOverloads constructor(
             )
         }
 
-        postInvalidateOnAnimation()
+        if (!reducedMotion) {
+            postInvalidateOnAnimation()
+        }
     }
 
     private fun drawGlow(
@@ -121,8 +149,18 @@ class HubEffectView @JvmOverloads constructor(
             cy,
             radius,
             intArrayOf(
-                Color.argb(alpha, Color.red(color), Color.green(color), Color.blue(color)),
-                Color.argb(alpha / 3, Color.red(color), Color.green(color), Color.blue(color)),
+                Color.argb(
+                    alpha,
+                    Color.red(color),
+                    Color.green(color),
+                    Color.blue(color)
+                ),
+                Color.argb(
+                    alpha / 3,
+                    Color.red(color),
+                    Color.green(color),
+                    Color.blue(color)
+                ),
                 Color.TRANSPARENT
             ),
             floatArrayOf(0f, 0.45f, 1f),
