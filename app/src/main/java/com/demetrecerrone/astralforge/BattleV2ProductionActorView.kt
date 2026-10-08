@@ -53,27 +53,13 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
 
         addView(
             playerShadow,
-            FrameLayout.LayoutParams(
-                dp(250),
-                dp(24),
-                Gravity.BOTTOM or Gravity.START
-            ).apply {
-                leftMargin = dp(120)
-                bottomMargin = dp(106)
-            }
+            FrameLayout.LayoutParams(1, 1)
         )
         playerShadow.background = shadowDrawable()
 
         addView(
             enemyShadow,
-            FrameLayout.LayoutParams(
-                dp(185),
-                dp(20),
-                Gravity.BOTTOM or Gravity.END
-            ).apply {
-                rightMargin = dp(132)
-                bottomMargin = dp(134)
-            }
+            FrameLayout.LayoutParams(1, 1)
         )
         enemyShadow.background = shadowDrawable()
 
@@ -99,29 +85,67 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
 
         addView(
             playerStage,
-            FrameLayout.LayoutParams(
-                dp(430),
-                dp(390),
-                Gravity.BOTTOM or Gravity.START
-            ).apply {
-                leftMargin = dp(54)
-                bottomMargin = dp(88)
-            }
+            FrameLayout.LayoutParams(1, 1)
         )
 
         addView(
             enemyStage,
-            FrameLayout.LayoutParams(
-                dp(330),
-                dp(255),
-                Gravity.BOTTOM or Gravity.END
-            ).apply {
-                rightMargin = dp(74)
-                bottomMargin = dp(126)
-            }
+            FrameLayout.LayoutParams(1, 1)
         )
 
         resetActors()
+    }
+
+    override fun onSizeChanged(
+        w: Int,
+        h: Int,
+        oldw: Int,
+        oldh: Int
+    ) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        if (w <= 0 || h <= 0) return
+
+        // Anchor the production actors to the arena floor using
+        // percentages instead of device-dependent dp sizes.
+        playerStage.layoutParams =
+            FrameLayout.LayoutParams(
+                (w * 0.285f).toInt(),
+                (h * 0.515f).toInt(),
+                Gravity.BOTTOM or Gravity.START
+            ).apply {
+                leftMargin = (w * 0.115f).toInt()
+                bottomMargin = (h * 0.105f).toInt()
+            }
+
+        enemyStage.layoutParams =
+            FrameLayout.LayoutParams(
+                (w * 0.205f).toInt(),
+                (h * 0.315f).toInt(),
+                Gravity.BOTTOM or Gravity.END
+            ).apply {
+                rightMargin = (w * 0.145f).toInt()
+                bottomMargin = (h * 0.145f).toInt()
+            }
+
+        playerShadow.layoutParams =
+            FrameLayout.LayoutParams(
+                (w * 0.145f).toInt(),
+                (h * 0.030f).toInt(),
+                Gravity.BOTTOM or Gravity.START
+            ).apply {
+                leftMargin = (w * 0.185f).toInt()
+                bottomMargin = (h * 0.115f).toInt()
+            }
+
+        enemyShadow.layoutParams =
+            FrameLayout.LayoutParams(
+                (w * 0.115f).toInt(),
+                (h * 0.026f).toInt(),
+                Gravity.BOTTOM or Gravity.END
+            ).apply {
+                rightMargin = (w * 0.190f).toInt()
+                bottomMargin = (h * 0.150f).toInt()
+            }
     }
 
     fun playPlayer(animation: BattleV2Animation) {
@@ -140,7 +164,7 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
                 playerStage.scaleX = 1.04f
                 playerStage.scaleY = 1.04f
                 playerStage.animate()
-                    .translationX(dp(68).toFloat())
+                    .translationX(dp(42).toFloat())
                     .translationY(-dp(5).toFloat())
                     .setDuration(270L)
                     .withEndAction {
@@ -230,7 +254,7 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
                 enemyStage.scaleX = 1.08f
                 enemyStage.scaleY = 0.94f
                 enemyStage.animate()
-                    .translationX(-dp(132).toFloat())
+                    .translationX(-dp(92).toFloat())
                     .translationY(dp(2).toFloat())
                     .setDuration(290L)
                     .withEndAction {
@@ -359,7 +383,7 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             playerStage,
             View.TRANSLATION_Y,
             0f,
-            -dp(4).toFloat(),
+            -dp(2).toFloat(),
             0f
         ).apply {
             duration = 1900L
@@ -403,7 +427,7 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             enemyStage,
             View.TRANSLATION_Y,
             0f,
-            -dp(7).toFloat(),
+            -dp(3).toFloat(),
             0f
         ).apply {
             duration = 1050L
