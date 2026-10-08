@@ -57,8 +57,9 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
         playerFrames = loadFrames(
             R.drawable.battle_v2_auren_actor_atlas
         )
-        enemyFrames = loadFrames(
-            enemyAtlasResId(context, enemyEntityId)
+        enemyFrames = loadEnemyFrames(
+            context,
+            enemyEntityId
         )
 
         addView(
@@ -178,16 +179,61 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
     private fun enemyStageParams(
         w: Int,
         h: Int
-    ): FrameLayout.LayoutParams =
-        FrameLayout.LayoutParams(
-            (w * 0.175f).toInt().coerceAtLeast(dp(105)),
-            (h * 0.255f).toInt().coerceAtLeast(dp(105)),
-            Gravity.BOTTOM or Gravity.END
-        ).apply {
-            rightMargin = (w * 0.160f).toInt()
-            bottomMargin = (h * 0.180f).toInt()
+    ): FrameLayout.LayoutParams {
+        val widthScale: Float
+        val heightScale: Float
+        val minWidth: Int
+        val minHeight: Int
+        val rightScale: Float
+        val bottomScale: Float
+
+        when (enemyEntityId) {
+            "blue_slime" -> {
+                widthScale = 0.175f
+                heightScale = 0.255f
+                minWidth = 105
+                minHeight = 105
+                rightScale = 0.160f
+                bottomScale = 0.180f
+            }
+
+            "dire_wolf" -> {
+                widthScale = 0.245f
+                heightScale = 0.300f
+                minWidth = 150
+                minHeight = 125
+                rightScale = 0.120f
+                bottomScale = 0.155f
+            }
+
+            "dungeon_boss" -> {
+                widthScale = 0.300f
+                heightScale = 0.510f
+                minWidth = 190
+                minHeight = 220
+                rightScale = 0.085f
+                bottomScale = 0.115f
+            }
+
+            else -> {
+                widthScale = 0.220f
+                heightScale = 0.410f
+                minWidth = 135
+                minHeight = 175
+                rightScale = 0.125f
+                bottomScale = 0.125f
+            }
         }
 
+        return FrameLayout.LayoutParams(
+            (w * widthScale).toInt().coerceAtLeast(dp(minWidth)),
+            (h * heightScale).toInt().coerceAtLeast(dp(minHeight)),
+            Gravity.BOTTOM or Gravity.END
+        ).apply {
+            rightMargin = (w * rightScale).toInt()
+            bottomMargin = (h * bottomScale).toInt()
+        }
+    }
     private fun playerShadowParams(
         w: Int,
         h: Int
@@ -204,16 +250,44 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
     private fun enemyShadowParams(
         w: Int,
         h: Int
-    ): FrameLayout.LayoutParams =
-        FrameLayout.LayoutParams(
-            (w * 0.095f).toInt().coerceAtLeast(dp(58)),
+    ): FrameLayout.LayoutParams {
+        val isLarge =
+            enemyEntityId == "dungeon_boss"
+        val isLow =
+            enemyEntityId == "blue_slime" ||
+                enemyEntityId == "dire_wolf"
+
+        val widthScale =
+            when {
+                isLarge -> 0.150f
+                isLow -> 0.095f
+                else -> 0.105f
+            }
+
+        val rightScale =
+            when {
+                isLarge -> 0.160f
+                isLow -> 0.200f
+                else -> 0.175f
+            }
+
+        val bottomScale =
+            when (enemyEntityId) {
+                "blue_slime" -> 0.178f
+                "dire_wolf" -> 0.150f
+                "dungeon_boss" -> 0.118f
+                else -> 0.125f
+            }
+
+        return FrameLayout.LayoutParams(
+            (w * widthScale).toInt().coerceAtLeast(dp(58)),
             (h * 0.022f).toInt().coerceAtLeast(dp(7)),
             Gravity.BOTTOM or Gravity.END
         ).apply {
-            rightMargin = (w * 0.200f).toInt()
-            bottomMargin = (h * 0.178f).toInt()
+            rightMargin = (w * rightScale).toInt()
+            bottomMargin = (h * bottomScale).toInt()
         }
-
+    }
     fun playPlayer(animation: BattleV2Animation) {
         stopPlayerIdle()
         playerStage.animate().cancel()
@@ -559,6 +633,73 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
         enemyIdleAnimator = null
     }
 
+    private fun loadEnemyFrames(
+        context: Context,
+        enemyEntityId: String
+    ): ActorFrames {
+        val atlasRes =
+            enemyAtlasResIdOrZero(
+                context,
+                enemyEntityId
+            )
+
+        if (atlasRes != 0) {
+            return loadFrames(atlasRes)
+        }
+
+        val sprites =
+            EntitySpriteStore.loadMonster(
+                context,
+                enemyEntityId
+            )
+
+        val idle =
+            requireNotNull(sprites.idle) {
+                "Missing idle sprite for " + enemyEntityId
+            }
+
+        val attack =
+            sprites.attackFrames
+                .getOrNull(
+                    (sprites.attackFrames.size - 1)
+                        .coerceAtLeast(0)
+                )
+                ?: idle
+
+        val hit =
+            sprites.hitFrames.firstOrNull()
+                ?: idle
+
+        val death =
+            sprites.deathFrames.lastOrNull()
+                ?: hit
+
+        fun safeCopy(source: Bitmap): Bitmap =
+            source.copy(
+                Bitmap.Config.ARGB_8888,
+                false
+            )
+
+        return ActorFrames(
+            idle = paddedFrame(
+                safeCopy(idle),
+                1.18f
+            ),
+            attack = paddedFrame(
+                safeCopy(attack),
+                1.32f
+            ),
+            hit = paddedFrame(
+                safeCopy(hit),
+                1.24f
+            ),
+            finisher = paddedFrame(
+                safeCopy(death),
+                1.30f
+            )
+        )
+    }
+
     private fun loadFrames(resId: Int): ActorFrames {
         val atlas =
             requireNotNull(
@@ -656,8 +797,23 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
         fun hasProductionEnemy(
             context: Context,
             enemyEntityId: String
-        ): Boolean =
-            enemyAtlasResIdOrZero(context, enemyEntityId) != 0
+        ): Boolean {
+            if (
+                enemyAtlasResIdOrZero(
+                    context,
+                    enemyEntityId
+                ) != 0
+            ) {
+                return true
+            }
+
+            return enemyEntityId in setOf(
+                "goblin_raider",
+                "skeleton_warrior",
+                "dire_wolf",
+                "dungeon_boss"
+            )
+        }
 
         private fun enemyAtlasResId(
             context: Context,
