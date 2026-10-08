@@ -124,24 +124,24 @@ class BattleV2EffectsView @JvmOverloads constructor(
         val w = width.toFloat()
         val h = height.toFloat()
         val alpha = ((1f - p) * 255f).toInt().coerceIn(0, 255)
-        val sweep = (70f + 145f * p).coerceAtMost(205f)
+        val sweep = (42f + 82f * p).coerceAtMost(124f)
 
         rect.set(
-            w * 0.34f,
-            h * 0.20f,
-            w * 0.83f,
-            h * 0.76f
+            w * 0.205f,
+            h * 0.405f,
+            w * 0.515f,
+            h * 0.755f
         )
 
         paint.style = Paint.Style.STROKE
-        paint.strokeWidth = h * if (critical) 0.030f else 0.022f
+        paint.strokeWidth = h * if (critical) 0.017f else 0.012f
         paint.color = Color.argb(alpha, 118, 88, 255)
-        paint.setShadowLayer(h * 0.030f, 0f, 0f, Color.rgb(87, 52, 255))
+        paint.setShadowLayer(h * 0.018f, 0f, 0f, Color.rgb(87, 52, 255))
         canvas.drawArc(rect, 192f, sweep, false, paint)
 
         paint.strokeWidth *= 0.46f
         paint.color = Color.argb(alpha, 112, 225, 255)
-        paint.setShadowLayer(h * 0.020f, 0f, 0f, Color.rgb(74, 192, 255))
+        paint.setShadowLayer(h * 0.012f, 0f, 0f, Color.rgb(74, 192, 255))
         canvas.drawArc(rect, 198f, sweep * 0.96f, false, paint)
 
         paint.strokeWidth *= 0.42f
@@ -152,10 +152,10 @@ class BattleV2EffectsView @JvmOverloads constructor(
         val sparkCount = if (critical) 18 else 11
         for (i in 0 until sparkCount) {
             val t = i.toFloat() / sparkCount
-            val x = w * (0.49f + t * 0.30f)
-            val y = h * (0.61f - sin(t * 3.14159f) * 0.27f)
+            val x = w * (0.30f + t * 0.22f)
+            val y = h * (0.655f - sin(t * 3.14159f) * 0.11f)
             fill.color = Color.argb(alpha, 180 + (i % 2) * 70, 190, 255)
-            canvas.drawCircle(x, y, h * (0.005f + 0.005f * (1f - p)), fill)
+            canvas.drawCircle(x, y, h * (0.0035f + 0.0035f * (1f - p)), fill)
         }
     }
 
@@ -163,8 +163,8 @@ class BattleV2EffectsView @JvmOverloads constructor(
         val w = width.toFloat()
         val h = height.toFloat()
         val phase = if (p < 0.48f) p / 0.48f else (1f - p) / 0.52f
-        val x = w * (0.755f - 0.40f * phase.coerceIn(0f, 1f))
-        val y = h * (0.50f + 0.025f * sin(p * 6.283f))
+        val x = w * (0.755f - 0.36f * phase.coerceIn(0f, 1f))
+        val y = h * (0.665f + 0.018f * sin(p * 6.283f))
         val alpha = ((1f - p * 0.78f) * 210f).toInt().coerceIn(0, 210)
 
         for (i in 0 until 5) {
@@ -207,17 +207,17 @@ class BattleV2EffectsView @JvmOverloads constructor(
         val w = width.toFloat()
         val h = height.toFloat()
         val cx = w * if (enemySide) 0.745f else 0.255f
-        val cy = h * 0.49f
-        val alpha = ((1f - p) * 255f).toInt().coerceIn(0, 255)
-        val radius = h * (0.03f + p * if (critical) 0.20f else 0.13f)
+        val cy = h * if (enemySide) 0.665f else 0.625f
+        val alpha = ((1f - p) * 235f).toInt().coerceIn(0, 235)
+        val radius = h * (0.014f + p * if (critical) 0.082f else 0.055f)
 
         paint.style = Paint.Style.STROKE
-        paint.strokeWidth = h * if (critical) 0.018f else 0.012f
+        paint.strokeWidth = h * if (critical) 0.009f else 0.006f
         paint.color =
             if (critical) Color.argb(alpha, 255, 198, 69)
             else Color.argb(alpha, 165, 205, 255)
         paint.setShadowLayer(
-            h * 0.025f,
+            h * 0.012f,
             0f,
             0f,
             if (critical) Color.rgb(255, 116, 16)
@@ -226,7 +226,7 @@ class BattleV2EffectsView @JvmOverloads constructor(
         canvas.drawCircle(cx, cy, radius, paint)
         paint.clearShadowLayer()
 
-        val count = if (critical) 20 else 13
+        val count = if (critical) 14 else 9
         for (i in 0 until count) {
             val angle = i * 6.283185f / count
             val len = radius * (1.0f + (i % 3) * 0.18f)
@@ -234,7 +234,7 @@ class BattleV2EffectsView @JvmOverloads constructor(
             val y1 = cy + sin(angle) * radius * 0.40f
             val x2 = cx + cos(angle) * len
             val y2 = cy + sin(angle) * len
-            paint.strokeWidth = h * 0.005f
+            paint.strokeWidth = h * 0.0035f
             paint.color =
                 if (critical) Color.argb(alpha, 255, 231, 145)
                 else Color.argb(alpha, 130, 193, 255)
@@ -243,7 +243,7 @@ class BattleV2EffectsView @JvmOverloads constructor(
 
         if (p < 0.22f) {
             fill.color = Color.argb(
-                ((0.22f - p) / 0.22f * if (critical) 115f else 72f)
+                ((0.22f - p) / 0.22f * if (critical) 70f else 42f)
                     .toInt()
                     .coerceIn(0, 130),
                 255,
@@ -258,7 +258,7 @@ class BattleV2EffectsView @JvmOverloads constructor(
         val w = width.toFloat()
         val h = height.toFloat()
         val cx = w * if (enemySide) 0.745f else 0.255f
-        val cy = h * 0.54f
+        val cy = h * if (enemySide) 0.700f else 0.650f
         val alpha = ((1f - p) * 220f).toInt().coerceIn(0, 220)
 
         for (i in 0 until 22) {
@@ -281,7 +281,7 @@ class BattleV2EffectsView @JvmOverloads constructor(
         }
 
         paint.style = Paint.Style.STROKE
-        paint.strokeWidth = h * 0.010f
+        paint.strokeWidth = h * 0.006f
         paint.color =
             if (enemySide) Color.argb(alpha, 105, 210, 255)
             else Color.argb(alpha, 172, 120, 255)
@@ -298,13 +298,13 @@ class BattleV2EffectsView @JvmOverloads constructor(
         val w = width.toFloat()
         val h = height.toFloat()
         val cx = w * 0.255f
-        val cy = h * 0.49f
+        val cy = h * 0.625f
         val alpha = ((1f - p) * 205f).toInt().coerceIn(0, 205)
 
         paint.style = Paint.Style.STROKE
-        paint.strokeWidth = h * 0.007f
+        paint.strokeWidth = h * 0.0045f
         for (i in 0 until 3) {
-            val radius = h * (0.08f + i * 0.035f + p * 0.06f)
+            val radius = h * (0.050f + i * 0.024f + p * 0.038f)
             paint.color = Color.argb(
                 (alpha * (1f - i * 0.18f)).toInt().coerceAtLeast(0),
                 126,
@@ -315,7 +315,7 @@ class BattleV2EffectsView @JvmOverloads constructor(
         }
 
         path.reset()
-        val r = h * (0.10f + p * 0.05f)
+        val r = h * (0.070f + p * 0.032f)
         path.moveTo(cx, cy - r)
         path.lineTo(cx + r * 0.18f, cy - r * 0.18f)
         path.lineTo(cx + r, cy)
