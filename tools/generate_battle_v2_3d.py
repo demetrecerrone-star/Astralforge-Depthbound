@@ -380,8 +380,12 @@ def build_scene(path):
 
         return wrapper
 
-    player_root = add_actor("player", False, -1.25, False)
-    enemy_root = add_actor("enemy", True, 1.25, True)
+    # Stage actors farther apart so the battlefield reads as a duel,
+    # then lower their shared roots so their feet sit on the arena floor.
+    player_root = add_actor("player", False, -1.62, False)
+    enemy_root = add_actor("enemy", True, 1.62, True)
+    nodes[player_root]["translation"][1] = -0.18
+    nodes[enemy_root]["translation"][1] = -0.18
 
     gltf = {
         "asset": {
