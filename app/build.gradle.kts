@@ -33,6 +33,8 @@ val generateAuthUiAssets = tasks.register("generateAuthUiAssets") {
         dir.mkdirs()
 
         val assets = mapOf(
+            "auth_login_embedded.png" to "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/a62f049b56b9bf61ce2d952fd89f145aefdb709af497a445b883588b91d6a2a6.png",
+            "auth_create_embedded.png" to "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/292bcff6440eecd89d43ecf92f9708cbbb85eb734fc544ef5ebf4a0e24669ef5.png",
             "auth_login_bg.png" to "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/7dc0866d98f0f5b05df1b5a7eb677c94684d54bcd16669839de6bbc67d743cc6.png",
             "auth_create_bg.png" to "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/0a60148aeac8bae1845e538e55459acb315dd9f30654cc3accb20b6b89a79f07.png",
             "auth_btn_signin.png" to "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/6d4882adcf9fb5c61e63f399a6ef97458d2698442a286a2c02ea3d7c1673a318.png",
@@ -360,7 +362,7 @@ android {
         applicationId = "com.demetrecerrone.astralforge"
         minSdk = 26
         targetSdk = 35
-        versionCode = 36
+        versionCode = 37
         versionName = "0.0.1.0"
     }
 

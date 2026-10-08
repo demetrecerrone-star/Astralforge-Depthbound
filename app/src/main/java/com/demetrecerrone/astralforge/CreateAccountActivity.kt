@@ -28,81 +28,31 @@ class CreateAccountActivity : Activity() {
         AuthUi.setupWindow(this)
         auth = FirebaseAuth.getInstance()
 
-        val content = AuthUi.createScreen(
-            this,
-            R.drawable.auth_create_bg,
-            0.405f,
-            0.42f
-        )
 
-        content.addView(AuthUi.heading(this, getString(R.string.create_account_heading), 14.5f))
-        content.addView(AuthUi.subtitle(this, getString(R.string.create_account_subtitle)))
-
-        usernameField = AuthUi.field(
-            this,
-            getString(R.string.username),
-            R.drawable.auth_field_username,
-            compact = true
-        )
-        emailField = AuthUi.field(
-            this,
-            getString(R.string.email),
-            R.drawable.auth_field_email,
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
-            compact = true
-        )
-        passwordField = AuthUi.field(
-            this,
-            getString(R.string.password),
-            R.drawable.auth_field_password,
-            isPassword = true,
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD,
-            compact = true
-        )
-        confirmField = AuthUi.field(
-            this,
-            getString(R.string.confirm_password),
-            R.drawable.auth_field_confirm,
-            isPassword = true,
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD,
-            compact = true
-        )
-
-        AuthUi.twoFieldRow(content, usernameField, emailField, topMargin = true)
-        AuthUi.twoFieldRow(content, passwordField, confirmField, topMargin = true)
-
-        content.addView(
-            AuthUi.assetButton(
-                this,
-                R.drawable.auth_btn_create,
-                "Create Account",
-                0.25f,
-                0.095f
-            ) { createAccount() }
-        )
-
-        content.addView(AuthUi.divider(this))
-
-        content.addView(
-            AuthUi.assetButton(
-                this,
-                R.drawable.auth_btn_google,
-                "Continue with Google",
-                0.275f,
-                0.088f
-            ) { startGoogleSignIn() }
-        )
-
-        content.addView(
-            AuthUi.linkRow(
-                this,
-                getString(R.string.already_account),
-                getString(R.string.sign_in_link)
-            ) { finish() },
-            LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                topMargin = AuthUi.dp(this@CreateAccountActivity, 8)
-            }
-        )
+        val root = AuthUi.embeddedCanvas(this, R.drawable.auth_create_embedded)
+        usernameField = AuthUi.overlayField(this, getString(R.string.username),
+            InputType.TYPE_CLASS_TEXT)
+        emailField = AuthUi.overlayField(this, getString(R.string.email),
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS)
+        passwordField = AuthUi.overlayField(this, getString(R.string.password),
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD, true)
+        confirmField = AuthUi.overlayField(this, getString(R.string.confirm_password),
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD, true)
+        AuthUi.place(root, usernameField, 524, 364, 216, 77)
+        AuthUi.place(root, emailField, 943, 364, 223, 77)
+        AuthUi.place(root, passwordField, 524, 469, 176, 77)
+        AuthUi.place(root, confirmField, 943, 469, 176, 77)
+        AuthUi.overlayEye(root, passwordField, 704, 469)
+        AuthUi.overlayEye(root, confirmField, 1130, 469)
+        AuthUi.overlayButton(root, "CREATE ACCOUNT", 587, 560, 499, 94) {
+            createAccount()
+        }
+        AuthUi.overlayButton(root, "Continue with Google", 652, 700, 369, 99) {
+            startGoogleSignIn()
+        }
+        AuthUi.overlayLink(root, "Already have an account? Sign In", 640, 834, 395, 64) {
+            finish()
+        }
     }
 
     private fun createAccount() {

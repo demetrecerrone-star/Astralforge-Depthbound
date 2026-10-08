@@ -17,7 +17,7 @@ class MainActivity : Activity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var emailField: android.widget.EditText
     private lateinit var passwordField: android.widget.EditText
-    private lateinit var remember: android.widget.CheckBox
+    private lateinit var remember: android.widget.ToggleButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,86 +33,32 @@ class MainActivity : Activity() {
             auth.signOut()
         }
 
-        val content = AuthUi.createScreen(
-            this,
-            R.drawable.auth_login_bg,
-            0.425f,
-            0.35f
-        )
 
-        emailField = AuthUi.field(
-            this,
-            getString(R.string.email),
-            R.drawable.auth_field_email,
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
-        )
-        passwordField = AuthUi.field(
-            this,
-            getString(R.string.password),
-            R.drawable.auth_field_password,
-            isPassword = true,
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-        )
-        AuthUi.addField(content, emailField, 0)
-        AuthUi.addField(content, passwordField)
-
-        val options = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = android.view.Gravity.CENTER_VERTICAL
+        val root = AuthUi.embeddedCanvas(this, R.drawable.auth_login_embedded)
+        emailField = AuthUi.overlayField(this, getString(R.string.email),
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS)
+        passwordField = AuthUi.overlayField(this, getString(R.string.password),
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD, true)
+        AuthUi.place(root, emailField, 651, 383, 475, 72)
+        AuthUi.place(root, passwordField, 651, 480, 450, 71)
+        AuthUi.overlayEye(root, passwordField, 1132, 479)
+        remember = AuthUi.separateRemember(this, shouldRemember)
+        AuthUi.place(root, remember, 551, 560, 193, 53)
+        AuthUi.overlayLink(root, getString(R.string.forgot_password), 960, 559, 219, 50) {
+            sendPasswordReset()
         }
-        remember = AuthUi.rememberBox(this).apply { isChecked = shouldRemember }
-        options.addView(remember, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-        options.addView(
-            AuthUi.smallLink(this@MainActivity, getString(R.string.forgot_password)) { sendPasswordReset() },
-            LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-        )
-        content.addView(options, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
-
-        content.addView(
-            AuthUi.assetButton(
-                this,
-                R.drawable.auth_btn_signin,
-                "Sign In",
-                0.235f,
-                0.095f
-            ) { signInWithEmail() }
-        )
-
-        content.addView(AuthUi.divider(this))
-
-        content.addView(
-            AuthUi.assetButton(
-                this,
-                R.drawable.auth_btn_google,
-                "Continue with Google",
-                0.275f,
-                0.088f
-            ) { startGoogleSignIn() }
-        )
-
-        content.addView(
-            AuthUi.assetButton(
-                this,
-                R.drawable.auth_btn_guest,
-                "Continue as Guest",
-                0.275f,
-                0.088f
-            ) { signInAsGuest() }
-        )
-
-        val link = AuthUi.linkRow(
-            this,
-            getString(R.string.no_account),
-            getString(R.string.create_account_link)
-        ) {
+        AuthUi.overlayButton(root, "SIGN IN", 618, 610, 438, 86) {
+            signInWithEmail()
+        }
+        AuthUi.overlayButton(root, "Continue with Google", 535, 741, 287, 95) {
+            startGoogleSignIn()
+        }
+        AuthUi.overlayButton(root, "Continue as Guest", 847, 741, 287, 95) {
+            signInAsGuest()
+        }
+        AuthUi.overlayLink(root, "Create Account", 738, 844, 212, 64) {
             startActivity(Intent(this, CreateAccountActivity::class.java))
         }
-        content.addView(
-            link,
-            LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                topMargin = AuthUi.dp(this@MainActivity, 5)
-            }
-        )
 
         DabskyIntroOverlay.show(this)
     }

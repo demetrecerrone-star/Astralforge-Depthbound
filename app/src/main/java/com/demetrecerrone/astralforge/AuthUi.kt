@@ -13,6 +13,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.CheckBox
+import android.widget.ToggleButton
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -358,6 +359,106 @@ object AuthUi {
         minimumHeight = 0
         setPadding(0, 0, 0, 0)
     }
+
+
+    // Coordinates are expressed on the 1672 by 941 source artwork.
+    fun embeddedCanvas(activity: Activity, drawable: Int): FrameLayout {
+        val root = FrameLayout(activity)
+        root.addView(ImageView(activity).apply {
+            setImageResource(drawable)
+            scaleType = ImageView.ScaleType.FIT_XY
+        }, FrameLayout.LayoutParams(-1, -1))
+        activity.setContentView(root)
+        FullscreenUi.apply(activity)
+        return root
+    }
+
+    fun place(root: FrameLayout, view: View, x: Int, y: Int, w: Int, h: Int) {
+        val dm = root.context.resources.displayMetrics
+        root.addView(view, FrameLayout.LayoutParams(
+            (w * dm.widthPixels / 1672f).toInt(),
+            (h * dm.heightPixels / 941f).toInt()
+        ).apply {
+            leftMargin = (x * dm.widthPixels / 1672f).toInt()
+            topMargin = (y * dm.heightPixels / 941f).toInt()
+        })
+    }
+
+    fun overlayField(context: Context, hintText: String, inputTypeValue: Int,
+                     password: Boolean = false): EditText =
+        EditText(context).apply {
+            hint = hintText
+            setHintTextColor(0xFFDFD4F7.toInt())
+            setTextColor(Color.WHITE)
+            textSize = 14f
+            gravity = Gravity.CENTER_VERTICAL
+            background = null
+            setSingleLine(true)
+            setPadding(0, 0, 0, 0)
+            inputType = inputTypeValue
+            if (password) transformationMethod = PasswordTransformationMethod.getInstance()
+        }
+
+    fun overlayEye(root: FrameLayout, edit: EditText, x: Int, y: Int) {
+        place(root, View(root.context).apply {
+            contentDescription = "Show or hide password"
+            isClickable = true
+            isFocusable = true
+            setOnClickListener {
+                val hidden = edit.transformationMethod is PasswordTransformationMethod
+                edit.transformationMethod = if (hidden) {
+                    HideReturnsTransformationMethod.getInstance()
+                } else {
+                    PasswordTransformationMethod.getInstance()
+                }
+                edit.setSelection(edit.text.length)
+            }
+        }, x, y, 74, 70)
+    }
+
+    fun overlayButton(root: FrameLayout, title: String,
+                      x: Int, y: Int, w: Int, h: Int,
+                      onClick: () -> Unit) {
+        place(root, TextView(root.context).apply {
+            text = title
+            gravity = Gravity.CENTER
+            textSize = 14f
+            setTextColor(Color.WHITE)
+            typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+            isClickable = true
+            isFocusable = true
+            contentDescription = title
+            setOnClickListener { onClick() }
+        }, x, y, w, h)
+    }
+
+    fun overlayLink(root: FrameLayout, title: String,
+                    x: Int, y: Int, w: Int, h: Int,
+                    onClick: () -> Unit) {
+        place(root, TextView(root.context).apply {
+            text = title
+            gravity = Gravity.CENTER
+            textSize = 13f
+            setTextColor(0xFFD4A1FF.toInt())
+            isClickable = true
+            setOnClickListener { onClick() }
+        }, x, y, w, h)
+    }
+
+    fun separateRemember(context: Context, checked: Boolean): ToggleButton =
+        ToggleButton(context).apply {
+            textOff = "Remember Me"
+            textOn = "✦ Remember On"
+            isChecked = checked
+            textSize = 12f
+            isAllCaps = false
+            setTextColor(Color.WHITE)
+            background = GradientDrawable().apply {
+                setColor(0xCC140B2E.toInt())
+                cornerRadius = 15f
+                setStroke(2, 0xFFB266EB.toInt())
+            }
+        }
 
     fun smallLink(
         context: Context,
