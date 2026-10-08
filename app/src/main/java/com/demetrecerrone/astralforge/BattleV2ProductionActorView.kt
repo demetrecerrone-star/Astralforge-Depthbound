@@ -640,6 +640,18 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
         context: Context,
         enemyEntityId: String
     ): ActorFrames {
+        val splitProduction =
+            runCatching {
+                loadSplitEnemyFrames(
+                    context,
+                    enemyEntityId
+                )
+            }.getOrNull()
+
+        if (splitProduction != null) {
+            return splitProduction
+        }
+
         val atlasRes =
             enemyAtlasResIdOrZero(
                 context,
@@ -707,6 +719,49 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
                 safeCopy(death),
                 1.30f
             )
+        )
+    }
+
+    private fun loadSplitEnemyFrames(
+        context: Context,
+        enemyEntityId: String
+    ): ActorFrames? {
+        val stateResources =
+            splitEnemyStateResIds(
+                context,
+                enemyEntityId
+            ) ?: return null
+
+        fun decode(
+            resId: Int,
+            padding: Float
+        ): Bitmap {
+            val raw =
+                BitmapFactory.decodeResource(
+                    resources,
+                    resId
+                ) ?: throw IllegalStateException(
+                    "Battle V2 split actor frame failed to decode."
+                )
+
+            val copy =
+                raw.copy(
+                    Bitmap.Config.ARGB_8888,
+                    false
+                )
+            raw.recycle()
+
+            return paddedFrame(
+                copy,
+                padding
+            )
+        }
+
+        return ActorFrames(
+            idle = decode(stateResources[0], 1.16f),
+            attack = decode(stateResources[1], 1.30f),
+            hit = decode(stateResources[2], 1.22f),
+            finisher = decode(stateResources[3], 1.28f)
         )
     }
 
@@ -816,6 +871,15 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             enemyEntityId: String
         ): Boolean {
             if (
+                splitEnemyStateResIds(
+                    context,
+                    enemyEntityId
+                ) != null
+            ) {
+                return true
+            }
+
+            if (
                 enemyAtlasResIdOrZero(
                     context,
                     enemyEntityId
@@ -830,6 +894,41 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
                 "dire_wolf",
                 "dungeon_boss"
             )
+        }
+
+        private fun splitEnemyStateResIds(
+            context: Context,
+            enemyEntityId: String
+        ): IntArray? {
+            val prefix =
+                if (enemyEntityId == "blue_slime") {
+                    "battle_v2_slime_actor"
+                } else {
+                    "battle_v2_" + enemyEntityId
+                }
+
+            val names =
+                listOf(
+                    prefix + "_idle",
+                    prefix + "_attack",
+                    prefix + "_hit",
+                    prefix + "_death"
+                )
+
+            val ids =
+                names.map {
+                    context.resources.getIdentifier(
+                        it,
+                        "drawable",
+                        context.packageName
+                    )
+                }
+
+            return if (ids.all { it != 0 }) {
+                ids.toIntArray()
+            } else {
+                null
+            }
         }
 
         private fun enemyAtlasResId(
