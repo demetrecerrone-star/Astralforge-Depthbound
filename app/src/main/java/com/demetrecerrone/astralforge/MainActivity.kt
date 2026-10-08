@@ -33,18 +33,23 @@ class MainActivity : Activity() {
             auth.signOut()
         }
 
-        val content = AuthUi.createScreen(this, 0.445f)
+        val content = AuthUi.createScreen(
+            this,
+            R.drawable.auth_login_bg,
+            0.425f,
+            0.35f
+        )
 
         emailField = AuthUi.field(
             this,
             getString(R.string.email),
-            R.drawable.ic_mail,
+            R.drawable.auth_field_email,
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
         )
         passwordField = AuthUi.field(
             this,
             getString(R.string.password),
-            R.drawable.ic_lock,
+            R.drawable.auth_field_password,
             isPassword = true,
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         )
@@ -66,9 +71,10 @@ class MainActivity : Activity() {
         content.addView(
             AuthUi.assetButton(
                 this,
-                R.drawable.file_00000000d90c81f590bfb22d91dd428d,
+                R.drawable.auth_btn_signin,
                 "Sign In",
-                58
+                0.225f,
+                0.078f
             ) { signInWithEmail() }
         )
 
@@ -77,18 +83,20 @@ class MainActivity : Activity() {
         content.addView(
             AuthUi.assetButton(
                 this,
-                R.drawable.file_0000000004a881f6b93ff7dc066c5f95,
+                R.drawable.auth_btn_google,
                 "Continue with Google",
-                46
+                0.26f,
+                0.073f
             ) { startGoogleSignIn() }
         )
 
         content.addView(
             AuthUi.assetButton(
                 this,
-                R.drawable.file_000000000dd481f6a8aebb5476e7346d,
+                R.drawable.auth_btn_guest,
                 "Continue as Guest",
-                46
+                0.26f,
+                0.073f
             ) { signInAsGuest() }
         )
 

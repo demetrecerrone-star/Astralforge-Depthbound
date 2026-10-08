@@ -1,3 +1,4 @@
+import java.net.URI
 import java.awt.image.BufferedImage
 import java.util.zip.ZipFile
 import javax.imageio.ImageIO
@@ -16,6 +17,47 @@ val generatedBattleV2ThreeDDir =
 
 val generatedDabskyIntroResDir =
     layout.buildDirectory.dir("generated/dabskyIntroRes")
+
+val generatedAuthUiResDir =
+    layout.buildDirectory.dir("generated/authUiRes")
+
+val generateAuthUiAssets = tasks.register("generateAuthUiAssets") {
+    val outputDir = generatedAuthUiResDir.map {
+        it.dir("drawable-nodpi")
+    }
+
+    outputs.dir(outputDir)
+
+    doLast {
+        val dir = outputDir.get().asFile
+        dir.mkdirs()
+
+        val assets = mapOf(
+            "auth_login_bg.png" to "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/7dc0866d98f0f5b05df1b5a7eb677c94684d54bcd16669839de6bbc67d743cc6.png",
+            "auth_create_bg.png" to "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/0a60148aeac8bae1845e538e55459acb315dd9f30654cc3accb20b6b89a79f07.png",
+            "auth_btn_signin.png" to "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/6d4882adcf9fb5c61e63f399a6ef97458d2698442a286a2c02ea3d7c1673a318.png",
+            "auth_btn_create.png" to "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/c6e5a7b464c3198b35045e10800002c420e1f6d78ec1d6c4af9e6ed94e297c24.png",
+            "auth_btn_google.png" to "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/1dd2ca4fcbcf16f6692d9db2c286bdf7a87172a394ecb256cc628e968a968981.png",
+            "auth_btn_guest.png" to "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/7abebec58a7e584a1b2fb8f9ff6bfc617cba7930b6b47cadbc9898ec63e42ce5.png",
+            "auth_field_email.png" to "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/964b51b19cc49c4b059948adcff9279dd457eb660be4b2b6c9f9a609a4bffa1a.png",
+            "auth_field_password.png" to "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/707b8dd5bda601212d14b94a7676771610089cc3f22dc287c4617d86df9340be.png",
+            "auth_field_username.png" to "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/82c54a4462e1efd2935f9734c39cd24f5a09d699f4fbceb209143866ab40f747.png",
+            "auth_field_confirm.png" to "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/0ddd6fbdcfac3a2ecd787999e5e903c52db20dd5bec6d0a11f14c5766f42c003.png"
+        )
+
+        assets.forEach { (name, url) ->
+            val output = dir.resolve(name)
+            URI(url).toURL().openStream().use { input ->
+                output.outputStream().use { out ->
+                    input.copyTo(out)
+                }
+            }
+            check(output.length() > 10_000L) {
+                "Auth UI asset download failed: " + name
+            }
+        }
+    }
+}
 
 val generateDabskyCompatIntro =
     tasks.register<org.gradle.api.tasks.Exec>("generateDabskyCompatIntro") {
@@ -318,7 +360,7 @@ android {
         applicationId = "com.demetrecerrone.astralforge"
         minSdk = 26
         targetSdk = 35
-        versionCode = 29
+        versionCode = 30
         versionName = "0.0.1.0"
     }
 
@@ -350,6 +392,7 @@ android {
         getByName("main").assets.srcDir(generatedAstralSpritesDir)
         getByName("main").assets.srcDir(generatedBattleV2ThreeDDir)
         getByName("main").res.srcDir(generatedDabskyIntroResDir)
+        getByName("main").res.srcDir(generatedAuthUiResDir)
     }
 }
 
@@ -357,7 +400,8 @@ tasks.matching { it.name == "preBuild" }.configureEach {
     dependsOn(
         splitAstralSpriteSheets,
         generateBattleV2ThreeD,
-        generateDabskyCompatIntro
+        generateDabskyCompatIntro,
+        generateAuthUiAssets
     )
 }
 

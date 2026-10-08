@@ -28,29 +28,38 @@ class CreateAccountActivity : Activity() {
         AuthUi.setupWindow(this)
         auth = FirebaseAuth.getInstance()
 
-        val content = AuthUi.createScreen(this, 0.455f)
+        val content = AuthUi.createScreen(
+            this,
+            R.drawable.auth_create_bg,
+            0.405f,
+            0.42f
+        )
 
-        content.addView(AuthUi.heading(this, getString(R.string.create_account_heading), 15f))
+        content.addView(AuthUi.heading(this, getString(R.string.create_account_heading), 14.5f))
         content.addView(AuthUi.subtitle(this, getString(R.string.create_account_subtitle)))
 
-        usernameField = AuthUi.field(this, getString(R.string.username), R.drawable.ic_user)
+        usernameField = AuthUi.field(
+            this,
+            getString(R.string.username),
+            R.drawable.auth_field_username
+        )
         emailField = AuthUi.field(
             this,
             getString(R.string.email),
-            R.drawable.ic_mail,
+            R.drawable.auth_field_email,
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
         )
         passwordField = AuthUi.field(
             this,
             getString(R.string.password),
-            R.drawable.ic_lock,
+            R.drawable.auth_field_password,
             isPassword = true,
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         )
         confirmField = AuthUi.field(
             this,
             getString(R.string.confirm_password),
-            R.drawable.ic_lock,
+            R.drawable.auth_field_confirm,
             isPassword = true,
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         )
@@ -61,9 +70,10 @@ class CreateAccountActivity : Activity() {
         content.addView(
             AuthUi.assetButton(
                 this,
-                R.drawable.file_00000000a694822fabb704680dcacbc2,
+                R.drawable.auth_btn_create,
                 "Create Account",
-                58
+                0.245f,
+                0.078f
             ) { createAccount() }
         )
 
@@ -72,9 +82,10 @@ class CreateAccountActivity : Activity() {
         content.addView(
             AuthUi.assetButton(
                 this,
-                R.drawable.file_0000000004a881f6b93ff7dc066c5f95,
+                R.drawable.auth_btn_google,
                 "Continue with Google",
-                46
+                0.26f,
+                0.073f
             ) { startGoogleSignIn() }
         )
 
