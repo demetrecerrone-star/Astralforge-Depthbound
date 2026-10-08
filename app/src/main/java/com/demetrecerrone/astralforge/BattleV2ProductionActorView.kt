@@ -216,8 +216,8 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             }
 
             else -> {
-                widthScale = 0.220f
-                heightScale = 0.410f
+                widthScale = 0.235f
+                heightScale = 0.430f
                 minWidth = 135
                 minHeight = 175
                 rightScale = 0.125f
@@ -772,100 +772,70 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
         )
     }
 
-    private fun removeEdgeMatte(
-        source: Bitmap
-    ): Bitmap {
+    private fun removeEdgeMatte(source: Bitmap): Bitmap {
         val w = source.width
         val h = source.height
-        if (w <= 4 || h <= 4) return source
+        if (w < 8 || h < 8) return source
 
         val pixels = IntArray(w * h)
-        source.getPixels(
-            pixels,
-            0,
-            w,
-            0,
-            0,
-            w,
-            h
-        )
+        source.getPixels(pixels, 0, w, 0, 0, w, h)
 
-        fun rgbDistance(
-            a: Int,
-            b: Int
-        ): Int {
+        // Transparent cutouts have already been prepared. Never sample their
+        // edges for a matte color: armor, skin and weapons can touch the edge,
+        // causing the flood fill to erase most of a Goblin Raider.
+        for (x in 0 until w) {
+            if (
+                Color.alpha(pixels[x]) < 255 ||
+                Color.alpha(pixels[(h - 1) * w + x]) < 255
+            ) return source
+        }
+        for (y in 0 until h) {
+            if (
+                Color.alpha(pixels[y * w]) < 255 ||
+                Color.alpha(pixels[y * w + w - 1]) < 255
+            ) return source
+        }
+
+        fun distanceSq(a: Int, b: Int): Int {
             val dr = Color.red(a) - Color.red(b)
             val dg = Color.green(a) - Color.green(b)
             val db = Color.blue(a) - Color.blue(b)
             return dr * dr + dg * dg + db * db
         }
 
-        // Sample several points from the outer border. Generated matte
-        // backgrounds are close in color to these samples, while the
-        // Goblin's armor, skin, blade and shadows are not.
-        val borderSamples =
-            listOf(
-                pixels[0],
-                pixels[w - 1],
-                pixels[(h - 1) * w],
-                pixels[h * w - 1],
-                pixels[w / 2],
-                pixels[(h - 1) * w + w / 2],
-                pixels[(h / 2) * w],
-                pixels[(h / 2) * w + (w - 1)]
-            )
+        val matte = pixels[0]
+        val corners = intArrayOf(
+            pixels[w - 1],
+            pixels[(h - 1) * w],
+            pixels[h * w - 1]
+        )
 
-        fun matchesMatte(index: Int): Boolean {
-            val color = pixels[index]
-            if (Color.alpha(color) == 0) return true
-
-            val bestDistance =
-                borderSamples.minOf {
-                    rgbDistance(
-                        color,
-                        it
-                    )
-                }
-
-            // 46 RGB units ~= squared distance 2116.
-            // This is deliberately conservative so dark character
-            // details survive even when they touch the edge.
-            return bestDistance <= 2116
+        // If the corners disagree, this isn't a uniform matte. Keep the
+        // original frame intact rather than guessing which colors to erase.
+        if (corners.any { distanceSq(matte, it) > 600 }) {
+            return source
         }
 
+        val thresholdSq = 800
         val visited = BooleanArray(w * h)
         val queue = IntArray(w * h)
         var head = 0
         var tail = 0
 
-        fun enqueue(
-            x: Int,
-            y: Int
-        ) {
-            if (
-                x !in 0 until w ||
-                y !in 0 until h
-            ) {
-                return
-            }
-
+        fun enqueue(x: Int, y: Int) {
+            if (x !in 0 until w || y !in 0 until h) return
             val index = y * w + x
-            if (
-                visited[index] ||
-                !matchesMatte(index)
-            ) {
-                return
-            }
-
+            if (visited[index]) return
             visited[index] = true
-            queue[tail++] = index
+            if (distanceSq(pixels[index], matte) <= thresholdSq) {
+                queue[tail++] = index
+            }
         }
 
         for (x in 0 until w) {
             enqueue(x, 0)
             enqueue(x, h - 1)
         }
-
         for (y in 0 until h) {
             enqueue(0, y)
             enqueue(w - 1, y)
@@ -875,62 +845,14 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             val index = queue[head++]
             val x = index % w
             val y = index / w
-
             pixels[index] = Color.TRANSPARENT
-
             enqueue(x - 1, y)
             enqueue(x + 1, y)
             enqueue(x, y - 1)
             enqueue(x, y + 1)
         }
 
-        // Feather only pixels that are both very close to the sampled
-        // matte color and directly touch transparent background.
-        val original = pixels.copyOf()
-
-        for (y in 1 until h - 1) {
-            for (x in 1 until w - 1) {
-                val index = y * w + x
-                val color = original[index]
-
-                if (Color.alpha(color) == 0) {
-                    continue
-                }
-
-                val touchesClear =
-                    Color.alpha(original[index - 1]) == 0 ||
-                        Color.alpha(original[index + 1]) == 0 ||
-                        Color.alpha(original[index - w]) == 0 ||
-                        Color.alpha(original[index + w]) == 0
-
-                if (!touchesClear) {
-                    continue
-                }
-
-                val bestDistance =
-                    borderSamples.minOf {
-                        rgbDistance(
-                            color,
-                            it
-                        )
-                    }
-
-                if (bestDistance <= 900) {
-                    pixels[index] = Color.TRANSPARENT
-                }
-            }
-        }
-
-        source.setPixels(
-            pixels,
-            0,
-            w,
-            0,
-            0,
-            w,
-            h
-        )
-
+        source.setPixels(pixels, 0, w, 0, 0, w, h)
         return source
     }
 
