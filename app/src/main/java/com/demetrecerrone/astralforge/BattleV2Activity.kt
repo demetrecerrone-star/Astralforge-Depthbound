@@ -49,6 +49,15 @@ class BattleV2Activity : Activity() {
     private var busy = false
     private var autoBattle = false
     private var actorsReady = false
+    private val previewEnemies = listOf(
+        "blue_slime",
+        "goblin_raider",
+        "skeleton_warrior",
+        "dire_wolf",
+        "dungeon_boss"
+    )
+    private var previewEnemyIndex = 0
+    private var previewDepth = 1
     private var useProductionActors = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,7 +68,12 @@ class BattleV2Activity : Activity() {
         settings = GameSettingsStore.load(this)
         activeHero = HeroRosterStore.activeHero(this)
         playerEntityId = activeHero.id
-        enemyEntityId = BattleActorFactory.enemyRigId(progress.depth)
+        previewEnemyIndex =
+            getPreferences(MODE_PRIVATE)
+                .getInt("preview_enemy_index", 0)
+                .coerceIn(0, previewEnemies.lastIndex)
+        enemyEntityId = previewEnemies[previewEnemyIndex]
+        previewDepth = previewEnemyIndex + 1
         useProductionActors =
             playerEntityId == "knight" &&
                 BattleV2ProductionActorView.hasProductionEnemy(
@@ -73,7 +87,7 @@ class BattleV2Activity : Activity() {
                 playerAttack = progress.attack,
                 playerDefense = progress.defense,
                 playerCritChance = progress.critChance,
-                depth = progress.depth
+                depth = previewDepth
             )
 
         buildScene()
@@ -172,6 +186,7 @@ class BattleV2Activity : Activity() {
         addEnemyHud()
         addPlayerHudAndControls()
         addPreviewBadge()
+        addEnemySelector()
         addBackButton()
 
         renderer.onModeChanged = { mode ->
@@ -213,7 +228,7 @@ class BattleV2Activity : Activity() {
         )
 
         enemyNameText = hudText(
-            "Lv." + progress.depth + "  •  " +
+            "Lv." + previewDepth + "  •  " +
                 BattleActorFactory.enemyDisplayName(enemyEntityId),
             13f,
             Gravity.CENTER_VERTICAL
@@ -444,6 +459,44 @@ class BattleV2Activity : Activity() {
             }
         )
     }
+    private fun addEnemySelector() {
+        root.addView(
+            makeAction("ENEMY ▶", false) {
+                if (busy) return@makeAction
+
+                val nextIndex =
+                    (previewEnemyIndex + 1) %
+                        previewEnemies.size
+
+                getPreferences(MODE_PRIVATE)
+                    .edit()
+                    .putInt(
+                        "preview_enemy_index",
+                        nextIndex
+                    )
+                    .apply()
+
+                recreate()
+            },
+            FrameLayout.LayoutParams(
+                AuthUi.dp(this, 82),
+                AuthUi.dp(this, 30),
+                Gravity.TOP or Gravity.START
+            ).apply {
+                topMargin =
+                    AuthUi.dp(
+                        this@BattleV2Activity,
+                        8
+                    )
+                leftMargin =
+                    AuthUi.dp(
+                        this@BattleV2Activity,
+                        8
+                    )
+            }
+        )
+    }
+
     private fun addBackButton() {
         root.addView(
             makeAction("BACK", false) {
@@ -489,7 +542,7 @@ class BattleV2Activity : Activity() {
                     "Lv." + progress.level +
                         "  •  " + activeHero.displayName
                 enemyNameText.text =
-                    "Lv." + progress.depth +
+                    "Lv." + previewDepth +
                         "  •  " + enemySprites.displayName
                 actorsReady = true
                 statusText.text = renderer.modeLabel
