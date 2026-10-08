@@ -47,6 +47,19 @@ class BattleV2RendererHost @JvmOverloads constructor(
         }
     }
 
+    fun disableForProductionActors() {
+        threeDView?.release()
+        threeDView?.let { removeView(it) }
+        threeDView = null
+
+        fallbackView?.release()
+        fallbackView?.let { removeView(it) }
+        fallbackView = null
+
+        modeLabel = "Production actor art"
+        onModeChanged?.invoke(modeLabel)
+    }
+
     fun setPreferredFps(
         value: String,
         batterySaverEnabled: Boolean
