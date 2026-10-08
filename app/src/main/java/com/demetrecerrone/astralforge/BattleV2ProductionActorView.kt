@@ -747,12 +747,19 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             val copy =
                 raw.copy(
                     Bitmap.Config.ARGB_8888,
-                    false
+                    true
                 )
             raw.recycle()
 
+            val cleaned =
+                if (enemyEntityId == "goblin_raider") {
+                    removeEdgeMatte(copy)
+                } else {
+                    copy
+                }
+
             return paddedFrame(
-                copy,
+                cleaned,
                 padding
             )
         }
@@ -763,6 +770,123 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             hit = decode(stateResources[2], 1.22f),
             finisher = decode(stateResources[3], 1.28f)
         )
+    }
+
+    private fun removeEdgeMatte(
+        source: Bitmap
+    ): Bitmap {
+        val w = source.width
+        val h = source.height
+        if (w <= 2 || h <= 2) return source
+
+        val pixels = IntArray(w * h)
+        source.getPixels(
+            pixels,
+            0,
+            w,
+            0,
+            0,
+            w,
+            h
+        )
+
+        fun isMatte(index: Int): Boolean {
+            val color = pixels[index]
+            val alpha =
+                Color.alpha(color)
+            if (alpha == 0) return true
+
+            val red = Color.red(color)
+            val green = Color.green(color)
+            val blue = Color.blue(color)
+            val luminance =
+                (red * 30 + green * 59 + blue * 11) / 100
+
+            // The generated Goblin frames carry a charcoal/brown
+            // backdrop. Only flood pixels connected to the outside,
+            // so dark armor/shield detail inside the silhouette survives.
+            return luminance < 92 &&
+                red < 112 &&
+                green < 105 &&
+                blue < 105
+        }
+
+        val visited = BooleanArray(w * h)
+        val queue = IntArray(w * h)
+        var head = 0
+        var tail = 0
+
+        fun enqueue(x: Int, y: Int) {
+            if (x !in 0 until w || y !in 0 until h) return
+            val index = y * w + x
+            if (visited[index] || !isMatte(index)) return
+            visited[index] = true
+            queue[tail++] = index
+        }
+
+        for (x in 0 until w) {
+            enqueue(x, 0)
+            enqueue(x, h - 1)
+        }
+        for (y in 0 until h) {
+            enqueue(0, y)
+            enqueue(w - 1, y)
+        }
+
+        while (head < tail) {
+            val index = queue[head++]
+            val x = index % w
+            val y = index / w
+
+            pixels[index] = Color.TRANSPARENT
+
+            enqueue(x - 1, y)
+            enqueue(x + 1, y)
+            enqueue(x, y - 1)
+            enqueue(x, y + 1)
+        }
+
+        // One soft cleanup pass catches antialiased fringe next to the
+        // removed matte without erasing opaque character details.
+        val original = pixels.copyOf()
+        for (y in 1 until h - 1) {
+            for (x in 1 until w - 1) {
+                val index = y * w + x
+                val color = original[index]
+                val alpha = Color.alpha(color)
+                if (alpha == 0) continue
+
+                val red = Color.red(color)
+                val green = Color.green(color)
+                val blue = Color.blue(color)
+                val luminance =
+                    (red * 30 + green * 59 + blue * 11) / 100
+
+                if (luminance >= 110) continue
+
+                val touchesClear =
+                    Color.alpha(original[index - 1]) == 0 ||
+                        Color.alpha(original[index + 1]) == 0 ||
+                        Color.alpha(original[index - w]) == 0 ||
+                        Color.alpha(original[index + w]) == 0
+
+                if (touchesClear && alpha < 245) {
+                    pixels[index] = Color.TRANSPARENT
+                }
+            }
+        }
+
+        source.setPixels(
+            pixels,
+            0,
+            w,
+            0,
+            0,
+            w,
+            h
+        )
+
+        return source
     }
 
     private fun loadFrames(resId: Int): ActorFrames {
