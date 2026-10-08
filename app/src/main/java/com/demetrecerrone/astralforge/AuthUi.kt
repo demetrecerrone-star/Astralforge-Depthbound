@@ -122,23 +122,30 @@ object AuthUi {
         hint: String,
         frameRes: Int,
         isPassword: Boolean = false,
-        inputType: Int = InputType.TYPE_CLASS_TEXT
+        inputType: Int = InputType.TYPE_CLASS_TEXT,
+        compact: Boolean = false
     ): EditText {
         return EditText(context).apply {
             this.hint = hint
             setHintTextColor(Color.rgb(219, 208, 247))
             setTextColor(Color.WHITE)
-            textSize = 13f
+            textSize = if (compact) 11.5f else 13f
             setSingleLine(true)
+            setHorizontallyScrolling(true)
+            ellipsize = android.text.TextUtils.TruncateAt.END
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(context, 8), 0, dp(context, 8), 0)
             setBackgroundResource(frameRes)
             addOnLayoutChangeListener { view, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
                 val fieldWidth = (right - left).coerceAtLeast(1)
-                val leftPad = (fieldWidth * 0.22f).toInt()
+                val leftPad =
+                    (fieldWidth * if (compact) 0.29f else 0.22f).toInt()
                 val rightPad =
-                    if (isPassword) (fieldWidth * 0.20f).toInt()
-                    else (fieldWidth * 0.08f).toInt()
+                    if (isPassword) {
+                        (fieldWidth * if (compact) 0.19f else 0.20f).toInt()
+                    } else {
+                        (fieldWidth * if (compact) 0.06f else 0.08f).toInt()
+                    }
                 if (paddingLeft != leftPad || paddingRight != rightPad) {
                     setPadding(leftPad, 0, rightPad, 0)
                 }

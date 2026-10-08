@@ -41,27 +41,31 @@ class CreateAccountActivity : Activity() {
         usernameField = AuthUi.field(
             this,
             getString(R.string.username),
-            R.drawable.auth_field_username
+            R.drawable.auth_field_username,
+            compact = true
         )
         emailField = AuthUi.field(
             this,
             getString(R.string.email),
             R.drawable.auth_field_email,
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
+            compact = true
         )
         passwordField = AuthUi.field(
             this,
             getString(R.string.password),
             R.drawable.auth_field_password,
             isPassword = true,
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD,
+            compact = true
         )
         confirmField = AuthUi.field(
             this,
             getString(R.string.confirm_password),
             R.drawable.auth_field_confirm,
             isPassword = true,
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD,
+            compact = true
         )
 
         AuthUi.twoFieldRow(content, usernameField, emailField, topMargin = true)
