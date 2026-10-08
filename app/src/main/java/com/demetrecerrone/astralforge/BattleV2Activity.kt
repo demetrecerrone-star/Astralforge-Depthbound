@@ -26,6 +26,7 @@ class BattleV2Activity : Activity() {
     private lateinit var root: FrameLayout
     private lateinit var renderer: BattleV2RendererHost
     private lateinit var effects: BattleV2EffectsView
+    private lateinit var productionActors: BattleV2ProductionActorView
     private lateinit var controller: BattleV2Controller
     private lateinit var progress: PlayerProgress
     private lateinit var settings: GameSettings
@@ -48,6 +49,7 @@ class BattleV2Activity : Activity() {
     private var busy = false
     private var autoBattle = false
     private var actorsReady = false
+    private var useProductionActors = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,6 +60,9 @@ class BattleV2Activity : Activity() {
         activeHero = HeroRosterStore.activeHero(this)
         playerEntityId = activeHero.id
         enemyEntityId = BattleActorFactory.enemyRigId(progress.depth)
+        useProductionActors =
+            playerEntityId == "knight" &&
+                enemyEntityId == "blue_slime"
 
         controller =
             BattleV2Controller(
@@ -75,6 +80,9 @@ class BattleV2Activity : Activity() {
 
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
+        if (::productionActors.isInitialized) {
+            productionActors.release()
+        }
         if (::renderer.isInitialized) {
             renderer.release()
         }
@@ -132,6 +140,19 @@ class BattleV2Activity : Activity() {
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
         )
+
+        if (useProductionActors) {
+            renderer.disableForProductionActors()
+            productionActors =
+                BattleV2ProductionActorView(this)
+            root.addView(
+                productionActors,
+                FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+                )
+            )
+        }
 
         effects = BattleV2EffectsView(this)
         root.addView(
@@ -483,6 +504,11 @@ class BattleV2Activity : Activity() {
         statusText.text = activeHero.displayName + " attacks"
 
         renderer.playPlayer(BattleV2Animation.ATTACK)
+        if (::productionActors.isInitialized) {
+            productionActors.playPlayer(
+                BattleV2Animation.ATTACK
+            )
+        }
         if (settings.battleEffects) {
             effects.playPlayerSlash()
         }
@@ -517,6 +543,11 @@ class BattleV2Activity : Activity() {
                     renderer.playEnemy(
                         BattleV2Animation.DEATH
                     )
+                    if (::productionActors.isInitialized) {
+                        productionActors.playEnemy(
+                            BattleV2Animation.DEATH
+                        )
+                    }
                     if (settings.battleEffects) {
                         effects.playEnemyDeath()
                     }
@@ -527,6 +558,11 @@ class BattleV2Activity : Activity() {
                                 renderer.playPlayer(
                                     BattleV2Animation.VICTORY
                                 )
+                                if (::productionActors.isInitialized) {
+                                    productionActors.playPlayer(
+                                        BattleV2Animation.VICTORY
+                                    )
+                                }
                                 if (settings.battleEffects) {
                                     effects.playVictory()
                                 }
@@ -541,6 +577,11 @@ class BattleV2Activity : Activity() {
                     renderer.playEnemy(
                         BattleV2Animation.HIT
                     )
+                    if (::productionActors.isInitialized) {
+                        productionActors.playEnemy(
+                            BattleV2Animation.HIT
+                        )
+                    }
                 }
             },
             attackSpec.impactMs ?: 0L
@@ -563,6 +604,11 @@ class BattleV2Activity : Activity() {
     private fun performEnemyAttack() {
         statusText.text = BattleActorFactory.enemyDisplayName(enemyEntityId) + " attacks"
         renderer.playEnemy(BattleV2Animation.ATTACK)
+        if (::productionActors.isInitialized) {
+            productionActors.playEnemy(
+                BattleV2Animation.ATTACK
+            )
+        }
         if (settings.battleEffects) {
             effects.playSlimeLunge()
         }
@@ -596,6 +642,11 @@ class BattleV2Activity : Activity() {
                     renderer.playPlayer(
                         BattleV2Animation.DEATH
                     )
+                    if (::productionActors.isInitialized) {
+                        productionActors.playPlayer(
+                            BattleV2Animation.DEATH
+                        )
+                    }
                     if (settings.battleEffects) {
                         effects.playPlayerDeath()
                     }
@@ -614,6 +665,11 @@ class BattleV2Activity : Activity() {
                     renderer.playPlayer(
                         BattleV2Animation.HIT
                     )
+                    if (::productionActors.isInitialized) {
+                        productionActors.playPlayer(
+                            BattleV2Animation.HIT
+                        )
+                    }
                 }
             },
             attackSpec.impactMs ?: 0L
@@ -838,6 +894,9 @@ class BattleV2Activity : Activity() {
                 root.removeView(overlay)
                 controller.reset()
                 renderer.resetActors()
+                if (::productionActors.isInitialized) {
+                    productionActors.resetActors()
+                }
                 effects.clearEffects()
                 refreshHud(animate = false)
                 busy = false
