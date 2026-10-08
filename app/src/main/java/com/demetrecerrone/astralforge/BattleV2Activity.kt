@@ -62,7 +62,10 @@ class BattleV2Activity : Activity() {
         enemyEntityId = BattleActorFactory.enemyRigId(progress.depth)
         useProductionActors =
             playerEntityId == "knight" &&
-                enemyEntityId == "blue_slime"
+                BattleV2ProductionActorView.hasProductionEnemy(
+                    this,
+                    enemyEntityId
+                )
 
         controller =
             BattleV2Controller(
@@ -144,7 +147,10 @@ class BattleV2Activity : Activity() {
         if (useProductionActors) {
             renderer.disableForProductionActors()
             productionActors =
-                BattleV2ProductionActorView(this)
+                BattleV2ProductionActorView(
+                    this,
+                    enemyEntityId = enemyEntityId
+                )
             root.addView(
                 productionActors,
                 FrameLayout.LayoutParams(
@@ -609,7 +615,10 @@ class BattleV2Activity : Activity() {
                 BattleV2Animation.ATTACK
             )
         }
-        if (settings.battleEffects) {
+        if (
+            settings.battleEffects &&
+            enemyEntityId == "blue_slime"
+        ) {
             effects.playSlimeLunge()
         }
 
