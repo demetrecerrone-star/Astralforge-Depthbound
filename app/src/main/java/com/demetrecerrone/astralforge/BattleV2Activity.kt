@@ -535,8 +535,17 @@ class BattleV2Activity : Activity() {
                 playerSprites.idle?.let {
                     playerPortrait.setImageBitmap(it)
                 }
-                enemySprites.idle?.let {
-                    enemyPortrait.setImageBitmap(it)
+                if (
+                    useProductionActors &&
+                    ::productionActors.isInitialized
+                ) {
+                    enemyPortrait.setImageBitmap(
+                        productionActors.enemyPortraitBitmap()
+                    )
+                } else {
+                    enemySprites.idle?.let {
+                        enemyPortrait.setImageBitmap(it)
+                    }
                 }
                 playerNameText.text =
                     "Lv." + progress.level +
@@ -545,7 +554,7 @@ class BattleV2Activity : Activity() {
                     "Lv." + previewDepth +
                         "  •  " + enemySprites.displayName
                 actorsReady = true
-                statusText.text = renderer.modeLabel
+                statusText.text = "Ready"
             }
         }.start()
     }
