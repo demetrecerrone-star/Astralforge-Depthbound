@@ -163,7 +163,7 @@ class BattleV2EffectsView @JvmOverloads constructor(
         val w = width.toFloat()
         val h = height.toFloat()
         val phase = if (p < 0.48f) p / 0.48f else (1f - p) / 0.52f
-        val x = w * (0.72f - 0.28f * phase.coerceIn(0f, 1f))
+        val x = w * (0.755f - 0.40f * phase.coerceIn(0f, 1f))
         val y = h * (0.50f + 0.025f * sin(p * 6.283f))
         val alpha = ((1f - p * 0.78f) * 210f).toInt().coerceIn(0, 210)
 
@@ -206,7 +206,7 @@ class BattleV2EffectsView @JvmOverloads constructor(
     ) {
         val w = width.toFloat()
         val h = height.toFloat()
-        val cx = w * if (enemySide) 0.70f else 0.29f
+        val cx = w * if (enemySide) 0.745f else 0.255f
         val cy = h * 0.49f
         val alpha = ((1f - p) * 255f).toInt().coerceIn(0, 255)
         val radius = h * (0.03f + p * if (critical) 0.20f else 0.13f)
@@ -257,7 +257,7 @@ class BattleV2EffectsView @JvmOverloads constructor(
     private fun drawDeath(canvas: Canvas, p: Float, enemySide: Boolean) {
         val w = width.toFloat()
         val h = height.toFloat()
-        val cx = w * if (enemySide) 0.70f else 0.29f
+        val cx = w * if (enemySide) 0.745f else 0.255f
         val cy = h * 0.54f
         val alpha = ((1f - p) * 220f).toInt().coerceIn(0, 220)
 
@@ -297,7 +297,7 @@ class BattleV2EffectsView @JvmOverloads constructor(
     private fun drawVictory(canvas: Canvas, p: Float) {
         val w = width.toFloat()
         val h = height.toFloat()
-        val cx = w * 0.29f
+        val cx = w * 0.255f
         val cy = h * 0.49f
         val alpha = ((1f - p) * 205f).toInt().coerceIn(0, 205)
 
