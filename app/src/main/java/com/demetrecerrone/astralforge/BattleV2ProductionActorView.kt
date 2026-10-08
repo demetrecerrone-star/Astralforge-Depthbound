@@ -5,6 +5,7 @@ import android.animation.ObjectAnimator
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.util.AttributeSet
@@ -28,8 +29,16 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
     private val playerFrames: ActorFrames
     private val enemyFrames: ActorFrames
 
-    private val playerStage = FrameLayout(context)
-    private val enemyStage = FrameLayout(context)
+    private val playerStage =
+        FrameLayout(context).apply {
+            clipChildren = false
+            clipToPadding = false
+        }
+    private val enemyStage =
+        FrameLayout(context).apply {
+            clipChildren = false
+            clipToPadding = false
+        }
     private val playerImage = ImageView(context)
     private val enemyImage = ImageView(context)
     private val playerShadow = View(context)
@@ -217,8 +226,8 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             BattleV2Animation.ATTACK -> {
                 playerImage.setImageBitmap(playerFrames.attack)
                 playerStage.alpha = 1f
-                playerStage.scaleX = 1.04f
-                playerStage.scaleY = 1.04f
+                playerStage.scaleX = 1.015f
+                playerStage.scaleY = 1.015f
                 playerStage.animate()
                     .translationX(dp(42).toFloat())
                     .translationY(-dp(5).toFloat())
@@ -307,8 +316,8 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             BattleV2Animation.ATTACK -> {
                 enemyImage.setImageBitmap(enemyFrames.attack)
                 enemyStage.alpha = 1f
-                enemyStage.scaleX = 1.08f
-                enemyStage.scaleY = 0.94f
+                enemyStage.scaleX = 1.035f
+                enemyStage.scaleY = 0.97f
                 enemyStage.animate()
                     .translationX(-dp(92).toFloat())
                     .translationY(dp(2).toFloat())
@@ -540,42 +549,82 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
         val cellW = atlas.width / 2
         val cellH = atlas.height / 2
 
+        fun cell(
+            column: Int,
+            row: Int
+        ): Bitmap =
+            Bitmap.createBitmap(
+                atlas,
+                column * cellW,
+                row * cellH,
+                cellW,
+                cellH
+            )
+
+        // Action art reaches much farther than the idle silhouettes.
+        // Pad every state so sword arcs, cape tips, slime trails, and
+        // hit/death splashes never collide with an atlas-cell edge.
+        val idleRaw = cell(0, 0)
+        val attackRaw = cell(1, 0)
+        val hitRaw = cell(0, 1)
+        val finisherRaw = cell(1, 1)
+
         val frames =
             ActorFrames(
-                idle = Bitmap.createBitmap(
-                    atlas,
-                    0,
-                    0,
-                    cellW,
-                    cellH
-                ),
-                attack = Bitmap.createBitmap(
-                    atlas,
-                    cellW,
-                    0,
-                    cellW,
-                    cellH
-                ),
-                hit = Bitmap.createBitmap(
-                    atlas,
-                    0,
-                    cellH,
-                    cellW,
-                    cellH
-                ),
-                finisher = Bitmap.createBitmap(
-                    atlas,
-                    cellW,
-                    cellH,
-                    cellW,
-                    cellH
-                )
+                idle = paddedFrame(idleRaw, 1.16f),
+                attack = paddedFrame(attackRaw, 1.42f),
+                hit = paddedFrame(hitRaw, 1.28f),
+                finisher = paddedFrame(finisherRaw, 1.34f)
             )
+
+        listOf(
+            idleRaw,
+            attackRaw,
+            hitRaw,
+            finisherRaw
+        ).forEach {
+            if (!it.isRecycled) {
+                it.recycle()
+            }
+        }
 
         atlas.recycle()
         return frames
     }
 
+    private fun paddedFrame(
+        source: Bitmap,
+        scale: Float
+    ): Bitmap {
+        val safeScale = scale.coerceAtLeast(1f)
+        val width =
+            (source.width * safeScale)
+                .toInt()
+                .coerceAtLeast(source.width)
+        val height =
+            (source.height * safeScale)
+                .toInt()
+                .coerceAtLeast(source.height)
+
+        val output =
+            Bitmap.createBitmap(
+                width,
+                height,
+                Bitmap.Config.ARGB_8888
+            )
+
+        val canvas = Canvas(output)
+        val left = (width - source.width) * 0.5f
+        val top = (height - source.height) * 0.5f
+        canvas.drawBitmap(
+            source,
+            left,
+            top,
+            null
+        )
+
+        return output
+    }
     private fun shadowDrawable(): GradientDrawable =
         GradientDrawable().apply {
             shape = GradientDrawable.OVAL
