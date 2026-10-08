@@ -1,0 +1,40 @@
+name: Export Current Dabsky Intro
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/export-dabsky-intro.yml"
+  workflow_dispatch:
+
+jobs:
+  export-video:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure FFmpeg
+        run: |
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg
+          fi
+
+      - name: Produce exact app playback encoding
+        run: |
+          mkdir -p export
+          ffmpeg -y -i app/video_sources/dabsky_intro_source.mp4 \
+            -c:v libx264 -profile:v main -level:v 4.0 \
+            -preset medium -crf 20 -maxrate 10M -bufsize 20M \
+            -pix_fmt yuv420p -movflags +faststart \
+            -c:a aac -b:a 160k -ar 48000 -ac 2 \
+            export/dabsky_intro.mp4
+          test -s export/dabsky_intro.mp4
+
+      - name: Downloadable currently-playing Dabsky MP4
+        uses: actions/upload-artifact@v4
+        with:
+          name: dabsky-current-intro-mp4
+          path: export/dabsky_intro.mp4
+          if-no-files-found: error
