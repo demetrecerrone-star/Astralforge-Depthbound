@@ -159,19 +159,27 @@ class BattleV2Activity : Activity() {
         )
 
         if (useProductionActors) {
-            renderer.disableForProductionActors()
-            productionActors =
-                BattleV2ProductionActorView(
-                    this,
-                    enemyEntityId = enemyEntityId
+            val productionView =
+                runCatching {
+                    BattleV2ProductionActorView(
+                        this,
+                        enemyEntityId = enemyEntityId
+                    )
+                }.getOrNull()
+
+            if (productionView != null) {
+                renderer.disableForProductionActors()
+                productionActors = productionView
+                root.addView(
+                    productionActors,
+                    FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.MATCH_PARENT
+                    )
                 )
-            root.addView(
-                productionActors,
-                FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.MATCH_PARENT
-                )
-            )
+            } else {
+                useProductionActors = false
+            }
         }
 
         effects = BattleV2EffectsView(this)
