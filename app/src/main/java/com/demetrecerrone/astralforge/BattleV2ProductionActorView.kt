@@ -16,7 +16,8 @@ import android.widget.ImageView
 
 class BattleV2ProductionActorView @JvmOverloads constructor(
     context: Context,
-    attrs: AttributeSet? = null
+    attrs: AttributeSet? = null,
+    private val enemyEntityId: String = "blue_slime"
 ) : FrameLayout(context, attrs) {
 
     private data class ActorFrames(
@@ -57,7 +58,7 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             R.drawable.battle_v2_auren_actor_atlas
         )
         enemyFrames = loadFrames(
-            R.drawable.battle_v2_slime_actor_atlas
+            enemyAtlasResId(context, enemyEntityId)
         )
 
         addView(
@@ -303,6 +304,9 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
         }
     }
 
+    private fun enemyIsSlime(): Boolean =
+        enemyEntityId == "blue_slime"
+
     fun playEnemy(animation: BattleV2Animation) {
         stopEnemyIdle()
         enemyStage.animate().cancel()
@@ -316,11 +320,23 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             BattleV2Animation.ATTACK -> {
                 enemyImage.setImageBitmap(enemyFrames.attack)
                 enemyStage.alpha = 1f
-                enemyStage.scaleX = 1.035f
-                enemyStage.scaleY = 0.97f
+                enemyStage.scaleX =
+                    if (enemyIsSlime()) 1.035f else 1.015f
+                enemyStage.scaleY =
+                    if (enemyIsSlime()) 0.97f else 1.015f
                 enemyStage.animate()
-                    .translationX(-dp(92).toFloat())
-                    .translationY(dp(2).toFloat())
+                    .translationX(
+                        -dp(
+                            if (enemyIsSlime()) 92 else 54
+                        ).toFloat()
+                    )
+                    .translationY(
+                        if (enemyIsSlime()) {
+                            dp(2).toFloat()
+                        } else {
+                            -dp(4).toFloat()
+                        }
+                    )
                     .setDuration(290L)
                     .withEndAction {
                         enemyStage.animate()
@@ -343,14 +359,16 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             BattleV2Animation.HIT -> {
                 enemyImage.setImageBitmap(enemyFrames.hit)
                 enemyStage.animate()
-                    .translationX(dp(20).toFloat())
-                    .scaleX(1.13f)
-                    .scaleY(0.84f)
+                    .translationX(dp(if (enemyIsSlime()) 20 else 14).toFloat())
+                    .rotation(if (enemyIsSlime()) 0f else 2.5f)
+                    .scaleX(if (enemyIsSlime()) 1.13f else 0.98f)
+                    .scaleY(if (enemyIsSlime()) 0.84f else 0.98f)
                     .alpha(0.74f)
                     .setDuration(115L)
                     .withEndAction {
                         enemyStage.animate()
                             .translationX(0f)
+                            .rotation(0f)
                             .scaleX(1f)
                             .scaleY(1f)
                             .alpha(1f)
@@ -369,9 +387,12 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             BattleV2Animation.DEATH -> {
                 enemyImage.setImageBitmap(enemyFrames.finisher)
                 enemyStage.animate()
-                    .translationY(dp(30).toFloat())
-                    .scaleX(1.16f)
-                    .scaleY(0.72f)
+                    .translationY(
+                        dp(if (enemyIsSlime()) 30 else 44).toFloat()
+                    )
+                    .rotation(if (enemyIsSlime()) 0f else 7f)
+                    .scaleX(if (enemyIsSlime()) 1.16f else 0.94f)
+                    .scaleY(if (enemyIsSlime()) 0.72f else 0.94f)
                     .alpha(0.16f)
                     .setDuration(
                         BattleV2AnimationTimeline
@@ -492,10 +513,10 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             enemyStage,
             View.TRANSLATION_Y,
             0f,
-            -dp(3).toFloat(),
+            -dp(if (enemyIsSlime()) 3 else 2).toFloat(),
             0f
         ).apply {
-            duration = 1050L
+            duration = if (enemyIsSlime()) 1050L else 1550L
             repeatCount = ObjectAnimator.INFINITE
         }
 
@@ -503,10 +524,10 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             enemyStage,
             View.SCALE_X,
             1f,
-            1.035f,
+            if (enemyIsSlime()) 1.035f else 1.008f,
             1f
         ).apply {
-            duration = 1050L
+            duration = if (enemyIsSlime()) 1050L else 1550L
             repeatCount = ObjectAnimator.INFINITE
         }
 
@@ -514,10 +535,10 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             enemyStage,
             View.SCALE_Y,
             1f,
-            0.965f,
+            if (enemyIsSlime()) 0.965f else 1.008f,
             1f
         ).apply {
-            duration = 1050L
+            duration = if (enemyIsSlime()) 1050L else 1550L
             repeatCount = ObjectAnimator.INFINITE
         }
 
@@ -630,6 +651,48 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             shape = GradientDrawable.OVAL
             setColor(Color.argb(94, 5, 4, 18))
         }
+
+    companion object {
+        fun hasProductionEnemy(
+            context: Context,
+            enemyEntityId: String
+        ): Boolean =
+            enemyAtlasResIdOrZero(context, enemyEntityId) != 0
+
+        private fun enemyAtlasResId(
+            context: Context,
+            enemyEntityId: String
+        ): Int {
+            val value =
+                enemyAtlasResIdOrZero(context, enemyEntityId)
+            require(value != 0) {
+                "No production Battle V2 atlas for " +
+                    enemyEntityId
+            }
+            return value
+        }
+
+        private fun enemyAtlasResIdOrZero(
+            context: Context,
+            enemyEntityId: String
+        ): Int {
+            val resourceName =
+                when (enemyEntityId) {
+                    "blue_slime" ->
+                        "battle_v2_slime_actor_atlas"
+                    else ->
+                        "battle_v2_" +
+                            enemyEntityId +
+                            "_actor_atlas"
+                }
+
+            return context.resources.getIdentifier(
+                resourceName,
+                "drawable",
+                context.packageName
+            )
+        }
+    }
 
     private fun dp(value: Int): Int =
         (value * resources.displayMetrics.density)
