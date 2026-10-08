@@ -777,7 +777,7 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
     ): Bitmap {
         val w = source.width
         val h = source.height
-        if (w <= 2 || h <= 2) return source
+        if (w <= 4 || h <= 4) return source
 
         val pixels = IntArray(w * h)
         source.getPixels(
@@ -790,25 +790,47 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             h
         )
 
-        fun isMatte(index: Int): Boolean {
+        fun rgbDistance(
+            a: Int,
+            b: Int
+        ): Int {
+            val dr = Color.red(a) - Color.red(b)
+            val dg = Color.green(a) - Color.green(b)
+            val db = Color.blue(a) - Color.blue(b)
+            return dr * dr + dg * dg + db * db
+        }
+
+        // Sample several points from the outer border. Generated matte
+        // backgrounds are close in color to these samples, while the
+        // Goblin's armor, skin, blade and shadows are not.
+        val borderSamples =
+            listOf(
+                pixels[0],
+                pixels[w - 1],
+                pixels[(h - 1) * w],
+                pixels[h * w - 1],
+                pixels[w / 2],
+                pixels[(h - 1) * w + w / 2],
+                pixels[(h / 2) * w],
+                pixels[(h / 2) * w + (w - 1)]
+            )
+
+        fun matchesMatte(index: Int): Boolean {
             val color = pixels[index]
-            val alpha =
-                Color.alpha(color)
-            if (alpha == 0) return true
+            if (Color.alpha(color) == 0) return true
 
-            val red = Color.red(color)
-            val green = Color.green(color)
-            val blue = Color.blue(color)
-            val luminance =
-                (red * 30 + green * 59 + blue * 11) / 100
+            val bestDistance =
+                borderSamples.minOf {
+                    rgbDistance(
+                        color,
+                        it
+                    )
+                }
 
-            // The generated Goblin frames carry a charcoal/brown
-            // backdrop. Only flood pixels connected to the outside,
-            // so dark armor/shield detail inside the silhouette survives.
-            return luminance < 92 &&
-                red < 112 &&
-                green < 105 &&
-                blue < 105
+            // 46 RGB units ~= squared distance 2116.
+            // This is deliberately conservative so dark character
+            // details survive even when they touch the edge.
+            return bestDistance <= 2116
         }
 
         val visited = BooleanArray(w * h)
@@ -816,10 +838,25 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
         var head = 0
         var tail = 0
 
-        fun enqueue(x: Int, y: Int) {
-            if (x !in 0 until w || y !in 0 until h) return
+        fun enqueue(
+            x: Int,
+            y: Int
+        ) {
+            if (
+                x !in 0 until w ||
+                y !in 0 until h
+            ) {
+                return
+            }
+
             val index = y * w + x
-            if (visited[index] || !isMatte(index)) return
+            if (
+                visited[index] ||
+                !matchesMatte(index)
+            ) {
+                return
+            }
+
             visited[index] = true
             queue[tail++] = index
         }
@@ -828,6 +865,7 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             enqueue(x, 0)
             enqueue(x, h - 1)
         }
+
         for (y in 0 until h) {
             enqueue(0, y)
             enqueue(w - 1, y)
@@ -846,23 +884,18 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             enqueue(x, y + 1)
         }
 
-        // One soft cleanup pass catches antialiased fringe next to the
-        // removed matte without erasing opaque character details.
+        // Feather only pixels that are both very close to the sampled
+        // matte color and directly touch transparent background.
         val original = pixels.copyOf()
+
         for (y in 1 until h - 1) {
             for (x in 1 until w - 1) {
                 val index = y * w + x
                 val color = original[index]
-                val alpha = Color.alpha(color)
-                if (alpha == 0) continue
 
-                val red = Color.red(color)
-                val green = Color.green(color)
-                val blue = Color.blue(color)
-                val luminance =
-                    (red * 30 + green * 59 + blue * 11) / 100
-
-                if (luminance >= 110) continue
+                if (Color.alpha(color) == 0) {
+                    continue
+                }
 
                 val touchesClear =
                     Color.alpha(original[index - 1]) == 0 ||
@@ -870,7 +903,19 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
                         Color.alpha(original[index - w]) == 0 ||
                         Color.alpha(original[index + w]) == 0
 
-                if (touchesClear && alpha < 245) {
+                if (!touchesClear) {
+                    continue
+                }
+
+                val bestDistance =
+                    borderSamples.minOf {
+                        rgbDistance(
+                            color,
+                            it
+                        )
+                    }
+
+                if (bestDistance <= 900) {
                     pixels[index] = Color.TRANSPARENT
                 }
             }
