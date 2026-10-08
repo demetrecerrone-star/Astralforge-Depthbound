@@ -2,6 +2,7 @@ package com.demetrecerrone.astralforge
 
 import android.app.Activity
 import android.content.res.ColorStateList
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -210,8 +211,8 @@ class BattleV2Activity : Activity() {
     private fun addEnemyHud() {
         val screenW = resources.displayMetrics.widthPixels
         val screenH = resources.displayMetrics.heightPixels
-        val hudW = (screenW * 0.515f).toInt()
-        val hudH = (screenH * 0.205f).toInt()
+        val hudW = (screenW * 0.475f).toInt()
+        val hudH = (screenH * 0.195f).toInt()
         val hud = FrameLayout(this)
 
         hud.addView(
@@ -232,7 +233,7 @@ class BattleV2Activity : Activity() {
         }
         hud.addView(
             enemyPortrait,
-            rectParams(hudW, hudH, 0.060f, 0.185f, 0.165f, 0.55f)
+            rectParams(hudW, hudH, 0.050f, 0.130f, 0.195f, 0.65f)
         )
 
         enemyNameText = hudText(
@@ -277,7 +278,7 @@ class BattleV2Activity : Activity() {
                 Gravity.TOP or Gravity.END
             ).apply {
                 topMargin = (screenH * 0.088f).toInt()
-                rightMargin = (screenW * 0.050f).toInt()
+                rightMargin = (screenW * 0.047f).toInt()
             }
         )
     }
@@ -285,8 +286,8 @@ class BattleV2Activity : Activity() {
     private fun addPlayerHudAndControls() {
         val screenW = resources.displayMetrics.widthPixels
         val screenH = resources.displayMetrics.heightPixels
-        val hudW = (screenW * 0.505f).toInt()
-        val hudH = (screenH * 0.215f).toInt()
+        val hudW = (screenW * 0.475f).toInt()
+        val hudH = (screenH * 0.205f).toInt()
         val hud = FrameLayout(this)
 
         hud.addView(
@@ -307,7 +308,7 @@ class BattleV2Activity : Activity() {
         }
         hud.addView(
             playerPortrait,
-            rectParams(hudW, hudH, 0.064f, 0.17f, 0.18f, 0.57f)
+            rectParams(hudW, hudH, 0.052f, 0.135f, 0.205f, 0.67f)
         )
 
         playerNameText = hudText(
@@ -541,19 +542,19 @@ class BattleV2Activity : Activity() {
                     enemySprites
                 )
                 playerSprites.idle?.let {
-                    playerPortrait.setImageBitmap(it)
+                    playerPortrait.setImageBitmap(cropVisiblePortrait(it))
                 }
-                if (
-                    useProductionActors &&
-                    ::productionActors.isInitialized
-                ) {
-                    enemyPortrait.setImageBitmap(
+                val portrait =
+                    if (
+                        useProductionActors &&
+                        ::productionActors.isInitialized
+                    ) {
                         productionActors.enemyPortraitBitmap()
-                    )
-                } else {
-                    enemySprites.idle?.let {
-                        enemyPortrait.setImageBitmap(it)
+                    } else {
+                        enemySprites.idle
                     }
+                portrait?.let {
+                    enemyPortrait.setImageBitmap(cropVisiblePortrait(it))
                 }
                 playerNameText.text =
                     "Lv." + progress.level +
@@ -1024,6 +1025,58 @@ class BattleV2Activity : Activity() {
         )
     }
 
+
+    /**
+     * Crops only transparent padding, leaving the silhouette untouched.
+     * Sprite sheets often reserve most of their canvas around a small actor,
+     * which makes the HUD portrait appear tiny even in a large slot.
+     */
+    private fun cropVisiblePortrait(source: Bitmap): Bitmap {
+        if (source.isRecycled) return source
+
+        val width = source.width
+        val height = source.height
+        if (width < 2 || height < 2 || !source.hasAlpha()) return source
+
+        var left = width
+        var top = height
+        var right = -1
+        var bottom = -1
+
+        val row = IntArray(width)
+        for (y in 0 until height) {
+            source.getPixels(row, 0, width, 0, y, width, 1)
+            for (x in 0 until width) {
+                if (Color.alpha(row[x]) > 24) {
+                    if (x < left) left = x
+                    if (x > right) right = x
+                    if (y < top) top = y
+                    if (y > bottom) bottom = y
+                }
+            }
+        }
+
+        if (right < left || bottom < top) return source
+
+        val padding = (max(width, height) * 0.025f).toInt()
+        left = (left - padding).coerceAtLeast(0)
+        top = (top - padding).coerceAtLeast(0)
+        right = (right + padding).coerceAtMost(width - 1)
+        bottom = (bottom + padding).coerceAtMost(height - 1)
+
+        if (
+            left == 0 && top == 0 &&
+            right == width - 1 && bottom == height - 1
+        ) return source
+
+        return Bitmap.createBitmap(
+            source,
+            left,
+            top,
+            right - left + 1,
+            bottom - top + 1
+        )
+    }
 
     private fun hudText(
         value: String,
