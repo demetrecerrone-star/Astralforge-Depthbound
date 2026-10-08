@@ -72,8 +72,8 @@ class CreateAccountActivity : Activity() {
                 this,
                 R.drawable.auth_btn_create,
                 "Create Account",
-                0.245f,
-                0.078f
+                0.25f,
+                0.095f
             ) { createAccount() }
         )
 
@@ -84,8 +84,8 @@ class CreateAccountActivity : Activity() {
                 this,
                 R.drawable.auth_btn_google,
                 "Continue with Google",
-                0.26f,
-                0.073f
+                0.275f,
+                0.088f
             ) { startGoogleSignIn() }
         )
 

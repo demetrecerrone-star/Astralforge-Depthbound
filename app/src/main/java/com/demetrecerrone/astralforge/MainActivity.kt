@@ -73,8 +73,8 @@ class MainActivity : Activity() {
                 this,
                 R.drawable.auth_btn_signin,
                 "Sign In",
-                0.225f,
-                0.078f
+                0.235f,
+                0.095f
             ) { signInWithEmail() }
         )
 
@@ -85,8 +85,8 @@ class MainActivity : Activity() {
                 this,
                 R.drawable.auth_btn_google,
                 "Continue with Google",
-                0.26f,
-                0.073f
+                0.275f,
+                0.088f
             ) { startGoogleSignIn() }
         )
 
@@ -95,8 +95,8 @@ class MainActivity : Activity() {
                 this,
                 R.drawable.auth_btn_guest,
                 "Continue as Guest",
-                0.26f,
-                0.073f
+                0.275f,
+                0.088f
             ) { signInAsGuest() }
         )
 
