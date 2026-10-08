@@ -160,8 +160,8 @@ class BattleV2Activity : Activity() {
     private fun addEnemyHud() {
         val screenW = resources.displayMetrics.widthPixels
         val screenH = resources.displayMetrics.heightPixels
-        val hudW = (screenW * 0.56f).toInt()
-        val hudH = (screenH * 0.225f).toInt()
+        val hudW = (screenW * 0.515f).toInt()
+        val hudH = (screenH * 0.205f).toInt()
         val hud = FrameLayout(this)
 
         hud.addView(
@@ -226,8 +226,8 @@ class BattleV2Activity : Activity() {
                 hudH,
                 Gravity.TOP or Gravity.END
             ).apply {
-                topMargin = (screenH * 0.075f).toInt()
-                rightMargin = (screenW * 0.025f).toInt()
+                topMargin = (screenH * 0.088f).toInt()
+                rightMargin = (screenW * 0.050f).toInt()
             }
         )
     }
@@ -235,8 +235,8 @@ class BattleV2Activity : Activity() {
     private fun addPlayerHudAndControls() {
         val screenW = resources.displayMetrics.widthPixels
         val screenH = resources.displayMetrics.heightPixels
-        val hudW = (screenW * 0.57f).toInt()
-        val hudH = (screenH * 0.245f).toInt()
+        val hudW = (screenW * 0.505f).toInt()
+        val hudH = (screenH * 0.215f).toInt()
         val hud = FrameLayout(this)
 
         hud.addView(
@@ -300,13 +300,13 @@ class BattleV2Activity : Activity() {
                 hudH,
                 Gravity.BOTTOM or Gravity.START
             ).apply {
-                leftMargin = (screenW * 0.018f).toInt()
-                bottomMargin = (screenH * 0.012f).toInt()
+                leftMargin = (screenW * 0.030f).toInt()
+                bottomMargin = (screenH * 0.030f).toInt()
             }
         )
 
-        val size = (screenH * 0.155f).toInt()
-        val gap = (screenW * 0.008f).toInt()
+        val size = (screenH * 0.138f).toInt()
+        val gap = (screenW * 0.0045f).toInt()
         val buttons = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
@@ -374,8 +374,8 @@ class BattleV2Activity : Activity() {
                 size,
                 Gravity.BOTTOM or Gravity.END
             ).apply {
-                rightMargin = (screenW * 0.025f).toInt()
-                bottomMargin = (screenH * 0.035f).toInt()
+                rightMargin = (screenW * 0.045f).toInt()
+                bottomMargin = (screenH * 0.060f).toInt()
             }
         )
 
@@ -389,12 +389,12 @@ class BattleV2Activity : Activity() {
         root.addView(
             statusText,
             FrameLayout.LayoutParams(
-                (screenW * 0.29f).toInt(),
-                AuthUi.dp(this, 28),
+                (screenW * 0.235f).toInt(),
+                AuthUi.dp(this, 24),
                 Gravity.TOP or Gravity.END
             ).apply {
-                topMargin = AuthUi.dp(this@BattleV2Activity, 4)
-                rightMargin = AuthUi.dp(this@BattleV2Activity, 96)
+                topMargin = AuthUi.dp(this@BattleV2Activity, 10)
+                rightMargin = AuthUi.dp(this@BattleV2Activity, 82)
             }
         )
     }
@@ -409,8 +409,8 @@ class BattleV2Activity : Activity() {
                 contentDescription = "Battle V2"
             },
             FrameLayout.LayoutParams(
-                (screenW * 0.31f).toInt(),
-                (screenH * 0.105f).toInt(),
+                (screenW * 0.275f).toInt(),
+                (screenH * 0.090f).toInt(),
                 Gravity.TOP or Gravity.CENTER_HORIZONTAL
             ).apply {
                 topMargin = AuthUi.dp(this@BattleV2Activity, 2)
@@ -423,12 +423,12 @@ class BattleV2Activity : Activity() {
                 finish()
             },
             FrameLayout.LayoutParams(
-                AuthUi.dp(this, 82),
-                AuthUi.dp(this, 38),
+                AuthUi.dp(this, 68),
+                AuthUi.dp(this, 32),
                 Gravity.TOP or Gravity.END
             ).apply {
-                topMargin = AuthUi.dp(this@BattleV2Activity, 14)
-                rightMargin = AuthUi.dp(this@BattleV2Activity, 12)
+                topMargin = AuthUi.dp(this@BattleV2Activity, 8)
+                rightMargin = AuthUi.dp(this@BattleV2Activity, 8)
             }
         )
     }
