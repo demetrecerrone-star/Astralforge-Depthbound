@@ -25,6 +25,7 @@ class BattleV2Activity : Activity() {
 
     private lateinit var root: FrameLayout
     private lateinit var renderer: BattleV2RendererHost
+    private lateinit var effects: BattleV2EffectsView
     private lateinit var controller: BattleV2Controller
     private lateinit var progress: PlayerProgress
     private lateinit var settings: GameSettings
@@ -126,6 +127,15 @@ class BattleV2Activity : Activity() {
 
         root.addView(
             renderer,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+
+        effects = BattleV2EffectsView(this)
+        root.addView(
+            effects,
             FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
@@ -473,6 +483,9 @@ class BattleV2Activity : Activity() {
         statusText.text = activeHero.displayName + " attacks"
 
         renderer.playPlayer(BattleV2Animation.ATTACK)
+        if (settings.battleEffects) {
+            effects.playPlayerSlash()
+        }
         val attackSpec =
             BattleV2AnimationTimeline.spec(
                 BattleV2Animation.ATTACK
@@ -493,12 +506,20 @@ class BattleV2Activity : Activity() {
                     )
                 }
 
+                if (settings.battleEffects) {
+                    effects.playEnemyHit(outcome.critical)
+                    cameraKick(enemySide = true, critical = outcome.critical)
+                }
+
                 AppHaptics.tap(this)
 
                 if (outcome.defeated) {
                     renderer.playEnemy(
                         BattleV2Animation.DEATH
                     )
+                    if (settings.battleEffects) {
+                        effects.playEnemyDeath()
+                    }
                     statusText.text = "Target defeated"
                     handler.postDelayed(
                         {
@@ -506,6 +527,9 @@ class BattleV2Activity : Activity() {
                                 renderer.playPlayer(
                                     BattleV2Animation.VICTORY
                                 )
+                                if (settings.battleEffects) {
+                                    effects.playVictory()
+                                }
                                 showResult(true)
                             }
                         },
@@ -539,6 +563,9 @@ class BattleV2Activity : Activity() {
     private fun performEnemyAttack() {
         statusText.text = BattleActorFactory.enemyDisplayName(enemyEntityId) + " attacks"
         renderer.playEnemy(BattleV2Animation.ATTACK)
+        if (settings.battleEffects) {
+            effects.playSlimeLunge()
+        }
 
         val attackSpec =
             BattleV2AnimationTimeline.spec(
@@ -560,10 +587,18 @@ class BattleV2Activity : Activity() {
                     )
                 }
 
+                if (settings.battleEffects) {
+                    effects.playPlayerHit(outcome.critical)
+                    cameraKick(enemySide = false, critical = outcome.critical)
+                }
+
                 if (outcome.defeated) {
                     renderer.playPlayer(
                         BattleV2Animation.DEATH
                     )
+                    if (settings.battleEffects) {
+                        effects.playPlayerDeath()
+                    }
                     statusText.text = activeHero.displayName + " defeated"
                     handler.postDelayed(
                         {
@@ -630,6 +665,47 @@ class BattleV2Activity : Activity() {
                 " / " +
                 state.enemyMaxHp
     }
+    private fun cameraKick(
+        enemySide: Boolean,
+        critical: Boolean
+    ) {
+        if (settings.reducedMotion) return
+
+        val direction = if (enemySide) 1f else -1f
+        val amount =
+            AuthUi.dp(
+                this,
+                if (critical) 16 else 9
+            ).toFloat() * direction
+
+        renderer.animate()
+            .translationX(amount)
+            .translationY(
+                AuthUi.dp(
+                    this,
+                    if (critical) -5 else -2
+                ).toFloat()
+            )
+            .setDuration(45L)
+            .withEndAction {
+                renderer.animate()
+                    .translationX(-amount * 0.42f)
+                    .translationY(
+                        AuthUi.dp(this, 2).toFloat()
+                    )
+                    .setDuration(55L)
+                    .withEndAction {
+                        renderer.animate()
+                            .translationX(0f)
+                            .translationY(0f)
+                            .setDuration(70L)
+                            .start()
+                    }
+                    .start()
+            }
+            .start()
+    }
+
     private fun showDamageNumber(
         amount: Int,
         critical: Boolean,
@@ -762,6 +838,7 @@ class BattleV2Activity : Activity() {
                 root.removeView(overlay)
                 controller.reset()
                 renderer.resetActors()
+                effects.clearEffects()
                 refreshHud(animate = false)
                 busy = false
                 attackButton.alpha = 1f
