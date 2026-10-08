@@ -440,24 +440,56 @@ object AuthUi {
             text = title
             gravity = Gravity.CENTER
             textSize = 13f
-            setTextColor(0xFFD4A1FF.toInt())
+            setTextColor(Color.WHITE)
+            setShadowLayer(4f, 0f, 0f, 0xFF7D3BD1.toInt())
             isClickable = true
+            isFocusable = true
+            contentDescription = title
+            setOnClickListener { onClick() }
+        }, x, y, w, h)
+    }
+
+    fun overlayText(root: FrameLayout, title: String,
+                    x: Int, y: Int, w: Int, h: Int,
+                    size: Float = 12.5f) {
+        place(root, TextView(root.context).apply {
+            text = title
+            gravity = Gravity.CENTER_VERTICAL
+            textSize = size
+            setTextColor(Color.WHITE)
+            setShadowLayer(4f, 0f, 0f, 0xFF7D3BD1.toInt())
+        }, x, y, w, h)
+    }
+
+    fun overlayTap(root: FrameLayout, description: String,
+                   x: Int, y: Int, w: Int, h: Int,
+                   onClick: () -> Unit) {
+        place(root, View(root.context).apply {
+            isClickable = true
+            isFocusable = true
+            contentDescription = description
             setOnClickListener { onClick() }
         }, x, y, w, h)
     }
 
     fun separateRemember(context: Context, checked: Boolean): ToggleButton =
         ToggleButton(context).apply {
-            textOff = "Remember Me"
-            textOn = "✦ Remember On"
+            textOff = ""
+            textOn = "✓"
             isChecked = checked
-            textSize = 12f
+            textSize = 18f
             isAllCaps = false
+            gravity = Gravity.CENTER
             setTextColor(Color.WHITE)
+            minWidth = 0
+            minHeight = 0
+            minimumWidth = 0
+            minimumHeight = 0
+            setPadding(0, 0, 0, 0)
             background = GradientDrawable().apply {
-                setColor(0xCC140B2E.toInt())
-                cornerRadius = 15f
-                setStroke(2, 0xFFB266EB.toInt())
+                setColor(0xD9120A2B.toInt())
+                cornerRadius = 10f
+                setStroke(2, 0xFFE1C6FF.toInt())
             }
         }
 

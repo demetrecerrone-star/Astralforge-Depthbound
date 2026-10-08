@@ -47,7 +47,7 @@ class CreateAccountActivity : Activity() {
         AuthUi.overlayButton(root, "CREATE ACCOUNT", 587, 560, 499, 94) {
             createAccount()
         }
-        AuthUi.overlayButton(root, "Continue with Google", 652, 700, 369, 99) {
+        AuthUi.overlayTap(root, "Continue with Google", 652, 700, 369, 99) {
             startGoogleSignIn()
         }
         AuthUi.overlayLink(root, "Already have an account? Sign In", 640, 834, 395, 64) {

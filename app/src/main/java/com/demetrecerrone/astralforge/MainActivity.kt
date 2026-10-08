@@ -43,17 +43,18 @@ class MainActivity : Activity() {
         AuthUi.place(root, passwordField, 651, 480, 450, 71)
         AuthUi.overlayEye(root, passwordField, 1132, 479)
         remember = AuthUi.separateRemember(this, shouldRemember)
-        AuthUi.place(root, remember, 551, 560, 193, 53)
+        AuthUi.place(root, remember, 557, 563, 46, 46)
+        AuthUi.overlayText(root, getString(R.string.remember_me), 615, 558, 170, 54, 12.5f)
         AuthUi.overlayLink(root, getString(R.string.forgot_password), 960, 559, 219, 50) {
             sendPasswordReset()
         }
         AuthUi.overlayButton(root, "SIGN IN", 618, 610, 438, 86) {
             signInWithEmail()
         }
-        AuthUi.overlayButton(root, "Continue with Google", 535, 741, 287, 95) {
+        AuthUi.overlayTap(root, "Continue with Google", 535, 741, 287, 95) {
             startGoogleSignIn()
         }
-        AuthUi.overlayButton(root, "Continue as Guest", 847, 741, 287, 95) {
+        AuthUi.overlayTap(root, "Continue as Guest", 847, 741, 287, 95) {
             signInAsGuest()
         }
         AuthUi.overlayLink(root, "Create Account", 738, 844, 212, 64) {
