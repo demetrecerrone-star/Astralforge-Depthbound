@@ -288,6 +288,9 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             bottomMargin = (h * bottomScale).toInt()
         }
     }
+    fun enemyPortraitBitmap(): Bitmap =
+        enemyFrames.idle
+
     fun playPlayer(animation: BattleV2Animation) {
         stopPlayerIdle()
         playerStage.animate().cancel()
