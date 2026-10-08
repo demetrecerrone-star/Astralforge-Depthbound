@@ -647,7 +647,14 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
             )
 
         if (atlasRes != 0) {
-            return loadFrames(atlasRes)
+            val production =
+                runCatching {
+                    loadFrames(atlasRes)
+                }.getOrNull()
+
+            if (production != null) {
+                return production
+            }
         }
 
         val sprites =
@@ -705,11 +712,21 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
 
     private fun loadFrames(resId: Int): ActorFrames {
         val atlas =
-            requireNotNull(
-                BitmapFactory.decodeResource(resources, resId)
-            ) {
+            BitmapFactory.decodeResource(
+                resources,
+                resId
+            ) ?: throw IllegalStateException(
                 "Battle V2 actor atlas failed to decode."
-            }
+            )
+
+        require(
+            atlas.width >= 4 &&
+                atlas.height >= 4 &&
+                atlas.width % 2 == 0 &&
+                atlas.height % 2 == 0
+        ) {
+            "Battle V2 actor atlas has invalid dimensions."
+        }
 
         val cellW = atlas.width / 2
         val cellH = atlas.height / 2
@@ -726,9 +743,6 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
                 cellH
             )
 
-        // Action art reaches much farther than the idle silhouettes.
-        // Pad every state so sword arcs, cape tips, slime trails, and
-        // hit/death splashes never collide with an atlas-cell edge.
         val idleRaw = cell(0, 0)
         val attackRaw = cell(1, 0)
         val hitRaw = cell(0, 1)
