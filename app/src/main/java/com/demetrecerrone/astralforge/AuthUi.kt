@@ -35,7 +35,7 @@ object AuthUi {
         context.resources.displayMetrics.widthPixels
 
     private fun fieldHeight(context: Context): Int =
-        (screenHeight(context) * 0.074f).toInt().coerceAtLeast(46)
+        (screenHeight(context) * 0.102f).toInt().coerceAtLeast(64)
 
     private fun controlGap(context: Context): Int =
         (screenHeight(context) * 0.008f).toInt().coerceAtLeast(4)
@@ -124,7 +124,7 @@ object AuthUi {
         isPassword: Boolean = false,
         inputType: Int = InputType.TYPE_CLASS_TEXT
     ): EditText {
-        val sidePadding = dp(context, 24)
+        val sidePadding = (screenWidth(context) * 0.055f).toInt()
 
         return EditText(context).apply {
             this.hint = hint
