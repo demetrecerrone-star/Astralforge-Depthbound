@@ -428,7 +428,7 @@ object AuthUi {
             typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
             isClickable = true
             isFocusable = true
-            contentDescription = title
+            contentDescription = if (title.isBlank()) "Authentication option" else title
             setOnClickListener { onClick() }
         }, x, y, w, h)
     }
@@ -474,22 +474,27 @@ object AuthUi {
 
     fun separateRemember(context: Context, checked: Boolean): ToggleButton =
         ToggleButton(context).apply {
-            textOff = ""
-            textOn = "✓"
+            textOff = "Remember Me"
+            textOn = "Remember Me"
+            text = if (checked) "Remember Me" else "Remember Me"
             isChecked = checked
-            textSize = 18f
+            textSize = 12f
             isAllCaps = false
             gravity = Gravity.CENTER
             setTextColor(Color.WHITE)
-            minWidth = 0
-            minHeight = 0
-            minimumWidth = 0
-            minimumHeight = 0
-            setPadding(0, 0, 0, 0)
+            setPadding(10, 0, 10, 0)
             background = GradientDrawable().apply {
-                setColor(0xD9120A2B.toInt())
-                cornerRadius = 10f
-                setStroke(2, 0xFFE1C6FF.toInt())
+                setColor(if (checked) 0xCC3A1764.toInt() else 0xAA120B2B.toInt())
+                cornerRadius = 18f
+                setStroke(2, if (checked) 0xFFE0B8FF.toInt() else 0xFF9A63CC.toInt())
+            }
+            setOnCheckedChangeListener { button, on ->
+                button.text = "Remember Me"
+                button.background = GradientDrawable().apply {
+                    setColor(if (on) 0xCC3A1764.toInt() else 0xAA120B2B.toInt())
+                    cornerRadius = 18f
+                    setStroke(2, if (on) 0xFFE0B8FF.toInt() else 0xFF9A63CC.toInt())
+                }
             }
         }
 
