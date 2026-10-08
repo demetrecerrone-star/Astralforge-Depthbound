@@ -53,13 +53,19 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
 
         addView(
             playerShadow,
-            FrameLayout.LayoutParams(1, 1)
+            playerShadowParams(
+                resources.displayMetrics.widthPixels,
+                resources.displayMetrics.heightPixels
+            )
         )
         playerShadow.background = shadowDrawable()
 
         addView(
             enemyShadow,
-            FrameLayout.LayoutParams(1, 1)
+            enemyShadowParams(
+                resources.displayMetrics.widthPixels,
+                resources.displayMetrics.heightPixels
+            )
         )
         enemyShadow.background = shadowDrawable()
 
@@ -85,68 +91,118 @@ class BattleV2ProductionActorView @JvmOverloads constructor(
 
         addView(
             playerStage,
-            FrameLayout.LayoutParams(1, 1)
+            playerStageParams(
+                resources.displayMetrics.widthPixels,
+                resources.displayMetrics.heightPixels
+            )
         )
 
         addView(
             enemyStage,
-            FrameLayout.LayoutParams(1, 1)
+            enemyStageParams(
+                resources.displayMetrics.widthPixels,
+                resources.displayMetrics.heightPixels
+            )
         )
 
         resetActors()
     }
 
-    override fun onSizeChanged(
-        w: Int,
-        h: Int,
-        oldw: Int,
-        oldh: Int
-    ) {
-        super.onSizeChanged(w, h, oldw, oldh)
-        if (w <= 0 || h <= 0) return
-
-        // Anchor the production actors to the arena floor using
-        // percentages instead of device-dependent dp sizes.
-        playerStage.layoutParams =
-            FrameLayout.LayoutParams(
-                (w * 0.285f).toInt(),
-                (h * 0.515f).toInt(),
-                Gravity.BOTTOM or Gravity.START
-            ).apply {
-                leftMargin = (w * 0.115f).toInt()
-                bottomMargin = (h * 0.105f).toInt()
-            }
-
-        enemyStage.layoutParams =
-            FrameLayout.LayoutParams(
-                (w * 0.205f).toInt(),
-                (h * 0.315f).toInt(),
-                Gravity.BOTTOM or Gravity.END
-            ).apply {
-                rightMargin = (w * 0.145f).toInt()
-                bottomMargin = (h * 0.145f).toInt()
-            }
-
-        playerShadow.layoutParams =
-            FrameLayout.LayoutParams(
-                (w * 0.145f).toInt(),
-                (h * 0.030f).toInt(),
-                Gravity.BOTTOM or Gravity.START
-            ).apply {
-                leftMargin = (w * 0.185f).toInt()
-                bottomMargin = (h * 0.115f).toInt()
-            }
-
-        enemyShadow.layoutParams =
-            FrameLayout.LayoutParams(
-                (w * 0.115f).toInt(),
-                (h * 0.026f).toInt(),
-                Gravity.BOTTOM or Gravity.END
-            ).apply {
-                rightMargin = (w * 0.190f).toInt()
-                bottomMargin = (h * 0.150f).toInt()
-            }
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        post {
+            applyResponsiveLayout()
+            resetActors()
+        }
     }
+
+    override fun onLayout(
+        changed: Boolean,
+        left: Int,
+        top: Int,
+        right: Int,
+        bottom: Int
+    ) {
+        super.onLayout(changed, left, top, right, bottom)
+        if (changed) {
+            applyResponsiveLayout()
+        }
+    }
+
+    private fun applyResponsiveLayout() {
+        val w =
+            width.takeIf { it > 1 }
+                ?: resources.displayMetrics.widthPixels
+        val h =
+            height.takeIf { it > 1 }
+                ?: resources.displayMetrics.heightPixels
+
+        playerStage.layoutParams = playerStageParams(w, h)
+        enemyStage.layoutParams = enemyStageParams(w, h)
+        playerShadow.layoutParams = playerShadowParams(w, h)
+        enemyShadow.layoutParams = enemyShadowParams(w, h)
+
+        playerStage.visibility = View.VISIBLE
+        enemyStage.visibility = View.VISIBLE
+        playerImage.visibility = View.VISIBLE
+        enemyImage.visibility = View.VISIBLE
+        playerStage.bringToFront()
+        enemyStage.bringToFront()
+        invalidate()
+        requestLayout()
+    }
+
+    private fun playerStageParams(
+        w: Int,
+        h: Int
+    ): FrameLayout.LayoutParams =
+        FrameLayout.LayoutParams(
+            (w * 0.245f).toInt().coerceAtLeast(dp(150)),
+            (h * 0.455f).toInt().coerceAtLeast(dp(190)),
+            Gravity.BOTTOM or Gravity.START
+        ).apply {
+            leftMargin = (w * 0.135f).toInt()
+            bottomMargin = (h * 0.135f).toInt()
+        }
+
+    private fun enemyStageParams(
+        w: Int,
+        h: Int
+    ): FrameLayout.LayoutParams =
+        FrameLayout.LayoutParams(
+            (w * 0.175f).toInt().coerceAtLeast(dp(105)),
+            (h * 0.255f).toInt().coerceAtLeast(dp(105)),
+            Gravity.BOTTOM or Gravity.END
+        ).apply {
+            rightMargin = (w * 0.160f).toInt()
+            bottomMargin = (h * 0.180f).toInt()
+        }
+
+    private fun playerShadowParams(
+        w: Int,
+        h: Int
+    ): FrameLayout.LayoutParams =
+        FrameLayout.LayoutParams(
+            (w * 0.120f).toInt().coerceAtLeast(dp(72)),
+            (h * 0.026f).toInt().coerceAtLeast(dp(8)),
+            Gravity.BOTTOM or Gravity.START
+        ).apply {
+            leftMargin = (w * 0.195f).toInt()
+            bottomMargin = (h * 0.137f).toInt()
+        }
+
+    private fun enemyShadowParams(
+        w: Int,
+        h: Int
+    ): FrameLayout.LayoutParams =
+        FrameLayout.LayoutParams(
+            (w * 0.095f).toInt().coerceAtLeast(dp(58)),
+            (h * 0.022f).toInt().coerceAtLeast(dp(7)),
+            Gravity.BOTTOM or Gravity.END
+        ).apply {
+            rightMargin = (w * 0.200f).toInt()
+            bottomMargin = (h * 0.178f).toInt()
+        }
 
     fun playPlayer(animation: BattleV2Animation) {
         stopPlayerIdle()
