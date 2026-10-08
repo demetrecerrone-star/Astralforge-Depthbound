@@ -124,17 +124,25 @@ object AuthUi {
         isPassword: Boolean = false,
         inputType: Int = InputType.TYPE_CLASS_TEXT
     ): EditText {
-        val sidePadding = (screenWidth(context) * 0.055f).toInt()
-
         return EditText(context).apply {
             this.hint = hint
             setHintTextColor(Color.rgb(219, 208, 247))
             setTextColor(Color.WHITE)
-            textSize = 12f
+            textSize = 13f
             setSingleLine(true)
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(sidePadding, 0, sidePadding, 0)
+            setPadding(dp(context, 8), 0, dp(context, 8), 0)
             setBackgroundResource(frameRes)
+            addOnLayoutChangeListener { view, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+                val fieldWidth = (right - left).coerceAtLeast(1)
+                val leftPad = (fieldWidth * 0.22f).toInt()
+                val rightPad =
+                    if (isPassword) (fieldWidth * 0.20f).toInt()
+                    else (fieldWidth * 0.08f).toInt()
+                if (paddingLeft != leftPad || paddingRight != rightPad) {
+                    setPadding(leftPad, 0, rightPad, 0)
+                }
+            }
             this.inputType = inputType
             minHeight = 0
             minimumHeight = 0
